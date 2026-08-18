@@ -1,0 +1,27 @@
+[package]
+name = "ntc-model"
+description = "NTC-Web model: architecture config, input packing, Backend trait, CPU reference forward pass"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[features]
+default = []
+# Tiny config + test tokenizer + seeded random weights, shared across crates' tests
+test-support = ["dep:rand", "dep:rand_chacha"]
+
+[dependencies]
+ntc-core.workspace = true
+ntc-format.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+half.workspace = true
+rand = { workspace = true, optional = true }
+rand_chacha = { workspace = true, optional = true }
+
+[dev-dependencies]
+ntc-format = { workspace = true, features = ["write"] }
+ntc-model = { path = ".", features = ["test-support"] }
+approx.workspace = true

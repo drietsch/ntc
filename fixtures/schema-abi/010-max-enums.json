@@ -1,0 +1,1 @@
+{"name":"ui.set_color","description":"Set the accent color","parameters":{"color":{"type":"string","enum":["red","orange","yellow","green","teal","blue","indigo","violet","pink","brown","black","white"],"required":true}}}

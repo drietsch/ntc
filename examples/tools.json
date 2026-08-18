@@ -1,0 +1,4 @@
+[
+  {"name":"calendar.create","description":"create a calendar event","parameters":{"title":{"type":"string","required":true},"start":{"type":"string","format":"date-time","required":true},"duration_minutes":{"type":"integer","semantic":"DURATION"}}},
+  {"name":"email.send","description":"send an email","parameters":{"recipient":{"type":"string","required":true},"subject":{"type":"string"}}}
+]

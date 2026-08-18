@@ -1,0 +1,1 @@
+{"name":"search_trains","description":"Search for available train journeys","parameters":{"destination_city":{"type":"string","semantic":"LOCATION.DESTINATION","required":true},"departure_time":{"type":"string","format":"date-time","required":true}}}

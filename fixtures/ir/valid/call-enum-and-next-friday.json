@@ -1,0 +1,12 @@
+{
+  "ir_version": 1,
+  "action": "CALL",
+  "action_confidence": 0.95,
+  "tool": {"candidate_index": 1, "registry_id": "task.create", "confidence": 0.93},
+  "arguments": [
+    {"parameter": "priority", "semantic_type": "ENUM", "value": {"index": 2, "symbol": "high"}, "confidence": 0.9},
+    {"parameter": "due", "semantic_type": "RELATIVE_DATE", "value": {"relation": "NEXT", "weekday": "FRIDAY"}, "confidence": 0.89},
+    {"parameter": "done", "semantic_type": "BOOLEAN", "value": false, "confidence": 0.99},
+    {"parameter": "estimate", "semantic_type": "FLOAT", "value": 2.5, "confidence": 0.8}
+  ]
+}

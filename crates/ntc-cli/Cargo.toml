@@ -1,0 +1,22 @@
+[package]
+name = "ntc-cli"
+description = "NTC-Web developer CLI: contract schema generation, schema canonicalization, .ntc verification, fixture generation, CPU inference"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "ntc"
+path = "src/main.rs"
+
+[dependencies]
+ntc-core.workspace = true
+ntc-format = { workspace = true, features = ["write"] }
+ntc-model = { workspace = true, features = ["test-support"] }
+ntc-runtime.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+schemars.workspace = true

@@ -1,0 +1,22 @@
+[package]
+name = "ntc-wasm"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+ntc-core.workspace = true
+ntc-model.workspace = true
+ntc-runtime.workspace = true
+wasm-bindgen.workspace = true
+wasm-bindgen-futures.workspace = true
+js-sys.workspace = true
+console_error_panic_hook.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+wasm-bindgen-test.workspace = true

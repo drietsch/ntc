@@ -1,0 +1,1 @@
+{"name":"calendar.create","description":"Create a calendar event","parameters":{"title":{"type":"string","description":"Event title","required":true},"start":{"type":"string","format":"date-time","required":true},"duration_minutes":{"type":"integer","semantic":"DURATION"},"priority":{"type":"string","enum":["low","normal","high"]}}}

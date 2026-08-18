@@ -1,0 +1,5 @@
+{
+  "ir_version": 1, "action": "CALL", "action_confidence": 0.9,
+  "tool": {"candidate_index": 0, "registry_id": "x", "confidence": 0.9},
+  "arguments": [{"parameter": "p", "semantic_type": "TIMESTAMP", "value": "now", "confidence": 0.5}]
+}

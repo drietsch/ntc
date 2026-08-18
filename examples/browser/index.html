@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NTC browser demo</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --border: #d6dae1;
+      --text: #1c2430;
+      --muted: #5a6472;
+      --accent: #2456c4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 2rem 1rem 4rem;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    main { max-width: 46rem; margin: 0 auto; }
+    h1 { font-size: 1.4rem; margin: 0 0 0.25rem; }
+    .sub { color: var(--muted); margin: 0 0 1.5rem; font-size: 0.9rem; }
+    label { display: block; font-weight: 600; margin: 1rem 0 0.3rem; }
+    input, textarea {
+      width: 100%;
+      padding: 0.5rem 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--panel);
+      color: inherit;
+      font: inherit;
+    }
+    textarea { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; resize: vertical; }
+    button {
+      margin-top: 1.25rem;
+      padding: 0.55rem 1.4rem;
+      border: 0;
+      border-radius: 6px;
+      background: var(--accent);
+      color: #fff;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.5; cursor: default; }
+    pre {
+      margin-top: 1.25rem;
+      padding: 0.9rem;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow-x: auto;
+      min-height: 6rem;
+      font-size: 0.85rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .status { color: var(--muted); font-size: 0.85rem; margin-top: 0.75rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Neural Tool Compiler</h1>
+    <p class="sub">Runs the tiny fixture model on the CPU reference backend, fully in-browser (WebAssembly). <span id="version"></span></p>
+
+    <label for="utterance">Utterance</label>
+    <input id="utterance" value="make a dentist appointment tomorrow afternoon">
+
+    <label for="tools">Tools (JSON array of schemas)</label>
+    <textarea id="tools" rows="18" spellcheck="false">[
+  {
+    "name": "calendar.create",
+    "description": "create a calendar event",
+    "parameters": {
+      "title": {"type": "string", "required": true},
+      "start": {"type": "string", "format": "date-time", "required": true},
+      "duration_minutes": {"type": "integer", "semantic": "DURATION"}
+    }
+  },
+  {
+    "name": "email.send",
+    "description": "send an email",
+    "parameters": {
+      "recipient": {"type": "string", "required": true},
+      "subject": {"type": "string"}
+    }
+  }
+]</textarea>
+
+    <label for="timezone">Timezone (IANA)</label>
+    <input id="timezone" value="Europe/Berlin">
+
+    <button id="compile" disabled>Compile</button>
+    <div class="status" id="status">Loading wasm module…</div>
+
+    <pre id="output"></pre>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

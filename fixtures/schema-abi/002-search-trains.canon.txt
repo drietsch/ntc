@@ -1,0 +1,9 @@
+TOOL 0
+DESC search for available train journeys
+ARG 0 destination_city
+TYPE TEXT
+REQUIRED 1
+SEMANTIC LOCATION.DESTINATION
+ARG 1 departure_time
+TYPE DATETIME
+REQUIRED 1

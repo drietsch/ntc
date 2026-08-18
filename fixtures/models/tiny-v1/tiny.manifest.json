@@ -1,0 +1,1071 @@
+{
+  "format_version": 1,
+  "architecture": "ntc_encoder_heads_v1",
+  "model_version": "tiny-v1-seed42",
+  "quantization": "f32",
+  "ir_version": 1,
+  "abi_version": 1,
+  "head_spec_version": 1,
+  "tokenizer_sha256": "f1a93aa628ec438d5efde5bc354c381bb568e5bba866625cd4cb61c250e1738b",
+  "tokenizer_bytes": 1606,
+  "tensor_count": 112,
+  "total_tensor_bytes": 217176,
+  "tensors": [
+    {
+      "name": "embeddings.word.weight",
+      "dtype": "F32",
+      "shape": [
+        64,
+        32
+      ],
+      "offset": 0,
+      "byte_length": 8192
+    },
+    {
+      "name": "embeddings.position.weight",
+      "dtype": "F32",
+      "shape": [
+        128,
+        32
+      ],
+      "offset": 8192,
+      "byte_length": 16384
+    },
+    {
+      "name": "embeddings.norm.weight",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 24576,
+      "byte_length": 128
+    },
+    {
+      "name": "embeddings.norm.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 24832,
+      "byte_length": 128
+    },
+    {
+      "name": "encoder.layer.0.attn.q.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 25088,
+      "byte_length": 4096
+    },
+    {
+      "name": "encoder.layer.0.attn.q.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 29184,
+      "byte_length": 128
+    },
+    {
+      "name": "encoder.layer.0.attn.k.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 29440,
+      "byte_length": 4096
+    },
+    {
+      "name": "encoder.layer.0.attn.k.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 33536,
+      "byte_length": 128
+    },
+    {
+      "name": "encoder.layer.0.attn.v.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 33792,
+      "byte_length": 4096
+    },
+    {
+      "name": "encoder.layer.0.attn.v.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 37888,
+      "byte_length": 128
+    },
+    {
+      "name": "encoder.layer.0.attn.o.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 38144,
+      "byte_length": 4096
+    },
+    {
+      "name": "encoder.layer.0.attn.o.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 42240,
+      "byte_length": 128
+    },
+    {
+      "name": "encoder.layer.0.attn.norm.weight",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 42496,
+      "byte_length": 128
+    },
+    {
+      "name": "encoder.layer.0.attn.norm.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 42752,
+      "byte_length": 128
+    },
+    {
+      "name": "encoder.layer.0.ffn.up.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        64
+      ],
+      "offset": 43008,
+      "byte_length": 8192
+    },
+    {
+      "name": "encoder.layer.0.ffn.up.bias",
+      "dtype": "F32",
+      "shape": [
+        64
+      ],
+      "offset": 51200,
+      "byte_length": 256
+    },
+    {
+      "name": "encoder.layer.0.ffn.down.weight",
+      "dtype": "F32",
+      "shape": [
+        64,
+        32
+      ],
+      "offset": 51456,
+      "byte_length": 8192
+    },
+    {
+      "name": "encoder.layer.0.ffn.down.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 59648,
+      "byte_length": 128
+    },
+    {
+      "name": "encoder.layer.0.ffn.norm.weight",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 59904,
+      "byte_length": 128
+    },
+    {
+      "name": "encoder.layer.0.ffn.norm.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 60160,
+      "byte_length": 128
+    },
+    {
+      "name": "encoder.layer.1.attn.q.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 60416,
+      "byte_length": 4096
+    },
+    {
+      "name": "encoder.layer.1.attn.q.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 64512,
+      "byte_length": 128
+    },
+    {
+      "name": "encoder.layer.1.attn.k.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 64768,
+      "byte_length": 4096
+    },
+    {
+      "name": "encoder.layer.1.attn.k.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 68864,
+      "byte_length": 128
+    },
+    {
+      "name": "encoder.layer.1.attn.v.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 69120,
+      "byte_length": 4096
+    },
+    {
+      "name": "encoder.layer.1.attn.v.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 73216,
+      "byte_length": 128
+    },
+    {
+      "name": "encoder.layer.1.attn.o.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 73472,
+      "byte_length": 4096
+    },
+    {
+      "name": "encoder.layer.1.attn.o.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 77568,
+      "byte_length": 128
+    },
+    {
+      "name": "encoder.layer.1.attn.norm.weight",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 77824,
+      "byte_length": 128
+    },
+    {
+      "name": "encoder.layer.1.attn.norm.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 78080,
+      "byte_length": 128
+    },
+    {
+      "name": "encoder.layer.1.ffn.up.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        64
+      ],
+      "offset": 78336,
+      "byte_length": 8192
+    },
+    {
+      "name": "encoder.layer.1.ffn.up.bias",
+      "dtype": "F32",
+      "shape": [
+        64
+      ],
+      "offset": 86528,
+      "byte_length": 256
+    },
+    {
+      "name": "encoder.layer.1.ffn.down.weight",
+      "dtype": "F32",
+      "shape": [
+        64,
+        32
+      ],
+      "offset": 86784,
+      "byte_length": 8192
+    },
+    {
+      "name": "encoder.layer.1.ffn.down.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 94976,
+      "byte_length": 128
+    },
+    {
+      "name": "encoder.layer.1.ffn.norm.weight",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 95232,
+      "byte_length": 128
+    },
+    {
+      "name": "encoder.layer.1.ffn.norm.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 95488,
+      "byte_length": 128
+    },
+    {
+      "name": "schema.embeddings.segment_kind.weight",
+      "dtype": "F32",
+      "shape": [
+        10,
+        32
+      ],
+      "offset": 95744,
+      "byte_length": 1280
+    },
+    {
+      "name": "schema.embeddings.tool_index.weight",
+      "dtype": "F32",
+      "shape": [
+        5,
+        32
+      ],
+      "offset": 97024,
+      "byte_length": 640
+    },
+    {
+      "name": "schema.embeddings.norm.weight",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 97792,
+      "byte_length": 128
+    },
+    {
+      "name": "schema.embeddings.norm.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 98048,
+      "byte_length": 128
+    },
+    {
+      "name": "schema.layer.0.attn.q.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 98304,
+      "byte_length": 4096
+    },
+    {
+      "name": "schema.layer.0.attn.q.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 102400,
+      "byte_length": 128
+    },
+    {
+      "name": "schema.layer.0.attn.k.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 102656,
+      "byte_length": 4096
+    },
+    {
+      "name": "schema.layer.0.attn.k.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 106752,
+      "byte_length": 128
+    },
+    {
+      "name": "schema.layer.0.attn.v.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 107008,
+      "byte_length": 4096
+    },
+    {
+      "name": "schema.layer.0.attn.v.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 111104,
+      "byte_length": 128
+    },
+    {
+      "name": "schema.layer.0.attn.o.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 111360,
+      "byte_length": 4096
+    },
+    {
+      "name": "schema.layer.0.attn.o.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 115456,
+      "byte_length": 128
+    },
+    {
+      "name": "schema.layer.0.attn.norm.weight",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 115712,
+      "byte_length": 128
+    },
+    {
+      "name": "schema.layer.0.attn.norm.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 115968,
+      "byte_length": 128
+    },
+    {
+      "name": "schema.layer.0.ffn.up.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        64
+      ],
+      "offset": 116224,
+      "byte_length": 8192
+    },
+    {
+      "name": "schema.layer.0.ffn.up.bias",
+      "dtype": "F32",
+      "shape": [
+        64
+      ],
+      "offset": 124416,
+      "byte_length": 256
+    },
+    {
+      "name": "schema.layer.0.ffn.down.weight",
+      "dtype": "F32",
+      "shape": [
+        64,
+        32
+      ],
+      "offset": 124672,
+      "byte_length": 8192
+    },
+    {
+      "name": "schema.layer.0.ffn.down.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 132864,
+      "byte_length": 128
+    },
+    {
+      "name": "schema.layer.0.ffn.norm.weight",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 133120,
+      "byte_length": 128
+    },
+    {
+      "name": "schema.layer.0.ffn.norm.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 133376,
+      "byte_length": 128
+    },
+    {
+      "name": "fusion.no_tool.embedding",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 133632,
+      "byte_length": 128
+    },
+    {
+      "name": "fusion.block.0.self.q.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 133888,
+      "byte_length": 4096
+    },
+    {
+      "name": "fusion.block.0.self.q.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 137984,
+      "byte_length": 128
+    },
+    {
+      "name": "fusion.block.0.self.k.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 138240,
+      "byte_length": 4096
+    },
+    {
+      "name": "fusion.block.0.self.k.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 142336,
+      "byte_length": 128
+    },
+    {
+      "name": "fusion.block.0.self.v.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 142592,
+      "byte_length": 4096
+    },
+    {
+      "name": "fusion.block.0.self.v.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 146688,
+      "byte_length": 128
+    },
+    {
+      "name": "fusion.block.0.self.o.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 146944,
+      "byte_length": 4096
+    },
+    {
+      "name": "fusion.block.0.self.o.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 151040,
+      "byte_length": 128
+    },
+    {
+      "name": "fusion.block.0.self.norm.weight",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 151296,
+      "byte_length": 128
+    },
+    {
+      "name": "fusion.block.0.self.norm.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 151552,
+      "byte_length": 128
+    },
+    {
+      "name": "fusion.block.0.cross.q.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 151808,
+      "byte_length": 4096
+    },
+    {
+      "name": "fusion.block.0.cross.q.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 155904,
+      "byte_length": 128
+    },
+    {
+      "name": "fusion.block.0.cross.k.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 156160,
+      "byte_length": 4096
+    },
+    {
+      "name": "fusion.block.0.cross.k.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 160256,
+      "byte_length": 128
+    },
+    {
+      "name": "fusion.block.0.cross.v.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 160512,
+      "byte_length": 4096
+    },
+    {
+      "name": "fusion.block.0.cross.v.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 164608,
+      "byte_length": 128
+    },
+    {
+      "name": "fusion.block.0.cross.o.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 164864,
+      "byte_length": 4096
+    },
+    {
+      "name": "fusion.block.0.cross.o.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 168960,
+      "byte_length": 128
+    },
+    {
+      "name": "fusion.block.0.cross.norm.weight",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 169216,
+      "byte_length": 128
+    },
+    {
+      "name": "fusion.block.0.cross.norm.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 169472,
+      "byte_length": 128
+    },
+    {
+      "name": "fusion.block.0.ffn.up.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        64
+      ],
+      "offset": 169728,
+      "byte_length": 8192
+    },
+    {
+      "name": "fusion.block.0.ffn.up.bias",
+      "dtype": "F32",
+      "shape": [
+        64
+      ],
+      "offset": 177920,
+      "byte_length": 256
+    },
+    {
+      "name": "fusion.block.0.ffn.down.weight",
+      "dtype": "F32",
+      "shape": [
+        64,
+        32
+      ],
+      "offset": 178176,
+      "byte_length": 8192
+    },
+    {
+      "name": "fusion.block.0.ffn.down.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 186368,
+      "byte_length": 128
+    },
+    {
+      "name": "fusion.block.0.ffn.norm.weight",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 186624,
+      "byte_length": 128
+    },
+    {
+      "name": "fusion.block.0.ffn.norm.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 186880,
+      "byte_length": 128
+    },
+    {
+      "name": "heads.action.dense.weight",
+      "dtype": "F32",
+      "shape": [
+        64,
+        32
+      ],
+      "offset": 187136,
+      "byte_length": 8192
+    },
+    {
+      "name": "heads.action.dense.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 195328,
+      "byte_length": 128
+    },
+    {
+      "name": "heads.action.out.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        3
+      ],
+      "offset": 195584,
+      "byte_length": 384
+    },
+    {
+      "name": "heads.action.out.bias",
+      "dtype": "F32",
+      "shape": [
+        3
+      ],
+      "offset": 196096,
+      "byte_length": 12
+    },
+    {
+      "name": "heads.tool.dense.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 196352,
+      "byte_length": 4096
+    },
+    {
+      "name": "heads.tool.dense.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 200448,
+      "byte_length": 128
+    },
+    {
+      "name": "heads.tool.out.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        1
+      ],
+      "offset": 200704,
+      "byte_length": 128
+    },
+    {
+      "name": "heads.tool.out.bias",
+      "dtype": "F32",
+      "shape": [
+        1
+      ],
+      "offset": 200960,
+      "byte_length": 4
+    },
+    {
+      "name": "heads.presence.dense.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 201216,
+      "byte_length": 4096
+    },
+    {
+      "name": "heads.presence.dense.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 205312,
+      "byte_length": 128
+    },
+    {
+      "name": "heads.presence.out.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        4
+      ],
+      "offset": 205568,
+      "byte_length": 512
+    },
+    {
+      "name": "heads.presence.out.bias",
+      "dtype": "F32",
+      "shape": [
+        4
+      ],
+      "offset": 206080,
+      "byte_length": 16
+    },
+    {
+      "name": "heads.span.start.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 206336,
+      "byte_length": 4096
+    },
+    {
+      "name": "heads.span.end.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 210432,
+      "byte_length": 4096
+    },
+    {
+      "name": "heads.enum.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 214528,
+      "byte_length": 4096
+    },
+    {
+      "name": "heads.boolean.out.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        2
+      ],
+      "offset": 218624,
+      "byte_length": 256
+    },
+    {
+      "name": "heads.boolean.out.bias",
+      "dtype": "F32",
+      "shape": [
+        2
+      ],
+      "offset": 218880,
+      "byte_length": 8
+    },
+    {
+      "name": "heads.numeric.unit.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        6
+      ],
+      "offset": 219136,
+      "byte_length": 768
+    },
+    {
+      "name": "heads.numeric.unit.bias",
+      "dtype": "F32",
+      "shape": [
+        6
+      ],
+      "offset": 219904,
+      "byte_length": 24
+    },
+    {
+      "name": "heads.numeric.magnitude.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        1
+      ],
+      "offset": 220160,
+      "byte_length": 128
+    },
+    {
+      "name": "heads.numeric.magnitude.bias",
+      "dtype": "F32",
+      "shape": [
+        1
+      ],
+      "offset": 220416,
+      "byte_length": 4
+    },
+    {
+      "name": "heads.datetime.relation.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        10
+      ],
+      "offset": 220672,
+      "byte_length": 1280
+    },
+    {
+      "name": "heads.datetime.relation.bias",
+      "dtype": "F32",
+      "shape": [
+        10
+      ],
+      "offset": 221952,
+      "byte_length": 40
+    },
+    {
+      "name": "heads.datetime.weekday.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        8
+      ],
+      "offset": 222208,
+      "byte_length": 1024
+    },
+    {
+      "name": "heads.datetime.weekday.bias",
+      "dtype": "F32",
+      "shape": [
+        8
+      ],
+      "offset": 223232,
+      "byte_length": 32
+    },
+    {
+      "name": "heads.datetime.daypart.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        6
+      ],
+      "offset": 223488,
+      "byte_length": 768
+    },
+    {
+      "name": "heads.datetime.daypart.bias",
+      "dtype": "F32",
+      "shape": [
+        6
+      ],
+      "offset": 224256,
+      "byte_length": 24
+    },
+    {
+      "name": "heads.datetime.month.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        13
+      ],
+      "offset": 224512,
+      "byte_length": 1664
+    },
+    {
+      "name": "heads.datetime.month.bias",
+      "dtype": "F32",
+      "shape": [
+        13
+      ],
+      "offset": 226304,
+      "byte_length": 52
+    }
+  ]
+}

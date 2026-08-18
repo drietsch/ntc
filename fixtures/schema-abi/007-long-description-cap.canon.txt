@@ -1,0 +1,8 @@
+TOOL 0
+DESC search the internal documentation index for pages matching a query string and return ranked results with snippets and metadata about each page including the last modified timestamp and the author and
+ARG 0 query
+TYPE TEXT
+REQUIRED 1
+ARG 1 limit
+TYPE INTEGER
+REQUIRED 0

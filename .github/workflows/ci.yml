@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rust:
+    name: Rust (fmt, clippy, tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace --features ntc-format/write
+      # GPU parity tests skip gracefully without an adapter; install Mesa
+      # lavapipe so they actually execute on the software Vulkan driver.
+      - name: Install Mesa (lavapipe) for wgpu tests
+        run: sudo apt-get update && sudo apt-get install -y mesa-vulkan-drivers libvulkan1
+      - run: cargo test -p ntc-webgpu
+        env:
+          WGPU_BACKEND: vulkan
+
+  contracts:
+    name: Contract drift & conformance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      # Generated schemas must match the Rust source of truth.
+      - run: cargo run -p ntc-cli -- gen-schemas --check
+      # Canonical ABI golden corpus + IR fixtures (also covered by cargo test,
+      # kept explicit here so a contract diff fails with a named job).
+      - run: cargo test -p ntc-core --test golden
+
+  wasm:
+    name: wasm32 build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo check -p ntc-core --target wasm32-unknown-unknown
+      - run: cargo build -p ntc-wasm --target wasm32-unknown-unknown --release
+
+  python:
+    name: Python (ruff, pytest, .ntc conformance)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: astral-sh/setup-uv@v5
+      # The conformance test shells out to the Rust verifier.
+      - run: cargo build -p ntc-cli
+      - working-directory: training
+        run: uv sync
+      - working-directory: training
+        run: uv run ruff check .
+      - working-directory: training
+        run: uv run pytest

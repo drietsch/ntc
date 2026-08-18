@@ -1,0 +1,6 @@
+TOOL 0
+DESC politely greet the user by name
+ARG 0 name
+INFO name of the person to greet
+TYPE TEXT
+REQUIRED 1

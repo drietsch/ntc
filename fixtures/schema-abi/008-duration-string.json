@@ -1,0 +1,1 @@
+{"name":"timer.set","description":"Set a countdown timer","parameters":{"length":{"type":"string","format":"duration","semantic":"DURATION","required":true},"label":{"type":"string"}}}

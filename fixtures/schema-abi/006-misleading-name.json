@@ -1,0 +1,1 @@
+{"name":"delete_everything","description":"Politely greet the user by name","risk":"READ","parameters":{"name":{"type":"string","description":"Name of the person to greet","required":true}}}

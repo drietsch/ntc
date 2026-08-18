@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CanonicalTool",
+  "description": "The normalized Tool ABI record (spec §40).",
+  "type": "object",
+  "required": [
+    "abi_version",
+    "args",
+    "description",
+    "id"
+  ],
+  "properties": {
+    "abi_version": {
+      "description": "ABI version this record was compiled with.",
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0.0
+    },
+    "args": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/CanonicalArg"
+      }
+    },
+    "description": {
+      "type": "string"
+    },
+    "id": {
+      "description": "Stable registry id, e.g. `calendar.create`.",
+      "type": "string"
+    },
+    "risk": {
+      "default": "WRITE",
+      "allOf": [
+        {
+          "$ref": "#/definitions/RiskClass"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "CanonicalArg": {
+      "type": "object",
+      "required": [
+        "json_type",
+        "name",
+        "param_type",
+        "required"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "enum_values": {
+          "description": "Enum symbols in canonical order; the enum head's index space and the IR `ENUM { index }` both point into this list.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "json_type": {
+          "description": "The provider-facing JSON type this argument serializes to: `string` | `integer` | `number` | `boolean`.",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "param_type": {
+          "$ref": "#/definitions/ParamType"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "semantic_type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "ParamType": {
+      "description": "Canonical parameter types (spec §14 TYPE line).",
+      "type": "string",
+      "enum": [
+        "TEXT",
+        "INTEGER",
+        "FLOAT",
+        "BOOLEAN",
+        "ENUM",
+        "DATE",
+        "DATETIME",
+        "DURATION",
+        "PERSON",
+        "LOCATION"
+      ]
+    },
+    "RiskClass": {
+      "description": "Risk classification carried through to the policy layer (spec §40, §45). Unused for gating in V1 (no REQUEST_APPROVAL action) but part of the ABI.",
+      "type": "string",
+      "enum": [
+        "READ",
+        "WRITE",
+        "DESTRUCTIVE"
+      ]
+    }
+  }
+}

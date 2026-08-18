@@ -1,0 +1,28 @@
+/target
+**/*.rs.bk
+Cargo.lock.orig
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+uv.lock.orig
+*.egg-info/
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
+# Data & runs (large artifacts stay out of git)
+training/data/
+training/runs/
+wandb/
+*.safetensors
+*.ckpt
+
+# Editor
+.DS_Store
+.idea/
+.vscode/
+
+# Built wasm bundle (regenerate with examples/browser/build.sh)
+examples/browser/pkg/

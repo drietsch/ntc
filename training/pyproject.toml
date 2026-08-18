@@ -1,0 +1,34 @@
+[project]
+name = "ntc-training"
+version = "0.1.0"
+description = "NTC-Web training/eval workstream: contract models, .ntc exporter, PyTorch reference model, data engine skeleton."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "torch>=2.2",
+    "pydantic>=2",
+    "xxhash>=3.4",
+    "numpy>=1.26",
+    "pytest>=8",
+    "ruff>=0.4",
+    "jsonschema>=4.21",
+    "tokenizers>=0.19",
+]
+
+[tool.uv]
+# This is a workspace of top-level modules (ntc_contracts, ntc_model, export,
+# datasets, synthetic), not an installable distribution.
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "../eval/tests"]
+addopts = "--import-mode=importlib -q"
+# "." makes the training modules importable; ".." makes the repo root
+# importable so eval/ (a package) resolves as `eval.metrics` / `eval.harness`.
+pythonpath = [".", ".."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "UP", "B"]

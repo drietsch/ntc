@@ -1,0 +1,14 @@
+{
+  "ir_version": 1,
+  "action": "CALL",
+  "action_confidence": 0.998,
+  "tool": {"candidate_index": 2, "registry_id": "calendar.create", "confidence": 0.997},
+  "arguments": [
+    {"parameter": "title", "semantic_type": "STRING", "value": "Zahnarzttermin", "confidence": 0.995,
+     "provenance": {"source": "USER", "token_span": {"start": 7, "end": 9}}},
+    {"parameter": "start", "semantic_type": "RELATIVE_DATETIME",
+     "value": {"relation": "TOMORROW", "daypart": "AFTERNOON"}, "confidence": 0.981},
+    {"parameter": "duration", "semantic_type": "DURATION",
+     "value": {"magnitude": 1, "unit": "HOUR"}, "confidence": 0.994}
+  ]
+}

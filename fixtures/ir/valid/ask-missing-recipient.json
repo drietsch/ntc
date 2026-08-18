@@ -1,0 +1,9 @@
+{
+  "ir_version": 1,
+  "action": "ASK",
+  "action_confidence": 0.91,
+  "tool": {"candidate_index": 0, "registry_id": "email.send", "confidence": 0.88},
+  "unresolved": [
+    {"parameter": "recipient", "reason": "MISSING", "confidence": 0.86}
+  ]
+}

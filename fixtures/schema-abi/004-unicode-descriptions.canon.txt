@@ -1,0 +1,10 @@
+TOOL 0
+DESC prüfe die wettervorhersage für eine stadt. enthält überflüssige leerzeichen
+ARG 0 stadt
+INFO die stadt, z. b. münchen oder köln
+TYPE TEXT
+REQUIRED 1
+ARG 1 tage
+INFO anzahl der tage
+TYPE INTEGER
+REQUIRED 0

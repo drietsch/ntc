@@ -1,0 +1,1 @@
+{"name":"email.send","description":"Send an email to a recipient","parameters":{"type":"object","properties":{"recipient":{"type":"string","description":"Who receives the email"},"subject":{"type":"string"},"body":{"type":"string","description":"The message text"}},"required":["recipient","body"]}}

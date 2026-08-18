@@ -1,0 +1,23 @@
+[package]
+name = "ntc-webgpu"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+ntc-core.workspace = true
+ntc-model.workspace = true
+wgpu.workspace = true
+bytemuck.workspace = true
+half.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+ntc-model = { workspace = true, features = ["test-support"] }
+pollster.workspace = true
+naga = { workspace = true, features = ["wgsl-in"] }
+approx.workspace = true
+rand.workspace = true
+rand_chacha.workspace = true
+serde_json.workspace = true

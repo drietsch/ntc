@@ -1,0 +1,19 @@
+TOOL 0
+DESC create a calendar event
+ARG 0 title
+INFO event title
+TYPE TEXT
+REQUIRED 1
+ARG 1 start
+TYPE DATETIME
+REQUIRED 1
+ARG 2 duration_minutes
+TYPE INTEGER
+REQUIRED 0
+SEMANTIC DURATION
+ARG 3 priority
+TYPE ENUM
+REQUIRED 0
+ENUM 0 low
+ENUM 1 normal
+ENUM 2 high

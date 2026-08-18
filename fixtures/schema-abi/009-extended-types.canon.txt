@@ -1,0 +1,14 @@
+TOOL 0
+DESC assign an account to a sales person
+ARG 0 account
+TYPE TEXT
+REQUIRED 1
+ARG 1 owner
+TYPE PERSON
+REQUIRED 1
+ARG 2 region
+TYPE LOCATION
+REQUIRED 0
+ARG 3 active
+TYPE BOOLEAN
+REQUIRED 1

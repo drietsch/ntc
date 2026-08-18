@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CompileRequest",
+  "description": "The runtime's public compile input (spec §12, V1 subset).",
+  "type": "object",
+  "required": [
+    "utterance"
+  ],
+  "properties": {
+    "candidates": {
+      "description": "Registry ids of candidate tools, in candidate order (≤16 in V1). `None` = use all registered tools (error if more than 16).",
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string"
+      }
+    },
+    "context": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/RequestContext"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "locale": {
+      "description": "BCP-47, e.g. `de-DE`. Defaults to the compiler config.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "now": {
+      "description": "RFC 3339 override of \"now\" for deterministic resolution in tests/eval.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "timezone": {
+      "description": "IANA timezone, e.g. `Europe/Berlin`. Defaults to the compiler config.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "utterance": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "ContextEntity": {
+      "description": "A known conversational context entity (thin in V1).",
+      "type": "object",
+      "required": [
+        "display",
+        "id",
+        "kind"
+      ],
+      "properties": {
+        "display": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "description": "e.g. PERSON, LOCATION, EVENT",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "RequestContext": {
+      "type": "object",
+      "properties": {
+        "entities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ContextEntity"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

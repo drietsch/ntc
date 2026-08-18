@@ -1,0 +1,1 @@
+{"name":"wetter.abfrage","description":"Prüfe die Wettervorhersage für eine Stadt.  Enthält   überflüssige Leerzeichen.","parameters":{"stadt":{"type":"string","description":"Die Stadt, z. B. München oder Köln","required":true},"tage":{"type":"integer","description":"Anzahl der Tage"}}}

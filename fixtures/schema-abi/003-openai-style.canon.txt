@@ -1,0 +1,13 @@
+TOOL 0
+DESC send an email to a recipient
+ARG 0 recipient
+INFO who receives the email
+TYPE TEXT
+REQUIRED 1
+ARG 1 subject
+TYPE TEXT
+REQUIRED 0
+ARG 2 body
+INFO the message text
+TYPE TEXT
+REQUIRED 1

@@ -1,0 +1,23 @@
+[package]
+name = "ntc-format"
+description = "NTC-Web .ntc model container: normative reader, verifier, and (native, feature-gated) writer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[features]
+default = []
+# Writer is dev/tooling-only (fixture generation, conformance tests).
+write = []
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+sha2 = "0.10"
+xxhash-rust.workspace = true
+
+[dev-dependencies]
+rand.workspace = true
+rand_chacha.workspace = true

@@ -1,0 +1,729 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ActionIr",
+  "description": "The typed action program produced by the neural compiler and consumed by the deterministic backend.",
+  "type": "object",
+  "required": [
+    "action",
+    "action_confidence",
+    "ir_version"
+  ],
+  "properties": {
+    "action": {
+      "$ref": "#/definitions/ActionState"
+    },
+    "action_confidence": {
+      "description": "Calibrated confidence of the action-state decision, in `[0, 1]`.",
+      "type": "number",
+      "format": "float"
+    },
+    "arguments": {
+      "description": "Bound arguments; non-empty only for `CALL`.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ArgumentBinding"
+      }
+    },
+    "ir_version": {
+      "description": "Always [`crate::IR_VERSION`] for values produced by this crate.",
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0.0
+    },
+    "tool": {
+      "description": "Present iff `action == CALL`.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/ToolSelection"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "unresolved": {
+      "description": "Fields the model could not resolve; drives `ASK`.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/UnresolvedField"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "ActionState": {
+      "description": "V1 action states (spec §73; the full §3 set arrives in later phases).",
+      "type": "string",
+      "enum": [
+        "CALL",
+        "ASK",
+        "NO_CALL"
+      ]
+    },
+    "ArgumentBinding": {
+      "description": "A semantic value as predicted by the model — richer than JSON types so deterministic code can canonicalize exactly (spec §19).\n\nWire shape (adjacent tagging) matches spec §18: `{ \"semantic_type\": \"DURATION\", \"value\": { \"magnitude\": 1, \"unit\": \"HOUR\" } }`",
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "STRING"
+              ]
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "BOOLEAN"
+              ]
+            },
+            "value": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "INTEGER"
+              ]
+            },
+            "value": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "FLOAT"
+              ]
+            },
+            "value": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        },
+        {
+          "description": "Index + symbol into the canonical schema's enum-value list for the bound parameter. `index` is authoritative; `symbol` is redundancy the validator cross-checks.",
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "ENUM"
+              ]
+            },
+            "value": {
+              "type": "object",
+              "required": [
+                "index",
+                "symbol"
+              ],
+              "properties": {
+                "index": {
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0.0
+                },
+                "symbol": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "ABSOLUTE_DATE"
+              ]
+            },
+            "value": {
+              "$ref": "#/definitions/CivilDate"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "RELATIVE_DATE"
+              ]
+            },
+            "value": {
+              "type": "object",
+              "required": [
+                "relation"
+              ],
+              "properties": {
+                "offset": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/DurationValue"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "relation": {
+                  "$ref": "#/definitions/DateRelation"
+                },
+                "weekday": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/Weekday"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "description": "RFC 3339 timestamp, e.g. `2026-08-19T15:00:00+02:00`.",
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "ABSOLUTE_DATETIME"
+              ]
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "RELATIVE_DATETIME"
+              ]
+            },
+            "value": {
+              "type": "object",
+              "required": [
+                "relation"
+              ],
+              "properties": {
+                "daypart": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/Daypart"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "offset": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/DurationValue"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "relation": {
+                  "$ref": "#/definitions/DateRelation"
+                },
+                "time": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/CivilTime"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "weekday": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/Weekday"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "TIME_OF_DAY"
+              ]
+            },
+            "value": {
+              "$ref": "#/definitions/CivilTime"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "DAYPART"
+              ]
+            },
+            "value": {
+              "$ref": "#/definitions/Daypart"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "DURATION"
+              ]
+            },
+            "value": {
+              "$ref": "#/definitions/DurationValue"
+            }
+          }
+        },
+        {
+          "description": "Person reference by surface text in V1 (no context-entity resolution).",
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "PERSON_REF"
+              ]
+            },
+            "value": {
+              "type": "object",
+              "required": [
+                "text"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "LOCATION"
+              ]
+            },
+            "value": {
+              "type": "object",
+              "required": [
+                "text"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "required": [
+        "confidence",
+        "parameter"
+      ],
+      "properties": {
+        "confidence": {
+          "description": "Calibrated confidence of this binding, in `[0, 1]`.",
+          "type": "number",
+          "format": "float"
+        },
+        "parameter": {
+          "description": "Parameter name as declared in the canonical tool schema.",
+          "type": "string"
+        },
+        "provenance": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Provenance"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "CivilDate": {
+      "type": "object",
+      "required": [
+        "day",
+        "month",
+        "year"
+      ],
+      "properties": {
+        "day": {
+          "description": "1–31",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "month": {
+          "description": "1–12",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "year": {
+          "type": "integer",
+          "format": "int16"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CivilTime": {
+      "type": "object",
+      "required": [
+        "hour",
+        "minute"
+      ],
+      "properties": {
+        "hour": {
+          "description": "0–23",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "minute": {
+          "description": "0–59",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        }
+      },
+      "additionalProperties": false
+    },
+    "DateRelation": {
+      "description": "Fixed vocabulary of relative-date relations. Index assignments (for the datetime head) live in the head codec; this enum is the IR-side vocabulary.",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "TODAY",
+            "TOMORROW",
+            "YESTERDAY"
+          ]
+        },
+        {
+          "description": "e.g. \"this Friday\"",
+          "type": "string",
+          "enum": [
+            "THIS"
+          ]
+        },
+        {
+          "description": "e.g. \"next Friday\"",
+          "type": "string",
+          "enum": [
+            "NEXT"
+          ]
+        },
+        {
+          "description": "e.g. \"last Friday\"",
+          "type": "string",
+          "enum": [
+            "LAST"
+          ]
+        },
+        {
+          "description": "e.g. \"in 3 days\" — magnitude/unit in `offset`",
+          "type": "string",
+          "enum": [
+            "IN"
+          ]
+        },
+        {
+          "description": "e.g. \"3 days ago\" — magnitude/unit in `offset`",
+          "type": "string",
+          "enum": [
+            "AGO"
+          ]
+        }
+      ]
+    },
+    "Daypart": {
+      "type": "string",
+      "enum": [
+        "MORNING",
+        "NOON",
+        "AFTERNOON",
+        "EVENING",
+        "NIGHT"
+      ]
+    },
+    "DurationUnit": {
+      "type": "string",
+      "enum": [
+        "SECOND",
+        "MINUTE",
+        "HOUR",
+        "DAY",
+        "WEEK"
+      ]
+    },
+    "DurationValue": {
+      "type": "object",
+      "required": [
+        "magnitude",
+        "unit"
+      ],
+      "properties": {
+        "magnitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "unit": {
+          "$ref": "#/definitions/DurationUnit"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Provenance": {
+      "type": "object",
+      "required": [
+        "source"
+      ],
+      "properties": {
+        "source": {
+          "$ref": "#/definitions/ProvenanceSource"
+        },
+        "token_span": {
+          "description": "`[start, end)` token indices over the tokenized utterance.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TokenSpan"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "ProvenanceSource": {
+      "description": "Where a bound value came from.",
+      "oneOf": [
+        {
+          "description": "Extracted from the user utterance (span points into its tokens).",
+          "type": "string",
+          "enum": [
+            "USER"
+          ]
+        },
+        {
+          "description": "Resolved from conversational context entities.",
+          "type": "string",
+          "enum": [
+            "CONTEXT"
+          ]
+        },
+        {
+          "description": "Inferred by the model without a source span.",
+          "type": "string",
+          "enum": [
+            "MODEL"
+          ]
+        }
+      ]
+    },
+    "TokenSpan": {
+      "type": "object",
+      "required": [
+        "end",
+        "start"
+      ],
+      "properties": {
+        "end": {
+          "description": "Exclusive.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "start": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      },
+      "additionalProperties": false
+    },
+    "ToolSelection": {
+      "type": "object",
+      "required": [
+        "candidate_index",
+        "confidence",
+        "registry_id"
+      ],
+      "properties": {
+        "candidate_index": {
+          "description": "Index into the candidate set given to the model (0..15 in V1).",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "confidence": {
+          "description": "Calibrated confidence of the tool selection, in `[0, 1]`.",
+          "type": "number",
+          "format": "float"
+        },
+        "registry_id": {
+          "description": "Stable registry id of the selected tool, e.g. `calendar.create`.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "UnresolvedField": {
+      "type": "object",
+      "required": [
+        "confidence",
+        "parameter",
+        "reason"
+      ],
+      "properties": {
+        "confidence": {
+          "type": "number",
+          "format": "float"
+        },
+        "parameter": {
+          "type": "string"
+        },
+        "reason": {
+          "$ref": "#/definitions/UnresolvedReason"
+        }
+      },
+      "additionalProperties": false
+    },
+    "UnresolvedReason": {
+      "description": "Why an argument is unresolved (V1 subset of spec §16.3).",
+      "type": "string",
+      "enum": [
+        "MISSING",
+        "AMBIGUOUS"
+      ]
+    },
+    "Weekday": {
+      "type": "string",
+      "enum": [
+        "MONDAY",
+        "TUESDAY",
+        "WEDNESDAY",
+        "THURSDAY",
+        "FRIDAY",
+        "SATURDAY",
+        "SUNDAY"
+      ]
+    }
+  }
+}

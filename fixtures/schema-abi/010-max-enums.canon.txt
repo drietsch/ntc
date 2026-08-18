@@ -1,0 +1,17 @@
+TOOL 0
+DESC set the accent color
+ARG 0 color
+TYPE ENUM
+REQUIRED 1
+ENUM 0 red
+ENUM 1 orange
+ENUM 2 yellow
+ENUM 3 green
+ENUM 4 teal
+ENUM 5 blue
+ENUM 6 indigo
+ENUM 7 violet
+ENUM 8 pink
+ENUM 9 brown
+ENUM 10 black
+ENUM 11 white

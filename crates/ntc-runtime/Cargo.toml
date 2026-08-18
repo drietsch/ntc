@@ -1,0 +1,21 @@
+[package]
+name = "ntc-runtime"
+description = "NTC-Web deterministic runtime: head decoding, normalization, policy, JSON adapter, compiler orchestration"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+ntc-core.workspace = true
+ntc-format.workspace = true
+ntc-model.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+schemars.workspace = true
+jiff.workspace = true
+
+[dev-dependencies]
+ntc-model = { workspace = true, features = ["test-support"] }
+ntc-format = { workspace = true, features = ["write"] }

@@ -1,0 +1,23 @@
+# Cross-implementation numerical tolerance policy (single source, read by both
+# the Rust parity tests and eval/parity Python tools).
+#
+# The HARD GATE is decision parity: predicted action, tool index, presence
+# classes, enum indices, span (start, end), and datetime fields must match the
+# CPU reference 100% across the fixture set. Element tolerances below are
+# trend/debug metrics with generous headroom for GPU accumulation-order
+# variance; tighten empirically.
+
+[f32]                      # portable f32 kernels vs CPU reference
+activation_atol = 1.0e-4
+activation_rtol = 1.0e-3
+logit_atol = 1.0e-3
+logit_rtol = 5.0e-3
+
+[f16]                      # f16-storage / shader-f16 fast path vs CPU reference
+activation_atol = 5.0e-3
+activation_rtol = 1.0e-2
+logit_atol = 1.0e-2
+logit_rtol = 2.0e-2
+
+[decision]
+required_agreement = 1.0   # 100% on fixtures; ≥0.999 on full eval sets (IC-2.5)

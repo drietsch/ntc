@@ -1,0 +1,18 @@
+[package]
+name = "ntc-core"
+description = "NTC-Web core: Typed Action IR, Tool ABI + schema compiler, registry, validation, tokenizer wrapper"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+schemars.workspace = true
+thiserror.workspace = true
+tokenizers.workspace = true
+unicode-normalization = "0.1"
+
+[dev-dependencies]
+approx.workspace = true
