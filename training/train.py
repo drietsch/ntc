@@ -50,7 +50,7 @@ def mini_config(vocab: int) -> NtcArchConfig:
         max_tools=8,
         max_args=8,
         max_enum_values=4,
-        max_utterance_tokens=48,
+        max_utterance_tokens=64,
         max_schema_tokens=144,
     )
 

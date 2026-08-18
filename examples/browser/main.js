@@ -112,7 +112,8 @@ const EXAMPLES = {
   ],
   de: [
     "plane einen zahnarzttermin morgen nachmittag für eine stunde",
-    "schalte das licht im wohnzimmer aus",
+    "Drehe das Licht im Wohnzimmer ab!",
+    "Mach das Licht in der Küche an.",
     "stell einen timer auf eineinhalb stunden",
     "was macht das timer-tool?",
   ],

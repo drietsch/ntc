@@ -1,4 +1,74 @@
 [
-  {"name":"calendar.create","description":"create a calendar event","parameters":{"title":{"type":"string","required":true},"start":{"type":"string","format":"date-time","required":true},"duration_minutes":{"type":"integer","semantic":"DURATION"}}},
-  {"name":"email.send","description":"send an email","parameters":{"recipient":{"type":"string","required":true},"subject":{"type":"string"}}}
+  {
+    "name": "calendar.create",
+    "description": "Create a calendar event",
+    "parameters": {
+      "title": {
+        "type": "string",
+        "description": "event title",
+        "required": true
+      },
+      "start": {
+        "type": "string",
+        "format": "date-time",
+        "required": true
+      },
+      "duration_minutes": {
+        "type": "integer",
+        "semantic": "DURATION",
+        "description": "length of the event"
+      }
+    }
+  },
+  {
+    "name": "email.send",
+    "description": "Send an email to somebody",
+    "parameters": {
+      "recipient": {
+        "type": "string",
+        "description": "who receives it",
+        "required": true
+      },
+      "subject": {
+        "type": "string",
+        "description": "what it is about"
+      }
+    }
+  },
+  {
+    "name": "timer.set",
+    "description": "Start a countdown timer",
+    "parameters": {
+      "length": {
+        "type": "string",
+        "format": "duration",
+        "semantic": "DURATION",
+        "description": "how long the timer runs",
+        "required": true
+      },
+      "label": {
+        "type": "string",
+        "description": "name of the timer"
+      }
+    }
+  },
+  {
+    "name": "light.set",
+    "description": "Switch a light on or off",
+    "parameters": {
+      "room": {
+        "type": "string",
+        "description": "which room",
+        "required": true
+      },
+      "state": {
+        "type": "string",
+        "enum": [
+          "on",
+          "off"
+        ],
+        "required": true
+      }
+    }
+  }
 ]

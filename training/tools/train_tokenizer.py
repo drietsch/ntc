@@ -50,6 +50,10 @@ VECTOR_TEXTS = [
     "2026-08-19T15:00:00+02:00",
     "TOOL 7",
     "café münchen köln día señor",
+    "Drehe das Licht im Wohnzimmer ab!",
+    "Mach das Licht in der Küche an.",
+    "Schedule a Team Meeting tomorrow!",
+    "SET A TIMER FOR 90 MINUTES",
 ]
 
 
@@ -75,8 +79,14 @@ def build_corpus(data_dir: Path) -> list[str]:
 
 def train(corpus: list[str], vocab_size: int) -> Tokenizer:
     tok = Tokenizer(models.Unigram())
-    tok.normalizer = normalizers.NFC()
-    tok.pre_tokenizer = pre_tokenizers.Metaspace()
+    # Lowercase INSIDE the tokenizer config (the contract requires all
+    # normalization to live in tokenizer.json) — the model becomes
+    # case-insensitive while span resolution still returns the user's
+    # original casing. Punctuation splits keep "ab!" readable as "ab" "!".
+    tok.normalizer = normalizers.Sequence([normalizers.NFC(), normalizers.Lowercase()])
+    tok.pre_tokenizer = pre_tokenizers.Sequence(
+        [pre_tokenizers.Metaspace(), pre_tokenizers.Punctuation()]
+    )
     trainer = trainers.UnigramTrainer(
         vocab_size=vocab_size,
         special_tokens=SPECIALS,

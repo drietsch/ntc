@@ -401,18 +401,33 @@ def build_weather(lang: str, rng: random.Random) -> tuple[str, list[dict]]:
 def build_light(lang: str, rng: random.Random) -> tuple[str, list[dict]]:
     room = rng.choice(ROOMS[lang])
     on = rng.random() < 0.5
-    state_surface = {
-        "en": "on" if on else "off",
-        "de": "ein" if on else "aus",
-        "fr": "allume" if on else "éteins",
-        "es": "enciende" if on else "apaga",
-    }[lang]
-    parts: list[Part] = {
-        "en": ["turn ", (state_surface, "state"), " the light in the ", (room, "room")],
-        "de": ["schalte das licht im ", (room, "room"), " ", (state_surface, "state")],
-        "fr": [(state_surface, "state"), " la lumière dans la ", (room, "room")],
-        "es": [(state_surface, "state"), " la luz del ", (room, "room")],
-    }[lang]
+    # Several verb frames per language (schalten/machen/drehen, turn/switch,
+    # allumer/éteindre/couper …) so the surface form generalizes.
+    variants: list[list[Part]]
+    if lang == "en":
+        surface = "on" if on else "off"
+        variants = [
+            ["turn ", (surface, "state"), " the light in the ", (room, "room")],
+            ["switch ", (surface, "state"), " the light in the ", (room, "room")],
+            ["turn the light in the ", (room, "room"), " ", (surface, "state")],
+        ]
+    elif lang == "de":
+        variants = [
+            ["schalte das licht im ", (room, "room"), " ", ("ein" if on else "aus", "state")],
+            ["mach das licht im ", (room, "room"), " ", ("an" if on else "aus", "state")],
+            ["drehe das licht im ", (room, "room"), " ", ("auf" if on else "ab", "state")],
+            ["dreh das licht im ", (room, "room"), " ", ("auf" if on else "ab", "state")],
+        ]
+    elif lang == "fr":
+        variants = [
+            [("allume" if on else "éteins", "state"), " la lumière dans la ", (room, "room")],
+            [("allume" if on else "coupe", "state"), " la lumière dans la ", (room, "room")],
+        ]
+    else:
+        variants = [
+            [("enciende" if on else "apaga", "state"), " la luz del ", (room, "room")],
+        ]
+    parts = rng.choice(variants)
     text, spans = compose(*parts)
     enum_value = {"index": 0 if on else 1, "symbol": "on" if on else "off"}
     return text, [
@@ -626,6 +641,15 @@ def assemble(
     return ex
 
 
+def punctuate(rng: random.Random, utterance: str) -> str:
+    r = rng.random()
+    if r < 0.25:
+        return utterance + "!"
+    if r < 0.4:
+        return utterance + "."
+    return utterance
+
+
 def generate(seed: int = 7, per_domain_lang: int = 30) -> list[dict]:
     rng = random.Random(seed)
     examples: list[dict] = []
@@ -637,6 +661,7 @@ def generate(seed: int = 7, per_domain_lang: int = 30) -> list[dict]:
             for i in range(per_domain_lang):
                 split = "train" if i < per_domain_lang - 6 else ("dev" if i % 2 == 0 else "test")
                 utterance, args = builder(lang, rng)
+                utterance = punctuate(rng, utterance)
                 examples.append(
                     assemble(rng, lang, tool_name, utterance, args, [], "CALL", split, ["call"])
                 )
