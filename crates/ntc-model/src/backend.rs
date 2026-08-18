@@ -36,3 +36,14 @@ impl HeadOutputs {
 pub trait Backend {
     fn run(&mut self, inputs: &ModelInputs) -> Result<HeadOutputs, NtcError>;
 }
+
+/// Async execution contract for hosts without blocking GPU readback
+/// (wasm/WebGPU: `map_async` resolves via the browser event loop, so the
+/// whole inference must be awaited). Native backends implement it trivially
+/// by wrapping [`Backend::run`].
+pub trait AsyncBackend {
+    fn run_async(
+        &mut self,
+        inputs: &ModelInputs,
+    ) -> impl std::future::Future<Output = Result<HeadOutputs, NtcError>>;
+}

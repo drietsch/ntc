@@ -18,7 +18,7 @@ pub mod ops;
 pub mod tensor;
 pub mod weights;
 
-pub use backend::{Backend, HeadOutputs};
+pub use backend::{AsyncBackend, Backend, HeadOutputs};
 pub use config::NtcArchConfig;
 pub use cpu::CpuRefBackend;
 pub use inputs::{ModelInputs, SegmentKind};

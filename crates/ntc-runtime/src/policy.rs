@@ -44,6 +44,21 @@ impl ConfidencePolicy {
         }
 
         if let (ActionState::Call, Some(tool)) = (ir.action, tool) {
+            // Fail closed (spec §46): a required argument that is neither
+            // bound nor already unresolved becomes unresolved MISSING — the
+            // CALL degrades to ASK below instead of failing validation.
+            for arg in tool.args.iter().filter(|a| a.required) {
+                let bound = ir.arguments.iter().any(|b| b.parameter == arg.name);
+                let listed = ir.unresolved.iter().any(|u| u.parameter == arg.name);
+                if !bound && !listed {
+                    ir.unresolved.push(UnresolvedField {
+                        parameter: arg.name.clone(),
+                        reason: UnresolvedReason::Missing,
+                        confidence: 0.0,
+                    });
+                }
+            }
+
             let mut demoted: Vec<UnresolvedField> = vec![];
             ir.arguments.retain(|b| {
                 let required = tool.arg(&b.parameter).map(|a| a.required).unwrap_or(false);

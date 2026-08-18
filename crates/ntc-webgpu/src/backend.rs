@@ -304,8 +304,13 @@ fn record_transformer_layer(
     record_ffn_block(exec, wbufs, enc, prefix, &states, len, h, f, eps)
 }
 
-impl Backend for WgpuBackend {
-    fn run(&mut self, inputs: &ModelInputs) -> Result<HeadOutputs, NtcError> {
+impl WgpuBackend {
+    /// Record the full forward pass; returns the encoder plus the
+    /// user/fused state buffers to read back.
+    fn record_forward(
+        &mut self,
+        inputs: &ModelInputs,
+    ) -> Result<(wgpu::CommandEncoder, wgpu::Buffer, wgpu::Buffer), NtcError> {
         let cfg = self.cfg.clone();
         let h = cfg.hidden;
         let f = cfg.ffn;
@@ -313,8 +318,7 @@ impl Backend for WgpuBackend {
         let eps = cfg.layer_norm_eps;
         let ls = cfg.max_schema_tokens;
         let lu = cfg.max_utterance_tokens;
-        let a = cfg.max_args;
-        let e = cfg.max_enum_values;
+
         let n_tools = inputs.tools.len();
 
         // CPU embedding sums (pre-LayerNorm).
@@ -466,10 +470,23 @@ impl Backend for WgpuBackend {
             fused = record_ffn_block(exec, wbufs, &mut enc, &p, &fused, s_len, h, f, eps)?;
         }
 
-        // 4. Read back user + fused states; heads run on CPU.
-        let mut res = exec.read_back(enc, &[(&user, lu * h), (&fused, s_len * h)])?;
-        let fused = Tensor::from_vec(&[s_len, h], res.pop().expect("fused states"));
-        let user_states = Tensor::from_vec(&[lu, h], res.pop().expect("user states"));
+        Ok((enc, user, fused))
+    }
+
+    /// CPU head decode over read-back states (mirrors `CpuRefBackend`).
+    fn decode_heads(
+        &self,
+        inputs: &ModelInputs,
+        user_states: Tensor,
+        fused: Tensor,
+    ) -> Result<HeadOutputs, NtcError> {
+        let cfg = &self.cfg;
+        let h = cfg.hidden;
+        let ls = cfg.max_schema_tokens;
+        let lu = cfg.max_utterance_tokens;
+        let a = cfg.max_args;
+        let e = cfg.max_enum_values;
+        let n_tools = inputs.tools.len();
 
         let state_at = |idx: usize| -> &[f32] { &fused.data[idx * h..(idx + 1) * h] };
         let user_cls = &user_states.data[0..h];
@@ -580,5 +597,44 @@ impl Backend for WgpuBackend {
         out.insert("datetime.month.logits".into(), month);
 
         Ok(HeadOutputs { tensors: out })
+    }
+}
+
+impl Backend for WgpuBackend {
+    fn run(&mut self, inputs: &ModelInputs) -> Result<HeadOutputs, NtcError> {
+        let (enc, user, fused) = self.record_forward(inputs)?;
+        let (h, ls, lu) = (
+            self.cfg.hidden,
+            self.cfg.max_schema_tokens,
+            self.cfg.max_utterance_tokens,
+        );
+        let s_len = inputs.tools.len() * ls + 1;
+        let mut res = self
+            .exec
+            .read_back(enc, &[(&user, lu * h), (&fused, s_len * h)])?;
+        let fused = Tensor::from_vec(&[s_len, h], res.pop().expect("fused states"));
+        let user_states = Tensor::from_vec(&[lu, h], res.pop().expect("user states"));
+        self.decode_heads(inputs, user_states, fused)
+    }
+}
+
+impl ntc_model::AsyncBackend for WgpuBackend {
+    /// Awaitable inference for wasm/WebGPU hosts (readback resolves via
+    /// the browser event loop).
+    async fn run_async(&mut self, inputs: &ModelInputs) -> Result<HeadOutputs, NtcError> {
+        let (enc, user, fused) = self.record_forward(inputs)?;
+        let (h, ls, lu) = (
+            self.cfg.hidden,
+            self.cfg.max_schema_tokens,
+            self.cfg.max_utterance_tokens,
+        );
+        let s_len = inputs.tools.len() * ls + 1;
+        let mut res = self
+            .exec
+            .read_back_async(enc, &[(&user, lu * h), (&fused, s_len * h)])
+            .await?;
+        let fused = Tensor::from_vec(&[s_len, h], res.pop().expect("fused states"));
+        let user_states = Tensor::from_vec(&[lu, h], res.pop().expect("user states"));
+        self.decode_heads(inputs, user_states, fused)
     }
 }

@@ -33,3 +33,30 @@ pub mod kernels {
         ("attn_ctx.wgsl", ATTN_CTX),
     ];
 }
+
+use ntc_core::NtcError;
+
+/// Load a `.ntc` model onto the WebGPU backend and wrap it in the runtime
+/// compiler. Async: adapter/device acquisition awaits the platform (browser
+/// WebGPU or native).
+pub async fn load_gpu(
+    model_bytes: &[u8],
+    config: ntc_runtime::CompilerConfig,
+) -> Result<ntc_runtime::NeuralToolCompiler<WgpuBackend>, NtcError> {
+    let file =
+        ntc_format::NtcFile::parse(model_bytes).map_err(|e| NtcError::Format(e.to_string()))?;
+    if file.metadata.architecture != ntc_model::ARCHITECTURE {
+        return Err(NtcError::Format(format!(
+            "unsupported architecture `{}`",
+            file.metadata.architecture
+        )));
+    }
+    let arch = ntc_model::NtcArchConfig::from_metadata(&file.metadata.model)?;
+    let weights = ntc_model::ModelWeights::from_ntc(&file, &arch)?;
+    let tokenizer = ntc_core::tokenizer::NtcTokenizer::from_bytes(file.tokenizer_bytes)?;
+    let ctx = WgpuContext::new().await?;
+    let backend = WgpuBackend::new(arch.clone(), &weights, ctx)?;
+    Ok(ntc_runtime::NeuralToolCompiler::from_parts(
+        arch, tokenizer, backend, config,
+    ))
+}

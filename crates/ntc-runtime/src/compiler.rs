@@ -148,8 +148,20 @@ impl<B: Backend> NeuralToolCompiler<B> {
         Ok(serde_json::Value::Object(map))
     }
 
-    pub fn compile(&mut self, req: &CompileRequest) -> Result<CompileOutcome, NtcError> {
-        // 1. Candidate set (V1: caller-supplied or whole registry ≤ 16).
+    /// Steps 1–2 of the pipeline: candidate resolution, tokenization,
+    /// packing. Returns owned data so the backend call can borrow `self`
+    /// mutably afterwards.
+    fn prepare(
+        &self,
+        req: &CompileRequest,
+    ) -> Result<
+        (
+            Vec<ntc_core::ToolId>,
+            ntc_core::tokenizer::TokenSeq,
+            ModelInputs,
+        ),
+        NtcError,
+    > {
         let limit = self.arch.max_tools.min(ntc_core::registry::MAX_CANDIDATES);
         let candidate_ids = self
             .registry
@@ -164,20 +176,29 @@ impl<B: Backend> NeuralToolCompiler<B> {
             .iter()
             .map(|&id| self.registry.get(id).expect("resolved id exists"))
             .collect();
-
-        // 2. Tokenize + pack.
         let utterance = self.tokenizer.encode_utterance(&req.utterance)?;
         let inputs = ModelInputs::pack(&self.arch, &self.tokenizer, &utterance, &candidates)?;
+        Ok((candidate_ids, utterance, inputs))
+    }
 
-        // 3. Neural inference.
-        let outputs = self.backend.run(&inputs)?;
-
-        // 4. Decode.
+    /// Steps 4–6: decode, policy, validation, serialization.
+    fn postprocess(
+        &self,
+        req: &CompileRequest,
+        candidate_ids: &[ntc_core::ToolId],
+        utterance: &ntc_core::tokenizer::TokenSeq,
+        inputs: &ModelInputs,
+        outputs: &ntc_model::HeadOutputs,
+    ) -> Result<CompileOutcome, NtcError> {
+        let candidates: Vec<&CanonicalTool> = candidate_ids
+            .iter()
+            .map(|&id| self.registry.get(id).expect("resolved id exists"))
+            .collect();
         let cal = &self.arch.calibration;
         let decoder = Decoder {
-            outputs: &outputs,
-            inputs: &inputs,
-            utterance: &utterance,
+            outputs,
+            inputs,
+            utterance,
             utterance_text: &req.utterance,
             candidates: &candidates,
             action_temperature: cal.action,
@@ -187,7 +208,6 @@ impl<B: Backend> NeuralToolCompiler<B> {
         };
         let mut ir = decoder.decode()?;
 
-        // 5. Policy.
         let selected = ir
             .tool
             .as_ref()
@@ -198,7 +218,6 @@ impl<B: Backend> NeuralToolCompiler<B> {
             .as_ref()
             .map(|t| candidates[t.candidate_index as usize]);
 
-        // 6. Validate + serialize.
         match ir.action {
             ActionState::Call => {
                 let tool = selected.expect("policy guarantees a tool for CALL");
@@ -215,6 +234,12 @@ impl<B: Backend> NeuralToolCompiler<B> {
             }),
             ActionState::NoCall => Ok(CompileOutcome::NoCall { ir }),
         }
+    }
+
+    pub fn compile(&mut self, req: &CompileRequest) -> Result<CompileOutcome, NtcError> {
+        let (ids, utterance, inputs) = self.prepare(req)?;
+        let outputs = self.backend.run(&inputs)?;
+        self.postprocess(req, &ids, &utterance, &inputs, &outputs)
     }
 
     fn now_and_tz(&self, req: &CompileRequest) -> Result<(Timestamp, TimeZone), NtcError> {
@@ -361,6 +386,19 @@ fn iso8601_duration(d: &ntc_core::ir::DurationValue) -> String {
         out.push_str(&format!("{s}S"));
     }
     out
+}
+
+impl<B: Backend + ntc_model::AsyncBackend> NeuralToolCompiler<B> {
+    /// Async variant of [`Self::compile`] for hosts where GPU readback must
+    /// be awaited (wasm/WebGPU).
+    pub async fn compile_async(
+        &mut self,
+        req: &CompileRequest,
+    ) -> Result<CompileOutcome, NtcError> {
+        let (ids, utterance, inputs) = self.prepare(req)?;
+        let outputs = self.backend.run_async(&inputs).await?;
+        self.postprocess(req, &ids, &utterance, &inputs, &outputs)
+    }
 }
 
 #[cfg(test)]

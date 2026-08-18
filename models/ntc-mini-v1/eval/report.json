@@ -1,0 +1,747 @@
+{
+  "dev": {
+    "metrics": {
+      "all": {
+        "n": 112,
+        "n_examples": 112,
+        "exact_match": 0.9553571428571429,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 0.9733333333333334,
+        "hallucinated_arg_rate": 0.006756756756756757,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E03": 3,
+          "E04": 1,
+          "E05": 1
+        }
+      },
+      "lang:de": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.9642857142857143,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 0.9736842105263158,
+        "hallucinated_arg_rate": 0.0,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E03": 1
+        }
+      },
+      "lang:en": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.9642857142857143,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 0.9722222222222222,
+        "hallucinated_arg_rate": 0.0,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E05": 1
+        }
+      },
+      "lang:es": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.9285714285714286,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 0.9736842105263158,
+        "hallucinated_arg_rate": 0.02631578947368421,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E03": 1,
+          "E04": 1
+        }
+      },
+      "lang:fr": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.9642857142857143,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 0.9736842105263158,
+        "hallucinated_arg_rate": 0.0,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E03": 1
+        }
+      },
+      "seen×de": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.9642857142857143,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 0.9736842105263158,
+        "hallucinated_arg_rate": 0.0,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E03": 1
+        }
+      },
+      "seen×en": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.9642857142857143,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 0.9722222222222222,
+        "hallucinated_arg_rate": 0.0,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E05": 1
+        }
+      },
+      "seen×es": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.9285714285714286,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 0.9736842105263158,
+        "hallucinated_arg_rate": 0.02631578947368421,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E03": 1,
+          "E04": 1
+        }
+      },
+      "seen×fr": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.9642857142857143,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 0.9736842105263158,
+        "hallucinated_arg_rate": 0.0,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E03": 1
+        }
+      },
+      "split:seen": {
+        "n": 112,
+        "n_examples": 112,
+        "exact_match": 0.9553571428571429,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 0.9733333333333334,
+        "hallucinated_arg_rate": 0.006756756756756757,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E03": 3,
+          "E04": 1,
+          "E05": 1
+        }
+      },
+      "_infer_errors": 0
+    },
+    "ic25": {
+      "n": 112,
+      "action_agreement": 1.0,
+      "tool_agreement": 1.0,
+      "disagreements": []
+    }
+  },
+  "test": {
+    "metrics": {
+      "all": {
+        "n": 219,
+        "n_examples": 219,
+        "exact_match": 0.6210045662100456,
+        "tool_selection_accuracy": 0.6195652173913043,
+        "required_arg_accuracy": 0.6766917293233082,
+        "hallucinated_arg_rate": 0.0945273631840796,
+        "no_call_precision": 0.8421052631578947,
+        "no_call_recall": 1.0,
+        "no_call_f1": 0.9142857142857143,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E01": 60,
+          "E02": 10,
+          "E03": 8,
+          "E04": 3,
+          "E05": 2,
+          "E12": 57
+        }
+      },
+      "lang:de": {
+        "n": 50,
+        "n_examples": 50,
+        "exact_match": 0.58,
+        "tool_selection_accuracy": 0.6190476190476191,
+        "required_arg_accuracy": 0.6612903225806451,
+        "hallucinated_arg_rate": 0.046511627906976744,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E01": 15,
+          "E02": 1,
+          "E03": 5,
+          "E12": 15
+        }
+      },
+      "lang:en": {
+        "n": 54,
+        "n_examples": 54,
+        "exact_match": 0.6481481481481481,
+        "tool_selection_accuracy": 0.6363636363636364,
+        "required_arg_accuracy": 0.7,
+        "hallucinated_arg_rate": 0.12244897959183673,
+        "no_call_precision": 0.8571428571428571,
+        "no_call_recall": 1.0,
+        "no_call_f1": 0.923076923076923,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E01": 13,
+          "E02": 3,
+          "E03": 1,
+          "E04": 1,
+          "E05": 1,
+          "E12": 12
+        }
+      },
+      "lang:es": {
+        "n": 58,
+        "n_examples": 58,
+        "exact_match": 0.6206896551724138,
+        "tool_selection_accuracy": 0.6274509803921569,
+        "required_arg_accuracy": 0.7105263157894737,
+        "hallucinated_arg_rate": 0.14285714285714285,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E01": 14,
+          "E02": 5,
+          "E03": 1,
+          "E04": 2,
+          "E12": 14
+        }
+      },
+      "lang:fr": {
+        "n": 57,
+        "n_examples": 57,
+        "exact_match": 0.631578947368421,
+        "tool_selection_accuracy": 0.5957446808510638,
+        "required_arg_accuracy": 0.6323529411764706,
+        "hallucinated_arg_rate": 0.043478260869565216,
+        "no_call_precision": 0.6666666666666666,
+        "no_call_recall": 1.0,
+        "no_call_f1": 0.8,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E01": 18,
+          "E02": 1,
+          "E03": 1,
+          "E05": 1,
+          "E12": 16
+        }
+      },
+      "masked_names×de": {
+        "n": 6,
+        "n_examples": 6,
+        "exact_match": 0.5,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 0.6666666666666666,
+        "hallucinated_arg_rate": 0.0,
+        "no_call_precision": null,
+        "no_call_recall": null,
+        "no_call_f1": null,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E03": 3
+        }
+      },
+      "masked_names×en": {
+        "n": 10,
+        "n_examples": 10,
+        "exact_match": 0.9,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 0.9,
+        "hallucinated_arg_rate": 0.0,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": null,
+        "error_counts": {
+          "E05": 1
+        }
+      },
+      "masked_names×es": {
+        "n": 14,
+        "n_examples": 14,
+        "exact_match": 0.7142857142857143,
+        "tool_selection_accuracy": 0.8571428571428571,
+        "required_arg_accuracy": 0.8,
+        "hallucinated_arg_rate": 0.047619047619047616,
+        "no_call_precision": null,
+        "no_call_recall": null,
+        "no_call_f1": null,
+        "ask_accuracy": null,
+        "error_counts": {
+          "E01": 2,
+          "E03": 1,
+          "E04": 1,
+          "E12": 2
+        }
+      },
+      "masked_names×fr": {
+        "n": 13,
+        "n_examples": 13,
+        "exact_match": 0.6923076923076923,
+        "tool_selection_accuracy": 0.7,
+        "required_arg_accuracy": 0.5294117647058824,
+        "hallucinated_arg_rate": 0.0,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E01": 3,
+          "E05": 1,
+          "E12": 3
+        }
+      },
+      "seen×de": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.9285714285714286,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 0.9459459459459459,
+        "hallucinated_arg_rate": 0.0,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E03": 2
+        }
+      },
+      "seen×en": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.9285714285714286,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 0.9705882352941176,
+        "hallucinated_arg_rate": 0.029411764705882353,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E03": 1,
+          "E04": 1
+        }
+      },
+      "seen×es": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.9285714285714286,
+        "tool_selection_accuracy": 0.9523809523809523,
+        "required_arg_accuracy": 0.9714285714285714,
+        "hallucinated_arg_rate": 0.02857142857142857,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E01": 1,
+          "E04": 1,
+          "E12": 1
+        }
+      },
+      "seen×fr": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.9642857142857143,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 0.9714285714285714,
+        "hallucinated_arg_rate": 0.0,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E03": 1
+        }
+      },
+      "split:masked_names": {
+        "n": 43,
+        "n_examples": 43,
+        "exact_match": 0.7209302325581395,
+        "tool_selection_accuracy": 0.8611111111111112,
+        "required_arg_accuracy": 0.7213114754098361,
+        "hallucinated_arg_rate": 0.02127659574468085,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E01": 5,
+          "E03": 4,
+          "E04": 1,
+          "E05": 2,
+          "E12": 5
+        }
+      },
+      "split:seen": {
+        "n": 112,
+        "n_examples": 112,
+        "exact_match": 0.9375,
+        "tool_selection_accuracy": 0.9880952380952381,
+        "required_arg_accuracy": 0.9645390070921985,
+        "hallucinated_arg_rate": 0.014492753623188406,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E01": 1,
+          "E03": 4,
+          "E04": 2,
+          "E12": 1
+        }
+      },
+      "split:unseen_family": {
+        "n": 64,
+        "n_examples": 64,
+        "exact_match": 0.0,
+        "tool_selection_accuracy": 0.0,
+        "required_arg_accuracy": 0.0,
+        "hallucinated_arg_rate": 1.0,
+        "no_call_precision": 0.0,
+        "no_call_recall": null,
+        "no_call_f1": null,
+        "ask_accuracy": null,
+        "error_counts": {
+          "E01": 54,
+          "E02": 10,
+          "E12": 51
+        }
+      },
+      "unseen_family×de": {
+        "n": 16,
+        "n_examples": 16,
+        "exact_match": 0.0,
+        "tool_selection_accuracy": 0.0,
+        "required_arg_accuracy": 0.0,
+        "hallucinated_arg_rate": 1.0,
+        "no_call_precision": null,
+        "no_call_recall": null,
+        "no_call_f1": null,
+        "ask_accuracy": null,
+        "error_counts": {
+          "E01": 15,
+          "E02": 1,
+          "E12": 15
+        }
+      },
+      "unseen_family×en": {
+        "n": 16,
+        "n_examples": 16,
+        "exact_match": 0.0,
+        "tool_selection_accuracy": 0.0,
+        "required_arg_accuracy": 0.0,
+        "hallucinated_arg_rate": 1.0,
+        "no_call_precision": 0.0,
+        "no_call_recall": null,
+        "no_call_f1": null,
+        "ask_accuracy": null,
+        "error_counts": {
+          "E01": 13,
+          "E02": 3,
+          "E12": 12
+        }
+      },
+      "unseen_family×es": {
+        "n": 16,
+        "n_examples": 16,
+        "exact_match": 0.0,
+        "tool_selection_accuracy": 0.0,
+        "required_arg_accuracy": 0.0,
+        "hallucinated_arg_rate": 1.0,
+        "no_call_precision": null,
+        "no_call_recall": null,
+        "no_call_f1": null,
+        "ask_accuracy": null,
+        "error_counts": {
+          "E01": 11,
+          "E02": 5,
+          "E12": 11
+        }
+      },
+      "unseen_family×fr": {
+        "n": 16,
+        "n_examples": 16,
+        "exact_match": 0.0,
+        "tool_selection_accuracy": 0.0,
+        "required_arg_accuracy": 0.0,
+        "hallucinated_arg_rate": 1.0,
+        "no_call_precision": 0.0,
+        "no_call_recall": null,
+        "no_call_f1": null,
+        "ask_accuracy": null,
+        "error_counts": {
+          "E01": 15,
+          "E02": 1,
+          "E12": 13
+        }
+      },
+      "_infer_errors": 0
+    },
+    "ic25": {
+      "n": 219,
+      "action_agreement": 0.726027397260274,
+      "tool_agreement": 1.0,
+      "disagreements": [
+        {
+          "id": "61c9c42c9b05e43f",
+          "rust": {
+            "action": "ASK",
+            "tool": "task.create"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "task.create"
+          }
+        },
+        {
+          "id": "54e6adad467028cd",
+          "rust": {
+            "action": "ASK",
+            "tool": "task.create"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "task.create"
+          }
+        },
+        {
+          "id": "9b4b986960029187",
+          "rust": {
+            "action": "ASK",
+            "tool": "email.send"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "email.send"
+          }
+        },
+        {
+          "id": "eaeb7a46e411e86b",
+          "rust": {
+            "action": "ASK",
+            "tool": "music.play"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "music.play"
+          }
+        },
+        {
+          "id": "aed025d9f221f6c8",
+          "rust": {
+            "action": "ASK",
+            "tool": "timer.set"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "timer.set"
+          }
+        },
+        {
+          "id": "4af43da0dca3c393",
+          "rust": {
+            "action": "ASK",
+            "tool": "calendar.create"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "calendar.create"
+          }
+        },
+        {
+          "id": "f0653d4004fbda54",
+          "rust": {
+            "action": "ASK",
+            "tool": "email.send"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "email.send"
+          }
+        },
+        {
+          "id": "99ac27204be71f94",
+          "rust": {
+            "action": "ASK",
+            "tool": "email.send"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "email.send"
+          }
+        },
+        {
+          "id": "665b0a9d6285303f",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "CALL",
+            "tool": null
+          }
+        },
+        {
+          "id": "96ffcd6aecb26375",
+          "rust": {
+            "action": "ASK",
+            "tool": "calendar.create"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "calendar.create"
+          }
+        },
+        {
+          "id": "585c50ab6c246735",
+          "rust": {
+            "action": "ASK",
+            "tool": "calendar.create"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "calendar.create"
+          }
+        },
+        {
+          "id": "4908ef63c2511d07",
+          "rust": {
+            "action": "ASK",
+            "tool": "timer.set"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "timer.set"
+          }
+        },
+        {
+          "id": "4a4d36072c7aa874",
+          "rust": {
+            "action": "ASK",
+            "tool": "email.send"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "email.send"
+          }
+        },
+        {
+          "id": "0f4e258588115383",
+          "rust": {
+            "action": "ASK",
+            "tool": "email.send"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "email.send"
+          }
+        },
+        {
+          "id": "5e90abf76ba04ba4",
+          "rust": {
+            "action": "ASK",
+            "tool": "calendar.create"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "calendar.create"
+          }
+        },
+        {
+          "id": "4eec39f387c289f9",
+          "rust": {
+            "action": "ASK",
+            "tool": "timer.set"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "timer.set"
+          }
+        },
+        {
+          "id": "dd1f8947058e9f36",
+          "rust": {
+            "action": "ASK",
+            "tool": "timer.set"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "timer.set"
+          }
+        },
+        {
+          "id": "85c65fd65f19842f",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "ASK",
+            "tool": null
+          }
+        },
+        {
+          "id": "1fcfd2f4a60c2497",
+          "rust": {
+            "action": "ASK",
+            "tool": "reminder.set"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "reminder.set"
+          }
+        },
+        {
+          "id": "a5caf2d311df6d58",
+          "rust": {
+            "action": "ASK",
+            "tool": "timer.set"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "timer.set"
+          }
+        }
+      ]
+    }
+  }
+}

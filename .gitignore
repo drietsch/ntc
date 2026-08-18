@@ -26,3 +26,6 @@ wandb/
 
 # Built wasm bundle (regenerate with examples/browser/build.sh)
 examples/browser/pkg/
+
+# Regenerable eval batch inputs (the dataset generator is deterministic)
+models/*/eval/*.input.jsonl

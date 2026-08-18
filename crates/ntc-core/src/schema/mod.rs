@@ -139,8 +139,9 @@ pub enum LineKind {
 }
 
 /// One rendered line with byte-offset provenance, for anchor discovery by the
-/// input packer.
-#[derive(Debug, Clone, PartialEq)]
+/// input packer (serialized by `ntc schemac` so the Python packer uses the
+/// same single implementation).
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct RenderedLine {
     pub kind: LineKind,
     /// `[start, end)` byte range of the whole line in the rendered text.

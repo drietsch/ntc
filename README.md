@@ -73,11 +73,30 @@ examples/browser/build.sh && python3 -m http.server  # then open /examples/brows
       conformant), PyTorch model with head-codec-exact outputs, data-engine +
       eval-harness skeletons (85 pytest tests)
 - [x] Cross-language smoke: PyTorch-exported `.ntc` loads and runs through the
-      Rust runtime (`ntc infer --model fixtures/models/tiny-v1-py/tiny.ntc …`)
-- [ ] Python↔Rust logit parity on identical packed inputs (needs the Python
-      input packer; next milestone toward IC-1)
-- [ ] Tokenizer freeze (pruned-vocab mE5), Stage 1/2 training, IC-2…IC-3
-- [ ] WebGPU-in-browser (wasm + wgpu), perf hardening (A8)
+      Rust runtime
+- [x] **IC-1**: Python↔Rust logit + decision parity on identical packed inputs
+      (Python packer mirrors `inputs.rs`; `training/tests/test_parity_ic1.py`)
+- [x] Tokenizer **frozen** (mini-scale Unigram, EN/DE/FR/ES) with golden-vector
+      parity native-Rust-side (`contracts/tokenizer/`, `fixtures/tokenizer/`)
+- [x] Synthetic data engine: deterministic mini generator (1.9k validated
+      examples, 4 languages, decoys/hard-negatives/name-randomization) **and**
+      a live `claude -p` teacher batch through the production orchestrator
+- [x] **Trained mini model** (1.4M params, Stage-2 composite loss, calibrated,
+      exported to `models/ntc-mini-v1/model.ntc`): dev exact-match 95.5%,
+      seen-test 93.8%, tool selection 98.8% seen / 86% masked-names
+- [x] **IC-2.5**: PyTorch↔Rust-runtime decision agreement 100% on dev
+      (`models/ntc-mini-v1/eval/report.json`)
+- [x] **IC-3**: the trained model compiles EN/DE/FR/ES utterances to validated
+      JSON **in Chrome on WebGPU** — 33–44 ms/compile steady-state, 4.5× the
+      wasm-CPU path, identical outcomes (`docs/benchmarking.md`)
+- [x] WebGPU-in-browser: async wgpu path (`NtcWeb.new_gpu` + `compile_async`)
+
+Mini-scale caveats (documented limits, not defects): the 1.4M model does not
+generalize to unseen tool families (0% on that split — the capability the
+full-scale 250M pretrained backbone exists to provide), and the 642-piece
+tokenizer is case-sensitive to its training corpus. Full-scale training
+(pruned-mE5 backbone, teacher-generated 500k+ corpus, A100) reuses exactly
+this machinery.
 
 The V1 scope is spec §73: EN/DE/FR/ES, single-tool calls, `CALL/ASK/NO_CALL`,
 ≤16 candidate tools, BF16 training / F16 browser weights. Ternary is Phase 2;

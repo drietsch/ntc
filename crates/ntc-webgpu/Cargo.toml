@@ -8,10 +8,13 @@ repository.workspace = true
 [dependencies]
 ntc-core.workspace = true
 ntc-model.workspace = true
+ntc-format.workspace = true
+ntc-runtime.workspace = true
 wgpu.workspace = true
 bytemuck.workspace = true
 half.workspace = true
 thiserror.workspace = true
+futures-channel = "0.3"
 
 [dev-dependencies]
 ntc-model = { workspace = true, features = ["test-support"] }

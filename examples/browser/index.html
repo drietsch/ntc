@@ -65,34 +65,103 @@
 <body>
   <main>
     <h1>Neural Tool Compiler</h1>
-    <p class="sub">Runs the tiny fixture model on the CPU reference backend, fully in-browser (WebAssembly). <span id="version"></span></p>
+    <p class="sub">A trained neural tool-call compiler running fully in-browser: WebAssembly + WebGPU, no server. <span id="version"></span></p>
 
-    <label for="utterance">Utterance</label>
-    <input id="utterance" value="make a dentist appointment tomorrow afternoon">
+    <label for="utterance">Utterance
+      <span style="float:right">
+        <button id="ex-en" type="button">EN</button>
+        <button id="ex-de" type="button">DE</button>
+        <button id="ex-fr" type="button">FR</button>
+        <button id="ex-es" type="button">ES</button>
+      </span>
+    </label>
+    <input id="utterance" value="schedule a dentist appointment tomorrow afternoon for one and a half hours">
 
     <label for="tools">Tools (JSON array of schemas)</label>
     <textarea id="tools" rows="18" spellcheck="false">[
   {
     "name": "calendar.create",
-    "description": "create a calendar event",
+    "description": "Create a calendar event",
     "parameters": {
-      "title": {"type": "string", "required": true},
-      "start": {"type": "string", "format": "date-time", "required": true},
-      "duration_minutes": {"type": "integer", "semantic": "DURATION"}
+      "title": {
+        "type": "string",
+        "description": "event title",
+        "required": true
+      },
+      "start": {
+        "type": "string",
+        "format": "date-time",
+        "required": true
+      },
+      "duration_minutes": {
+        "type": "integer",
+        "semantic": "DURATION",
+        "description": "length of the event"
+      }
     }
   },
   {
     "name": "email.send",
-    "description": "send an email",
+    "description": "Send an email to somebody",
     "parameters": {
-      "recipient": {"type": "string", "required": true},
-      "subject": {"type": "string"}
+      "recipient": {
+        "type": "string",
+        "description": "who receives it",
+        "required": true
+      },
+      "subject": {
+        "type": "string",
+        "description": "what it is about"
+      }
+    }
+  },
+  {
+    "name": "timer.set",
+    "description": "Start a countdown timer",
+    "parameters": {
+      "length": {
+        "type": "string",
+        "format": "duration",
+        "semantic": "DURATION",
+        "description": "how long the timer runs",
+        "required": true
+      },
+      "label": {
+        "type": "string",
+        "description": "name of the timer"
+      }
+    }
+  },
+  {
+    "name": "light.set",
+    "description": "Switch a light on or off",
+    "parameters": {
+      "room": {
+        "type": "string",
+        "description": "which room",
+        "required": true
+      },
+      "state": {
+        "type": "string",
+        "enum": [
+          "on",
+          "off"
+        ],
+        "required": true
+      }
     }
   }
 ]</textarea>
 
     <label for="timezone">Timezone (IANA)</label>
     <input id="timezone" value="Europe/Berlin">
+
+    <label for="backend">Backend</label>
+    <select id="backend">
+      <option value="auto" selected>auto (WebGPU if available)</option>
+      <option value="gpu">gpu (WebGPU)</option>
+      <option value="cpu">cpu (reference)</option>
+    </select>
 
     <button id="compile" disabled>Compile</button>
     <div class="status" id="status">Loading wasm module…</div>

@@ -58,6 +58,16 @@ enum Command {
         #[arg(long, default_value_t = 42)]
         seed: u64,
     },
+    /// Batch compile: JSONL in ({id, utterance, tools, timezone?, now?,
+    /// candidates?}), JSONL out ({id, outcome}). Model loads once.
+    BatchInfer {
+        #[arg(long)]
+        model: PathBuf,
+        #[arg(long)]
+        input: PathBuf,
+        #[arg(long)]
+        output: PathBuf,
+    },
     /// Compile an utterance on the CPU reference backend.
     Infer {
         #[arg(long)]
@@ -87,6 +97,11 @@ fn main() -> Result<()> {
             dump_manifest,
         } => verify(&file, dump_manifest),
         Command::FixtureGen { out, seed } => fixture_gen(&out, seed),
+        Command::BatchInfer {
+            model,
+            input,
+            output,
+        } => batch_infer(&model, &input, &output),
         Command::Infer {
             model,
             utterance,
@@ -169,13 +184,14 @@ fn schemac(input: Option<PathBuf>, output: Option<PathBuf>) -> Result<()> {
             .with_context(|| format!("line {}: not a raw tool schema", lineno + 1))?;
         let tool = ntc_core::schema::compile_schema(&raw)
             .map_err(|e| anyhow::anyhow!("line {}: {e}", lineno + 1))?;
-        let text = tool.to_neural_text(index);
+        let (text, lines) = tool.to_neural_text_with_lines(index);
         let out = serde_json::json!({
             "id": tool.id,
             "abi_version": tool.abi_version,
             "index": index,
             "tool": tool,
             "text": text,
+            "lines": lines,
         });
         writeln!(writer, "{}", serde_json::to_string(&out)?)?;
     }
@@ -248,6 +264,80 @@ fn fixture_gen(out: &std::path::Path, seed: u64) -> Result<()> {
         report.tensor_count,
         buf.len()
     );
+    Ok(())
+}
+
+fn batch_infer(
+    model: &std::path::Path,
+    input: &std::path::Path,
+    output: &std::path::Path,
+) -> Result<()> {
+    use ntc_runtime::{CompilerConfig, NeuralToolCompiler};
+
+    #[derive(serde::Deserialize)]
+    struct Line {
+        id: String,
+        utterance: String,
+        tools: Vec<ntc_core::schema::RawToolSchema>,
+        #[serde(default)]
+        timezone: Option<String>,
+        #[serde(default)]
+        now: Option<String>,
+        #[serde(default)]
+        candidates: Option<Vec<String>>,
+    }
+
+    let bytes = std::fs::read(model).with_context(|| format!("reading {}", model.display()))?;
+    let mut compiler = NeuralToolCompiler::load_cpu(&bytes, CompilerConfig::default())
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
+
+    let reader = std::io::BufReader::new(std::fs::File::open(input)?);
+    let mut writer = std::io::BufWriter::new(std::fs::File::create(output)?);
+    let (mut ok, mut failed) = (0u64, 0u64);
+    for (lineno, line) in reader.lines().enumerate() {
+        let line = line?;
+        if line.trim().is_empty() {
+            continue;
+        }
+        let parsed: Line =
+            serde_json::from_str(&line).with_context(|| format!("line {}", lineno + 1))?;
+        // Tool registration replaces by registry id, so per-line tool sets
+        // with recurring names stay correct.
+        let mut names = Vec::with_capacity(parsed.tools.len());
+        for raw in parsed.tools {
+            names.push(raw.name.clone());
+            compiler
+                .register_tool(raw)
+                .map_err(|e| anyhow::anyhow!("line {}: {e}", lineno + 1))?;
+        }
+        let req = ntc_core::ir::CompileRequest {
+            utterance: parsed.utterance,
+            locale: None,
+            timezone: parsed.timezone,
+            now: parsed.now,
+            candidates: Some(parsed.candidates.unwrap_or(names)),
+            context: None,
+        };
+        match compiler.compile(&req) {
+            Ok(outcome) => {
+                ok += 1;
+                writeln!(
+                    writer,
+                    "{}",
+                    serde_json::json!({"id": parsed.id, "result": outcome})
+                )?;
+            }
+            Err(e) => {
+                failed += 1;
+                writeln!(
+                    writer,
+                    "{}",
+                    serde_json::json!({"id": parsed.id, "error": e.to_string()})
+                )?;
+            }
+        }
+    }
+    eprintln!("batch-infer: {ok} ok, {failed} failed");
     Ok(())
 }
 

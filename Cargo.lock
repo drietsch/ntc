@@ -609,6 +609,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa9a19cbb55df58761df49b23516a86d432839add4af60fc256da840f66ed35b"
 
 [[package]]
+name = "futures-channel"
+version = "0.3.34"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1f9e3d69d39e4862ffed03ed071a76f9a13ba1d9109d355b0f0aa6b15e393c4"
+dependencies = [
+ "futures-core",
+]
+
+[[package]]
 name = "futures-core"
 version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1183,8 +1192,10 @@ dependencies = [
  "console_error_panic_hook",
  "js-sys",
  "ntc-core",
+ "ntc-format",
  "ntc-model",
  "ntc-runtime",
+ "ntc-webgpu",
  "serde_json",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -1197,10 +1208,13 @@ version = "0.1.0"
 dependencies = [
  "approx",
  "bytemuck",
+ "futures-channel",
  "half",
  "naga",
  "ntc-core",
+ "ntc-format",
  "ntc-model",
+ "ntc-runtime",
  "pollster",
  "rand 0.8.7",
  "rand_chacha 0.3.1",

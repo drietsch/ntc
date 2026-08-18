@@ -12,6 +12,8 @@ crate-type = ["cdylib", "rlib"]
 ntc-core.workspace = true
 ntc-model.workspace = true
 ntc-runtime.workspace = true
+ntc-format.workspace = true
+ntc-webgpu = { path = "../ntc-webgpu" }
 wasm-bindgen.workspace = true
 wasm-bindgen-futures.workspace = true
 js-sys.workspace = true

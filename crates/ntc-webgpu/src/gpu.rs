@@ -513,6 +513,54 @@ impl GpuExecutor {
         Ok(results)
     }
 
+    /// Async variant of [`Self::read_back`] for wasm/WebGPU: `map_async`
+    /// resolves through the event loop, so mapping must be awaited. On
+    /// native the device is polled so the future resolves immediately.
+    pub(crate) async fn read_back_async(
+        &mut self,
+        mut enc: wgpu::CommandEncoder,
+        srcs: &[(&wgpu::Buffer, usize)],
+    ) -> Result<Vec<Vec<f32>>, NtcError> {
+        let stagings: Vec<wgpu::Buffer> = srcs
+            .iter()
+            .map(|&(src, floats)| {
+                let size = (floats.max(1) * 4) as u64;
+                let staging = self.ctx.device.create_buffer(&wgpu::BufferDescriptor {
+                    label: Some("readback-async"),
+                    size,
+                    usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
+                    mapped_at_creation: false,
+                });
+                enc.copy_buffer_to_buffer(src, 0, &staging, 0, size);
+                staging
+            })
+            .collect();
+
+        self.ctx.queue.submit(Some(enc.finish()));
+
+        let mut results = Vec::with_capacity(stagings.len());
+        for staging in &stagings {
+            let slice = staging.slice(..);
+            let (tx, rx) = futures_channel::oneshot::channel();
+            slice.map_async(wgpu::MapMode::Read, move |r| {
+                let _ = tx.send(r);
+            });
+            // Native: drive the device so the callback fires. On wasm this
+            // is a no-op and the browser resolves the mapping.
+            #[cfg(not(target_arch = "wasm32"))]
+            let _ = self.ctx.device.poll(wgpu::Maintain::Wait);
+            rx.await
+                .map_err(|_| NtcError::Inference("wgpu map_async callback dropped".into()))?
+                .map_err(|e| NtcError::Inference(format!("wgpu buffer map failed: {e:?}")))?;
+            let data = slice.get_mapped_range();
+            results.push(bytemuck::cast_slice::<u8, f32>(&data).to_vec());
+            drop(data);
+            staging.unmap();
+        }
+        self.arena.reclaim();
+        Ok(results)
+    }
+
     // ------------------------------------------------------------------
     // Blocking one-shot host wrappers (kernel parity tests).
     // ------------------------------------------------------------------

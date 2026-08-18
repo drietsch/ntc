@@ -244,6 +244,12 @@ impl CpuRefBackend {
     }
 }
 
+impl crate::backend::AsyncBackend for CpuRefBackend {
+    async fn run_async(&mut self, inputs: &ModelInputs) -> Result<HeadOutputs, NtcError> {
+        Backend::run(self, inputs)
+    }
+}
+
 impl Backend for CpuRefBackend {
     fn run(&mut self, inputs: &ModelInputs) -> Result<HeadOutputs, NtcError> {
         let cfg = &self.cfg;

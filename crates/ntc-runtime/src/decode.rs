@@ -134,6 +134,8 @@ impl<'a> Decoder<'a> {
         let text = self
             .utterance
             .span_text(self.utterance_text, start as u32, end as u32)
+            .map(str::trim)
+            .filter(|t| !t.is_empty())
             .map(str::to_owned);
         Ok((
             TokenSpan {
@@ -179,7 +181,20 @@ impl<'a> Decoder<'a> {
             token_span: Some(span),
         });
 
-        let out = match arg.param_type {
+        // Spec §40/§44: an INTEGER/FLOAT parameter annotated as a duration
+        // (e.g. `duration_minutes` with SEMANTIC DURATION) carries duration
+        // semantics — the numeric-unit head decides the unit and the
+        // deterministic backend converts to the field's target unit.
+        let duration_semantics = arg
+            .semantic_type
+            .as_ref()
+            .is_some_and(|sem| sem.0.contains("DURATION"));
+        let effective_type = match arg.param_type {
+            ParamType::Integer | ParamType::Float if duration_semantics => ParamType::Duration,
+            other => other,
+        };
+
+        let out = match effective_type {
             ParamType::Text => span_text.map(|t| (SemanticValue::String(t), span_conf, provenance)),
             ParamType::Person => {
                 span_text.map(|t| (SemanticValue::PersonRef { text: t }, span_conf, provenance))
