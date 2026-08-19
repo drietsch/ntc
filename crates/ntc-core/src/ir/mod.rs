@@ -474,7 +474,6 @@ impl SemanticValue {
 /// Arguments may bind these instead of extracting from the utterance
 /// ("tag *this*"), which is what makes an in-application router useful.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct LinkedItem {
     /// Stable handle within this request (`L1`, `L2`, …) that argument
     /// provenance points at.
@@ -490,15 +489,14 @@ pub struct LinkedItem {
     pub key: String,
     #[serde(default)]
     pub path: String,
-    #[serde(default)]
+    #[serde(default, alias = "isFolder")]
     pub is_folder: bool,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default, alias = "className", skip_serializing_if = "Option::is_none")]
     pub class_name: Option<String>,
 }
 
 /// One candidate interpretation of an identifier-like token.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct ResolverCandidate {
     #[serde(rename = "type")]
     pub kind: String,
@@ -511,10 +509,9 @@ pub struct ResolverCandidate {
 /// looked up before the model runs. An empty `candidates` list means "not
 /// found", which is deliberately indistinguishable from "no permission".
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct ResolverEntry {
     pub token: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default, alias = "charSpan", skip_serializing_if = "Option::is_none")]
     pub char_span: Option<CharSpan>,
     #[serde(default)]
     pub candidates: Vec<ResolverCandidate>,
@@ -552,10 +549,14 @@ pub struct RequestContext {
     pub resolver: Vec<ResolverEntry>,
     /// Total selection size when it exceeds what `linked` enumerates — the
     /// signal that a request is bulk and may exceed a tool's per-call cap.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        alias = "selectionCount",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub selection_count: Option<u32>,
     /// Where in the host UI the user is (list, detail, …).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default, alias = "studioView", skip_serializing_if = "Option::is_none")]
     pub studio_view: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub entities: Vec<ContextEntity>,

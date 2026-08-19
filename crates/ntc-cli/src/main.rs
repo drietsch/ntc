@@ -289,6 +289,9 @@ fn batch_infer(
         now: Option<String>,
         #[serde(default)]
         candidates: Option<Vec<String>>,
+        /// The host's context frame (linked selection, resolver pre-pass).
+        #[serde(default)]
+        context: Option<ntc_core::ir::RequestContext>,
     }
 
     let bytes = std::fs::read(model).with_context(|| format!("reading {}", model.display()))?;
@@ -320,7 +323,7 @@ fn batch_infer(
             timezone: parsed.timezone,
             now: parsed.now,
             candidates: Some(parsed.candidates.unwrap_or(names)),
-            context: None,
+            context: parsed.context,
         };
         match compiler.compile(&req) {
             Ok(outcome) => {

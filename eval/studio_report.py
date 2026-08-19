@@ -147,12 +147,46 @@ def evaluate(preds: dict[str, dict], gold: list[dict]) -> dict:
     }
 
 
+def build_batch_input(gold: list[dict], path: Path) -> None:
+    """Gold rows -> `ntc batch-infer` input, carrying the context frame."""
+    with path.open("w") as f:
+        for g in gold:
+            ctx = g.get("context") or {}
+            f.write(
+                json.dumps(
+                    {
+                        "id": g["id"],
+                        "utterance": g["utterance"],
+                        "tools": g["candidates"],
+                        "context": {
+                            "linked": ctx.get("linked", []),
+                            "resolver": ctx.get("resolver", []),
+                            **({"selection_count": ctx["selection_count"]}
+                               if ctx.get("selection_count") is not None else {}),
+                            **({"studio_view": ctx["studio_view"]}
+                               if ctx.get("studio_view") else {}),
+                        },
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n"
+            )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pred", type=Path, required=True, help="batch-infer output JSONL")
     parser.add_argument("--gold", type=Path, required=True)
     parser.add_argument("--out", type=Path, default=None)
+    parser.add_argument("--make-input", type=Path, default=None,
+                        help="write a batch-infer input file from the gold set and exit")
     args = parser.parse_args()
+
+    if args.make_input:
+        gold = load(args.gold)
+        build_batch_input(gold, args.make_input)
+        print(f"wrote {args.make_input} ({len(gold)} rows)")
+        return
 
     gold = load(args.gold)
     preds = {}

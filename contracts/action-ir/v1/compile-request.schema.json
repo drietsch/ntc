@@ -136,8 +136,7 @@
           "description": "Host element type (`asset`, `document`, `object`, …). Tools disagree on the symbol for the same thing (`object` vs `data-object`), so the binding layer maps it per tool rather than assuming one vocabulary.",
           "type": "string"
         }
-      },
-      "additionalProperties": false
+      }
     },
     "RequestContext": {
       "description": "Everything the host knows about the moment the utterance was typed.",
@@ -201,8 +200,7 @@
         "type": {
           "type": "string"
         }
-      },
-      "additionalProperties": false
+      }
     },
     "ResolverEntry": {
       "description": "The host's identifier pre-pass: integer-like tokens in the utterance, looked up before the model runs. An empty `candidates` list means \"not found\", which is deliberately indistinguishable from \"no permission\".",
@@ -231,8 +229,7 @@
         "token": {
           "type": "string"
         }
-      },
-      "additionalProperties": false
+      }
     }
   }
 }

@@ -48,3 +48,11 @@ models/*/eval/*.input.jsonl
 #   && uv run python -m export.export_mini --ckpt runs/any-v1/best.pt --out ../models/ntc-any-v1/model.ntc --version ntc-any-v1 --tokenizer-dir tokenizer-any
 models/ntc-any-v1/model.ntc
 models/ntc-pimcore-v1/model.ntc
+# Trained Studio router (87 MB). Rebuild:
+#   cd training && uv run python -m tools.convert_studio --max-candidates 3 \
+#     && uv run python train.py --arch studio --init runs/backbone/init.pt \
+#        --data data/studio --out runs/studio-v1 --epochs 5 --batch 12 --lr 2e-4 \
+#     && uv run python -m export.export_mini --ckpt runs/studio-v1/best.pt \
+#        --out ../models/ntc-studio-v1/model.ntc --version ntc-studio-v1 \
+#        --tokenizer-dir tokenizer-any
+models/ntc-studio-v1/model.ntc
