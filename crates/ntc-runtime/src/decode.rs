@@ -45,6 +45,8 @@ pub fn argmax_softmax(logits: &[f32], temperature: f32) -> (usize, f32) {
 const MULTI_LINK_THRESHOLD: f32 = 0.25;
 
 pub struct Decoder<'a> {
+    /// Minimum presence confidence for an optional argument to be bound.
+    pub optional_arg_threshold: f32,
     pub outputs: &'a HeadOutputs,
     pub inputs: &'a ModelInputs,
     pub utterance: &'a TokenSeq,
@@ -608,6 +610,10 @@ impl<'a> Decoder<'a> {
         for (k, arg) in tool.args.iter().enumerate() {
             let (presence, p_conf) = self.presence(tool_idx, k)?;
             match presence {
+                // An optional argument the model is only mildly confident
+                // about is dropped: including it changes what the call does.
+                PresenceState::Present if !arg.required && p_conf < self.optional_arg_threshold => {
+                }
                 PresenceState::Present => match self.value(tool_idx, k, tool)? {
                     Some((value, v_conf, provenance)) => ir.arguments.push(ArgumentBinding {
                         parameter: arg.name.clone(),

@@ -11,6 +11,14 @@ pub struct ConfidencePolicy {
     /// Below this binding confidence a required argument becomes unresolved
     /// (driving ASK).
     pub required_arg_threshold: f32,
+    /// Minimum presence confidence to include an **optional** argument.
+    ///
+    /// A required argument that is missing makes the call fail loudly; an
+    /// optional one that is merely *plausible* silently changes what the
+    /// call does — a `pageSize` or `parentId` nobody asked for is a wrong
+    /// call, not a harmless extra. Optional arguments therefore have to earn
+    /// their place, and the bar is higher than argmax.
+    pub optional_arg_threshold: f32,
 }
 
 impl Default for ConfidencePolicy {
@@ -18,6 +26,7 @@ impl Default for ConfidencePolicy {
         Self {
             tool_threshold: 0.35,
             required_arg_threshold: 0.30,
+            optional_arg_threshold: 0.60,
         }
     }
 }

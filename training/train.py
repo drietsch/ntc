@@ -201,18 +201,21 @@ def ce(
     return F.cross_entropy(flat, t, ignore_index=-100, weight=weight)
 
 
-def class_weights(counts: torch.Tensor, cap: float = 12.0) -> torch.Tensor:
-    """Balanced class weights `total / (n_classes * count_c)`, capped.
+def class_weights(counts: torch.Tensor, cap: float = 12.0, power: float = 0.5) -> torch.Tensor:
+    """Inverse-frequency class weights, softened by `power` and capped.
 
-    Presence labels are dominated by NOT_APPLICABLE (~95% on the Pimcore tool
-    set: 4 candidates x 8 args, of which only one or two are actually
-    present), so an unweighted objective collapses to the majority class and
-    the model stops binding arguments altogether. Balanced weighting makes
-    each class contribute equally; the cap keeps very rare classes (AMBIGUOUS
-    appears a handful of times) from dominating the gradient.
+    Presence labels are dominated by NOT_APPLICABLE, so an unweighted
+    objective collapses to the majority class and the model stops binding
+    arguments at all. Fully balanced weighting over-corrects in the other
+    direction — measured on the Studio corpus it made the model predict
+    PRESENT almost everywhere, which showed up as 58 invented optional
+    arguments on the dev split and cut executable accuracy to 28%. Neither
+    extreme is right, so the correction is softened by `power` (0.5 = square
+    root of inverse frequency), with the cap keeping classes that appear a
+    handful of times from dominating the gradient.
     """
     freq = counts.clamp(min=1).float()
-    w = freq.sum() / (len(freq) * freq)
+    w = (freq.sum() / (len(freq) * freq)).pow(power)
     return w.clamp(max=cap)
 
 

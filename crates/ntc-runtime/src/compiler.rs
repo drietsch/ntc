@@ -32,11 +32,19 @@ pub struct CompilerConfig {
 
 impl Default for CompilerConfig {
     fn default() -> Self {
+        let mut confidence = ConfidencePolicy::default();
+        // Calibrating this threshold needs a sweep over a dev set, so allow
+        // an override without a rebuild. Hosts set it through the API.
+        if let Ok(v) = std::env::var("NTC_OPTIONAL_ARG_THRESHOLD") {
+            if let Ok(v) = v.parse::<f32>() {
+                confidence.optional_arg_threshold = v;
+            }
+        }
         Self {
             locale: "en-US".into(),
             timezone: "UTC".into(),
             daypart_policy: DaypartPolicy::default(),
-            confidence: ConfidencePolicy::default(),
+            confidence,
         }
     }
 }
@@ -226,6 +234,7 @@ impl<B: Backend> NeuralToolCompiler<B> {
             tool_temperature: cal.tool,
             presence_temperature: cal.presence,
             value_temperature: cal.value,
+            optional_arg_threshold: self.config.confidence.optional_arg_threshold,
         };
         let mut ir = decoder.decode()?;
 
