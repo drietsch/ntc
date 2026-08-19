@@ -86,3 +86,25 @@ Next (not yet built):
   loop, token-span projection from char spans;
 - **parity fixtures**: dump PyTorch head outputs for fixed inputs and diff
   against the Rust CPU reference within `fixtures/tolerances.toml`.
+
+## Objective note: presence-head class imbalance
+
+The presence head labels **every declared argument of every candidate tool**,
+so its class distribution scales with the tool set's shape:
+
+| corpus | tools/example | args/tool | NOT_APPLICABLE share |
+|---|---|---|---|
+| mini (calendar/email/timer/light) | 4 | 2–3 | ~75% |
+| Pimcore MCP tools | 4 | up to 8 | **94.8%** |
+
+At ~95% the unweighted objective collapses to the majority class: the model
+still selects the right tool but marks every argument NOT_APPLICABLE, so it
+emits argument-free CALLs (measured: required-arg accuracy 0.05). The fix is
+balanced class weighting (`train.py:class_weights`, `total / (n_classes *
+count_c)`, capped at 12 so a handful of AMBIGUOUS labels cannot dominate),
+plus a `present_acc` metric in the training log — plain `presence_acc` hides
+the collapse because it is ~94% when the model predicts NOT_APPLICABLE for
+everything.
+
+This matters at full scale too: with 16 candidate tools the share only grows,
+so the weighting (or a focal-loss variant) should stay in the objective.

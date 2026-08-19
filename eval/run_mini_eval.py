@@ -141,7 +141,7 @@ def python_decisions(examples: list[dict], model_path: Path) -> dict[str, dict]:
                 action_idx = int(out["action.logits"][bi].argmax())
                 tool_idx = int(out["tool.logits"][bi, : n + 1].argmax())
                 decisions[ex["id"]] = {
-                    "action": ["CALL", "ASK", "NO_CALL"][action_idx],
+                    "action": ["CALL", "ASK", "NO_CALL", "DELEGATE"][action_idx],
                     "tool": ex["candidates"][tool_idx]["name"] if tool_idx < n else None,
                 }
     return decisions

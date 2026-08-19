@@ -104,10 +104,25 @@ examples/browser/build.sh && python3 -m http.server  # then open /examples/brows
       `light.set` call. Selectable in the browser demo next to the 2.8 MB mini
       model.
 
+- [x] **Router boundary**: `DELEGATE` as a fourth action (append-only head
+      codec v2) for work beyond a single typed call — multi-step chains over
+      results, bulk mutations, open-ended reasoning. See
+      [docs/delegation.md](docs/delegation.md).
+- [x] **Real tools**: all 49 Pimcore agent-bundle MCP tools extracted from
+      their PHP attributes (`training/tools/extract_pimcore_tools.py`), with
+      composite value types resolved in three tiers (LIST / flattened object /
+      OPAQUE→agent-only).
+- [x] **Pimcore router** (`models/ntc-pimcore-v1`, gitignored — rebuild recipe
+      below): DELEGATE precision **1.00** / recall **1.00** on both dev and
+      test; tool selection 0.83–0.85; test exact-match 0.87.
+
 Mini-scale caveats (documented limits, not defects): the 1.4M model does not
 generalize to unseen tool families (0% on that split — the capability the
 full-scale 250M pretrained backbone exists to provide), and the 642-piece
-tokenizer is case-sensitive to its training corpus. Full-scale training
+tokenizer is case-sensitive to its training corpus. The Pimcore router
+recognizes agent work reliably but still confuses adjacent tools
+(`get_asset` vs `assign_tag`) and can miss an unseen multi-step paraphrase —
+463 training examples over 49 tools is thin. Full-scale training
 (pruned-mE5 backbone, teacher-generated 500k+ corpus, A100) reuses exactly
 this machinery.
 

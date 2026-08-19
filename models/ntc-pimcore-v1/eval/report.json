@@ -1,0 +1,503 @@
+{
+  "dev": {
+    "metrics": {
+      "all": {
+        "n": 46,
+        "n_examples": 46,
+        "exact_match": 0.6521739130434783,
+        "tool_selection_accuracy": 0.8461538461538461,
+        "required_arg_accuracy": 0.6206896551724138,
+        "hallucinated_arg_rate": 0.6610169491525424,
+        "no_call_precision": 0.8888888888888888,
+        "no_call_recall": 1.0,
+        "no_call_f1": 0.9411764705882353,
+        "ask_accuracy": 0.5714285714285714,
+        "delegate_precision": 1.0,
+        "delegate_recall": 1.0,
+        "delegate_f1": 1.0,
+        "error_counts": {
+          "E01": 3,
+          "E02": 4,
+          "E04": 7,
+          "E05": 2,
+          "E11": 3
+        }
+      },
+      "lang:de": {
+        "n": 19,
+        "n_examples": 19,
+        "exact_match": 0.6842105263157895,
+        "tool_selection_accuracy": 0.6363636363636364,
+        "required_arg_accuracy": 0.3076923076923077,
+        "hallucinated_arg_rate": 0.8333333333333334,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 0.6666666666666666,
+        "delegate_precision": 1.0,
+        "delegate_recall": 1.0,
+        "delegate_f1": 1.0,
+        "error_counts": {
+          "E01": 1,
+          "E02": 4,
+          "E04": 1,
+          "E11": 1
+        }
+      },
+      "lang:en": {
+        "n": 9,
+        "n_examples": 9,
+        "exact_match": 0.4444444444444444,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 0.8571428571428571,
+        "hallucinated_arg_rate": 0.631578947368421,
+        "no_call_precision": null,
+        "no_call_recall": null,
+        "no_call_f1": null,
+        "ask_accuracy": 0.0,
+        "delegate_precision": 1.0,
+        "delegate_recall": 1.0,
+        "delegate_f1": 1.0,
+        "error_counts": {
+          "E01": 1,
+          "E04": 3,
+          "E05": 1,
+          "E11": 1
+        }
+      },
+      "lang:es": {
+        "n": 15,
+        "n_examples": 15,
+        "exact_match": 0.7333333333333333,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 0.8571428571428571,
+        "hallucinated_arg_rate": 0.36363636363636365,
+        "no_call_precision": 0.75,
+        "no_call_recall": 1.0,
+        "no_call_f1": 0.8571428571428571,
+        "ask_accuracy": 0.6666666666666666,
+        "delegate_precision": 1.0,
+        "delegate_recall": 1.0,
+        "delegate_f1": 1.0,
+        "error_counts": {
+          "E01": 1,
+          "E04": 2,
+          "E05": 1,
+          "E11": 1
+        }
+      },
+      "lang:fr": {
+        "n": 3,
+        "n_examples": 3,
+        "exact_match": 0.6666666666666666,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 1.0,
+        "hallucinated_arg_rate": 0.6,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": null,
+        "delegate_precision": null,
+        "delegate_recall": null,
+        "delegate_f1": null,
+        "error_counts": {
+          "E04": 1
+        }
+      },
+      "seen×de": {
+        "n": 19,
+        "n_examples": 19,
+        "exact_match": 0.6842105263157895,
+        "tool_selection_accuracy": 0.6363636363636364,
+        "required_arg_accuracy": 0.3076923076923077,
+        "hallucinated_arg_rate": 0.8333333333333334,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 0.6666666666666666,
+        "delegate_precision": 1.0,
+        "delegate_recall": 1.0,
+        "delegate_f1": 1.0,
+        "error_counts": {
+          "E01": 1,
+          "E02": 4,
+          "E04": 1,
+          "E11": 1
+        }
+      },
+      "seen×en": {
+        "n": 9,
+        "n_examples": 9,
+        "exact_match": 0.4444444444444444,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 0.8571428571428571,
+        "hallucinated_arg_rate": 0.631578947368421,
+        "no_call_precision": null,
+        "no_call_recall": null,
+        "no_call_f1": null,
+        "ask_accuracy": 0.0,
+        "delegate_precision": 1.0,
+        "delegate_recall": 1.0,
+        "delegate_f1": 1.0,
+        "error_counts": {
+          "E01": 1,
+          "E04": 3,
+          "E05": 1,
+          "E11": 1
+        }
+      },
+      "seen×es": {
+        "n": 15,
+        "n_examples": 15,
+        "exact_match": 0.7333333333333333,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 0.8571428571428571,
+        "hallucinated_arg_rate": 0.36363636363636365,
+        "no_call_precision": 0.75,
+        "no_call_recall": 1.0,
+        "no_call_f1": 0.8571428571428571,
+        "ask_accuracy": 0.6666666666666666,
+        "delegate_precision": 1.0,
+        "delegate_recall": 1.0,
+        "delegate_f1": 1.0,
+        "error_counts": {
+          "E01": 1,
+          "E04": 2,
+          "E05": 1,
+          "E11": 1
+        }
+      },
+      "seen×fr": {
+        "n": 3,
+        "n_examples": 3,
+        "exact_match": 0.6666666666666666,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 1.0,
+        "hallucinated_arg_rate": 0.6,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": null,
+        "delegate_precision": null,
+        "delegate_recall": null,
+        "delegate_f1": null,
+        "error_counts": {
+          "E04": 1
+        }
+      },
+      "split:seen": {
+        "n": 46,
+        "n_examples": 46,
+        "exact_match": 0.6521739130434783,
+        "tool_selection_accuracy": 0.8461538461538461,
+        "required_arg_accuracy": 0.6206896551724138,
+        "hallucinated_arg_rate": 0.6610169491525424,
+        "no_call_precision": 0.8888888888888888,
+        "no_call_recall": 1.0,
+        "no_call_f1": 0.9411764705882353,
+        "ask_accuracy": 0.5714285714285714,
+        "delegate_precision": 1.0,
+        "delegate_recall": 1.0,
+        "delegate_f1": 1.0,
+        "error_counts": {
+          "E01": 3,
+          "E02": 4,
+          "E04": 7,
+          "E05": 2,
+          "E11": 3
+        }
+      },
+      "_infer_errors": 0
+    },
+    "ic25": {
+      "n": 46,
+      "action_agreement": 0.9782608695652174,
+      "tool_agreement": 0.9782608695652174,
+      "disagreements": [
+        {
+          "id": "pimcore-de-0009",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "ASK",
+            "tool": "search_assets"
+          }
+        }
+      ]
+    }
+  },
+  "test": {
+    "metrics": {
+      "all": {
+        "n": 68,
+        "n_examples": 68,
+        "exact_match": 0.8676470588235294,
+        "tool_selection_accuracy": 0.8333333333333334,
+        "required_arg_accuracy": 0.6190476190476191,
+        "hallucinated_arg_rate": 0.5,
+        "no_call_precision": 0.6666666666666666,
+        "no_call_recall": 1.0,
+        "no_call_f1": 0.8,
+        "ask_accuracy": 0.875,
+        "delegate_precision": 1.0,
+        "delegate_recall": 1.0,
+        "delegate_f1": 1.0,
+        "error_counts": {
+          "E01": 3,
+          "E02": 1,
+          "E04": 3,
+          "E05": 2,
+          "E11": 1
+        }
+      },
+      "lang:de": {
+        "n": 21,
+        "n_examples": 21,
+        "exact_match": 0.7619047619047619,
+        "tool_selection_accuracy": 0.7777777777777778,
+        "required_arg_accuracy": 0.6153846153846154,
+        "hallucinated_arg_rate": 0.55,
+        "no_call_precision": 0.6666666666666666,
+        "no_call_recall": 1.0,
+        "no_call_f1": 0.8,
+        "ask_accuracy": null,
+        "delegate_precision": 1.0,
+        "delegate_recall": 1.0,
+        "delegate_f1": 1.0,
+        "error_counts": {
+          "E01": 1,
+          "E02": 1,
+          "E04": 2,
+          "E05": 1
+        }
+      },
+      "lang:en": {
+        "n": 20,
+        "n_examples": 20,
+        "exact_match": 0.9,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 0.8333333333333334,
+        "hallucinated_arg_rate": 0.3333333333333333,
+        "no_call_precision": null,
+        "no_call_recall": null,
+        "no_call_f1": null,
+        "ask_accuracy": 1.0,
+        "delegate_precision": 1.0,
+        "delegate_recall": 1.0,
+        "delegate_f1": 1.0,
+        "error_counts": {
+          "E04": 1,
+          "E05": 1
+        }
+      },
+      "lang:es": {
+        "n": 12,
+        "n_examples": 12,
+        "exact_match": 1.0,
+        "tool_selection_accuracy": null,
+        "required_arg_accuracy": null,
+        "hallucinated_arg_rate": null,
+        "no_call_precision": null,
+        "no_call_recall": null,
+        "no_call_f1": null,
+        "ask_accuracy": 1.0,
+        "delegate_precision": 1.0,
+        "delegate_recall": 1.0,
+        "delegate_f1": 1.0,
+        "error_counts": {}
+      },
+      "lang:fr": {
+        "n": 15,
+        "n_examples": 15,
+        "exact_match": 0.8666666666666667,
+        "tool_selection_accuracy": 0.5,
+        "required_arg_accuracy": 0.0,
+        "hallucinated_arg_rate": 1.0,
+        "no_call_precision": 0.6666666666666666,
+        "no_call_recall": 1.0,
+        "no_call_f1": 0.8,
+        "ask_accuracy": 0.6666666666666666,
+        "delegate_precision": 1.0,
+        "delegate_recall": 1.0,
+        "delegate_f1": 1.0,
+        "error_counts": {
+          "E01": 2,
+          "E11": 1
+        }
+      },
+      "seen×de": {
+        "n": 21,
+        "n_examples": 21,
+        "exact_match": 0.7619047619047619,
+        "tool_selection_accuracy": 0.7777777777777778,
+        "required_arg_accuracy": 0.6153846153846154,
+        "hallucinated_arg_rate": 0.55,
+        "no_call_precision": 0.6666666666666666,
+        "no_call_recall": 1.0,
+        "no_call_f1": 0.8,
+        "ask_accuracy": null,
+        "delegate_precision": 1.0,
+        "delegate_recall": 1.0,
+        "delegate_f1": 1.0,
+        "error_counts": {
+          "E01": 1,
+          "E02": 1,
+          "E04": 2,
+          "E05": 1
+        }
+      },
+      "seen×en": {
+        "n": 20,
+        "n_examples": 20,
+        "exact_match": 0.9,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 0.8333333333333334,
+        "hallucinated_arg_rate": 0.3333333333333333,
+        "no_call_precision": null,
+        "no_call_recall": null,
+        "no_call_f1": null,
+        "ask_accuracy": 1.0,
+        "delegate_precision": 1.0,
+        "delegate_recall": 1.0,
+        "delegate_f1": 1.0,
+        "error_counts": {
+          "E04": 1,
+          "E05": 1
+        }
+      },
+      "seen×es": {
+        "n": 12,
+        "n_examples": 12,
+        "exact_match": 1.0,
+        "tool_selection_accuracy": null,
+        "required_arg_accuracy": null,
+        "hallucinated_arg_rate": null,
+        "no_call_precision": null,
+        "no_call_recall": null,
+        "no_call_f1": null,
+        "ask_accuracy": 1.0,
+        "delegate_precision": 1.0,
+        "delegate_recall": 1.0,
+        "delegate_f1": 1.0,
+        "error_counts": {}
+      },
+      "seen×fr": {
+        "n": 15,
+        "n_examples": 15,
+        "exact_match": 0.8666666666666667,
+        "tool_selection_accuracy": 0.5,
+        "required_arg_accuracy": 0.0,
+        "hallucinated_arg_rate": 1.0,
+        "no_call_precision": 0.6666666666666666,
+        "no_call_recall": 1.0,
+        "no_call_f1": 0.8,
+        "ask_accuracy": 0.6666666666666666,
+        "delegate_precision": 1.0,
+        "delegate_recall": 1.0,
+        "delegate_f1": 1.0,
+        "error_counts": {
+          "E01": 2,
+          "E11": 1
+        }
+      },
+      "split:seen": {
+        "n": 68,
+        "n_examples": 68,
+        "exact_match": 0.8676470588235294,
+        "tool_selection_accuracy": 0.8333333333333334,
+        "required_arg_accuracy": 0.6190476190476191,
+        "hallucinated_arg_rate": 0.5,
+        "no_call_precision": 0.6666666666666666,
+        "no_call_recall": 1.0,
+        "no_call_f1": 0.8,
+        "ask_accuracy": 0.875,
+        "delegate_precision": 1.0,
+        "delegate_recall": 1.0,
+        "delegate_f1": 1.0,
+        "error_counts": {
+          "E01": 3,
+          "E02": 1,
+          "E04": 3,
+          "E05": 2,
+          "E11": 1
+        }
+      },
+      "_infer_errors": 0
+    },
+    "ic25": {
+      "n": 68,
+      "action_agreement": 0.9558823529411765,
+      "tool_agreement": 0.9264705882352942,
+      "disagreements": [
+        {
+          "id": "pimcore-assets-de-004",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "ASK",
+            "tool": "search_assets"
+          }
+        },
+        {
+          "id": "fr-tags-0003",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "ASK",
+            "tool": "create_tag"
+          }
+        },
+        {
+          "id": "es-doc-0007",
+          "rust": {
+            "action": "ASK",
+            "tool": "get_document_schema"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "get_document_schema"
+          }
+        },
+        {
+          "id": "fe22243f0274fe9b",
+          "rust": {
+            "action": "DELEGATE",
+            "tool": null
+          },
+          "python": {
+            "action": "DELEGATE",
+            "tool": "get_workflow_places"
+          }
+        },
+        {
+          "id": "2534736d1b2c5e10",
+          "rust": {
+            "action": "DELEGATE",
+            "tool": null
+          },
+          "python": {
+            "action": "DELEGATE",
+            "tool": "upload_asset"
+          }
+        },
+        {
+          "id": "aff547ba418dd454",
+          "rust": {
+            "action": "DELEGATE",
+            "tool": null
+          },
+          "python": {
+            "action": "DELEGATE",
+            "tool": "get_asset"
+          }
+        }
+      ]
+    }
+  }
+}

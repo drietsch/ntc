@@ -35,3 +35,4 @@ models/*/eval/*.input.jsonl
 #   && uv run python train.py --arch backbone --init runs/backbone/init.pt --data data/any --out runs/any-v1 --epochs 25 \
 #   && uv run python -m export.export_mini --ckpt runs/any-v1/best.pt --out ../models/ntc-any-v1/model.ntc --version ntc-any-v1 --tokenizer-dir tokenizer-any
 models/ntc-any-v1/model.ntc
+models/ntc-pimcore-v1/model.ntc

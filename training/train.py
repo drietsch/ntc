@@ -100,20 +100,51 @@ def mini_config(vocab: int) -> NtcArchConfig:
     )
 
 
-def ce(logits: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+def ce(
+    logits: torch.Tensor, target: torch.Tensor, weight: torch.Tensor | None = None
+) -> torch.Tensor:
     """Cross-entropy over the last dim with -100 ignore, safe on empty."""
     flat = logits.reshape(-1, logits.shape[-1]).float()
     t = target.reshape(-1)
     if (t != -100).sum() == 0:
         return logits.new_zeros(())
-    return F.cross_entropy(flat, t, ignore_index=-100)
+    return F.cross_entropy(flat, t, ignore_index=-100, weight=weight)
 
 
-def compute_loss(out: dict[str, torch.Tensor], tgt: dict[str, torch.Tensor]) -> tuple[torch.Tensor, dict]:
+def class_weights(counts: torch.Tensor, cap: float = 12.0) -> torch.Tensor:
+    """Balanced class weights `total / (n_classes * count_c)`, capped.
+
+    Presence labels are dominated by NOT_APPLICABLE (~95% on the Pimcore tool
+    set: 4 candidates x 8 args, of which only one or two are actually
+    present), so an unweighted objective collapses to the majority class and
+    the model stops binding arguments altogether. Balanced weighting makes
+    each class contribute equally; the cap keeps very rare classes (AMBIGUOUS
+    appears a handful of times) from dominating the gradient.
+    """
+    freq = counts.clamp(min=1).float()
+    w = freq.sum() / (len(freq) * freq)
+    return w.clamp(max=cap)
+
+
+def presence_class_weights(items, n_classes: int = 4) -> torch.Tensor:
+    counts = torch.zeros(n_classes)
+    for it in items:
+        for row in it.presence:
+            for v in row:
+                if v != -100:
+                    counts[v] += 1
+    return class_weights(counts)
+
+
+def compute_loss(
+    out: dict[str, torch.Tensor],
+    tgt: dict[str, torch.Tensor],
+    presence_weight: torch.Tensor | None = None,
+) -> tuple[torch.Tensor, dict]:
     parts = {
         "action": ce(out["action.logits"], tgt["action"]),
         "tool": ce(out["tool.logits"], tgt["tool"]),
-        "presence": ce(out["presence.logits"], tgt["presence"]),
+        "presence": ce(out["presence.logits"], tgt["presence"], presence_weight),
         "span": ce(out["span.start.logits"], tgt["span_start"])
         + ce(out["span.end.logits"], tgt["span_end"]),
         "enum": ce(out["enum.logits"], tgt["enum"]),
@@ -156,6 +187,12 @@ def evaluate(model, cfg, items, device, batch_size=32) -> dict[str, float]:
         agg["action_total"] += len(tgt["action"])
         agg["tool_correct"] += int((out["tool.logits"].argmax(-1) == tgt["tool"]).sum())
         agg["tool_total"] += len(tgt["tool"])
+
+        pmask = tgt["presence"] == 0  # PRESENT
+        agg["present_correct"] = agg.get("present_correct", 0) + int(
+            (out["presence.logits"].argmax(-1)[pmask] == 0).sum()
+        )
+        agg["present_total"] = agg.get("present_total", 0) + int(pmask.sum())
 
         for name, logits, target in (
             ("presence", out["presence.logits"], tgt["presence"]),
@@ -246,6 +283,13 @@ def main() -> None:
         train_items = train_items[: args.limit]
     print(f"train={len(train_items)} dev={len(dev_items)}")
 
+    presence_weight = presence_class_weights(train_items).to(device)
+    print(
+        "presence class weights "
+        f"[PRESENT, MISSING, AMBIGUOUS, NOT_APPLICABLE]: "
+        f"{[round(float(w), 2) for w in presence_weight]}"
+    )
+
     model = NtcEncoderHeadsV1(cfg).to(device)
     n_params = sum(p.numel() for p in model.parameters())
     print(f"params={n_params / 1e6:.2f}M")
@@ -287,7 +331,7 @@ def main() -> None:
                 tgt = {k: v.to(device) for k, v in batch.pop("targets").items()}
                 batch = {k: v.to(device) for k, v in batch.items()}
                 out = model(**batch)
-                loss, parts = compute_loss(out, tgt)
+                loss, parts = compute_loss(out, tgt, presence_weight)
                 opt.zero_grad()
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
