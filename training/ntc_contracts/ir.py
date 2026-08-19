@@ -144,15 +144,23 @@ class LocationValue(_Strict):
     value: TextRef
 
 
-class ListItems(_Strict):
-    """Elements of a `LIST<T>` value: scalars only (spec §19)."""
-
-    items: list[StringValue | BooleanValue | IntegerValue | FloatValue]
-
-
 class ListValue(_Strict):
+    """A `LIST<T>` value.
+
+    Two encodings exist for the same thing and both are accepted here:
+
+    - **dataset labels** carry the element type as a sibling field on the
+      argument (`item_type`) and the value as a flat list, mirroring the
+      source corpora's `ARRAY` shape;
+    - the **runtime IR** nests `{item_type, items, element_provenance}` inside
+      `value`, so a serialized call is self-describing without its schema.
+
+    Keeping the label form flat avoids rewriting every corpus; keeping the IR
+    form nested keeps a single argument interpretable on its own.
+    """
+
     semantic_type: Literal["LIST"]
-    value: ListItems
+    value: list[str | int | float | bool] | dict[str, Any]
 
 
 SemanticValue = Annotated[
