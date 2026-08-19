@@ -5,7 +5,8 @@
 
 use ntc_core::ir::{
     ActionIr, ActionState, ArgumentBinding, CivilDate, DateRelation, Daypart, DurationUnit,
-    DurationValue, Provenance, SemanticValue, TokenSpan, UnresolvedField, Weekday,
+    DurationValue, Provenance, ProvenanceSource, SemanticValue, TokenSpan, UnresolvedField,
+    Weekday,
 };
 use ntc_core::schema::{CanonicalTool, ParamType};
 use ntc_core::tokenizer::TokenSeq;
@@ -39,12 +40,18 @@ pub fn argmax_softmax(logits: &[f32], temperature: f32) -> (usize, f32) {
     (idx, if sum > 0.0 { exps[idx] / sum } else { 0.0 })
 }
 
+/// Threshold above which an additional linked item joins a multi-item
+/// binding ("tag all of these").
+const MULTI_LINK_THRESHOLD: f32 = 0.25;
+
 pub struct Decoder<'a> {
     pub outputs: &'a HeadOutputs,
     pub inputs: &'a ModelInputs,
     pub utterance: &'a TokenSeq,
     pub utterance_text: &'a str,
     pub candidates: &'a [&'a CanonicalTool],
+    /// The request's context frame, if the host supplied one.
+    pub context: Option<&'a ntc_core::ir::RequestContext>,
     pub action_temperature: f32,
     pub tool_temperature: f32,
     pub presence_temperature: f32,
@@ -59,6 +66,128 @@ pub struct DecodedAction {
 }
 
 impl<'a> Decoder<'a> {
+    /// Optional head lookup: models predating head-codec v3 do not emit these.
+    fn optional(&self, name: &str) -> Option<&ntc_model::Tensor> {
+        self.outputs.tensors.get(name)
+    }
+
+    /// Why the router escalated (head codec v3; `None` on older models).
+    pub fn delegate_reason(&self) -> Option<ntc_core::ir::DelegateReason> {
+        use ntc_core::ir::DelegateReason::*;
+        let logits = self.optional("delegate_reason.logits")?;
+        let (idx, _) = argmax_softmax(&logits.data, 1.0);
+        Some(match idx {
+            0 => PayloadRequired,
+            1 => OverLimit,
+            2 => MultiStep,
+            _ => MixedElementTypes,
+        })
+    }
+
+    /// Why nothing should run (head codec v3).
+    pub fn no_call_reason(&self) -> Option<ntc_core::ir::NoCallReason> {
+        use ntc_core::ir::NoCallReason::*;
+        let logits = self.optional("no_call_reason.logits")?;
+        let (idx, _) = argmax_softmax(&logits.data, 1.0);
+        Some(match idx {
+            0 => Chitchat,
+            1 => ConceptualQuestion,
+            2 => UnsupportedCapability,
+            3 => OutOfScope,
+            _ => MentionOnly,
+        })
+    }
+
+    /// Where an argument's value comes from (head codec v3). Defaults to the
+    /// utterance so older models keep their span-only behaviour.
+    fn value_source(&self, tool_idx: usize, arg_idx: usize) -> ProvenanceSource {
+        let Some(t) = self.optional("source.logits") else {
+            return ProvenanceSource::User;
+        };
+        let a = t.shape[1];
+        let base = (tool_idx * a + arg_idx) * 4;
+        let (idx, _) = argmax_softmax(&t.data[base..base + 4], self.value_temperature);
+        match idx {
+            0 => ProvenanceSource::User,
+            1 => ProvenanceSource::LinkedItem,
+            2 => ProvenanceSource::Resolver,
+            _ => ProvenanceSource::Model,
+        }
+    }
+
+    /// Which linked items an argument binds. Multi-select: every item whose
+    /// probability clears the threshold, so "tag all of these" binds several.
+    fn linked_refs(&self, tool_idx: usize, arg_idx: usize) -> Vec<String> {
+        let (Some(t), Some(ctx)) = (self.optional("entity_ref.logits"), self.context) else {
+            return vec![];
+        };
+        let n = ctx.linked.len();
+        if n == 0 {
+            return vec![];
+        }
+        let width = t.shape[2];
+        let a = t.shape[1];
+        let base = (tool_idx * a + arg_idx) * width;
+        let row = &t.data[base..base + width];
+        let max = row.iter().copied().fold(f32::NEG_INFINITY, f32::max);
+        let exps: Vec<f32> = row.iter().map(|v| (v - max).exp()).collect();
+        let sum: f32 = exps.iter().sum();
+        let none_idx = width - 1;
+        let (best, _) = argmax_softmax(row, 1.0);
+        if best == none_idx {
+            return vec![];
+        }
+        (0..n.min(width - 1))
+            .filter(|&i| sum > 0.0 && exps[i] / sum >= MULTI_LINK_THRESHOLD)
+            .map(|i| ctx.linked[i].reference.clone())
+            .collect()
+    }
+
+    /// Bind a value directly from linked context items.
+    fn value_from_linked(
+        &self,
+        arg: &ntc_core::schema::CanonicalArg,
+        refs: &[String],
+    ) -> Option<SemanticValue> {
+        let ctx = self.context?;
+        let items: Vec<&ntc_core::ir::LinkedItem> = refs
+            .iter()
+            .filter_map(|r| ctx.linked.iter().find(|l| &l.reference == r))
+            .collect();
+        if items.is_empty() {
+            return None;
+        }
+        match arg.param_type {
+            ParamType::Integer => Some(SemanticValue::Integer(items[0].id)),
+            ParamType::List => Some(SemanticValue::List {
+                item_type: ntc_core::ir::ListItemType::Integer,
+                items: items
+                    .iter()
+                    .map(|i| ntc_core::ir::ListItem::Integer(i.id))
+                    .collect(),
+                element_provenance: vec![],
+            }),
+            // Element type as an enum symbol: tools disagree on the vocabulary
+            // (`object` vs `data-object`), so match the schema's own list.
+            ParamType::Enum => {
+                let kind = &items[0].kind;
+                arg.enum_values
+                    .iter()
+                    .position(|v| {
+                        v == kind
+                            || (kind == "object" && v == "data-object")
+                            || (kind == "data-object" && v == "object")
+                    })
+                    .map(|index| SemanticValue::Enum {
+                        index: index as u32,
+                        symbol: arg.enum_values[index].clone(),
+                    })
+            }
+            ParamType::Text => Some(SemanticValue::String(items[0].key.clone())),
+            _ => None,
+        }
+    }
+
     pub fn decode_action(&self) -> Result<DecodedAction, NtcError> {
         let action_logits = &self.outputs.get("action.logits")?.data;
         let (a_idx, a_conf) = argmax_softmax(action_logits, self.action_temperature);
@@ -177,6 +306,41 @@ impl<'a> Decoder<'a> {
         tool: &CanonicalTool,
     ) -> Result<Option<(SemanticValue, f32, Option<Provenance>)>, NtcError> {
         let arg = &tool.args[arg_idx];
+
+        // Head codec v3: decide where the value comes from before looking for
+        // it. A value bound from the Studio selection has no span at all.
+        match self.value_source(tool_idx, arg_idx) {
+            ProvenanceSource::LinkedItem => {
+                let refs = self.linked_refs(tool_idx, arg_idx);
+                if !refs.is_empty() {
+                    if let Some(value) = self.value_from_linked(arg, &refs) {
+                        return Ok(Some((value, 0.9, Some(Provenance::from_linked(refs)))));
+                    }
+                }
+            }
+            ProvenanceSource::Resolver => {
+                if let (Some(ctx), Some(text)) = (self.context, self.span(tool_idx, arg_idx)?.2) {
+                    if let Some(entry) = ctx.resolver.iter().find(|r| r.token == text.trim()) {
+                        if let Some(c) = entry.candidates.first() {
+                            let value = match arg.param_type {
+                                ParamType::Integer => Some(SemanticValue::Integer(c.id)),
+                                ParamType::Text => Some(SemanticValue::String(c.key.clone())),
+                                _ => None,
+                            };
+                            if let Some(v) = value {
+                                return Ok(Some((
+                                    v,
+                                    0.9,
+                                    Some(Provenance::from_resolver(entry.token.clone())),
+                                )));
+                            }
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+
         let (span, span_conf, span_text) = self.span(tool_idx, arg_idx)?;
         let provenance = Some(Provenance::from_utterance(span));
 
@@ -420,9 +584,15 @@ impl<'a> Decoder<'a> {
             ..ActionIr::bare(ActionState::Call, 0.0)
         };
 
-        // DELEGATE is a whole-utterance verdict: no tool, no arguments.
+        // DELEGATE / NO_CALL are whole-utterance verdicts; attach the reason
+        // so the host knows which escalation path applies.
         if ir.action == ActionState::Delegate {
+            ir.delegate_reason = self.delegate_reason();
+            ir.suggested_tool = decoded.tool.map(|(idx, _)| self.candidates[idx].id.clone());
             return Ok(ir);
+        }
+        if ir.action == ActionState::NoCall {
+            ir.no_call_reason = self.no_call_reason();
         }
 
         let Some((tool_idx, tool_conf)) = decoded.tool else {

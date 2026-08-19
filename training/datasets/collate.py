@@ -25,6 +25,16 @@ from ntc_model.packing import Canonicalizer, PackedTool, pack_tool
 
 IGNORE = -100
 PRESENCE = {"PRESENT": 0, "MISSING": 1, "AMBIGUOUS": 2, "NOT_APPLICABLE": 3}
+# The corpus's richer unresolved vocabulary collapses onto the 4-way presence
+# head: the model says "cannot fill this", and the *reason* is a separate
+# label (below) so the host can phrase the question.
+UNRESOLVED_TO_PRESENCE = {
+    "MISSING": 1, "NOT_FOUND": 1, "RECOMMENDED": 1,
+    "AMBIGUOUS": 2, "TYPE_CONFLICT": 2,
+}
+UNRESOLVED_REASON = {
+    "MISSING": 0, "AMBIGUOUS": 1, "NOT_FOUND": 2, "RECOMMENDED": 3, "TYPE_CONFLICT": 4,
+}
 RELATION = {
     "TODAY": 1, "TOMORROW": 2, "YESTERDAY": 3, "THIS": 4, "NEXT": 5,
     "LAST": 6, "IN": 7, "AGO": 8,
@@ -36,6 +46,18 @@ WEEKDAY = {
 DAYPART = {"MORNING": 1, "NOON": 2, "AFTERNOON": 3, "EVENING": 4, "NIGHT": 5}
 UNIT = {"SECOND": 1, "MINUTE": 2, "HOUR": 3, "DAY": 4, "WEEK": 5}
 NO_TOOL = -1  # sentinel; becomes index T at batch time
+
+# Head-codec v3 vocabularies (order frozen; see contracts/heads/v1/head-spec.json).
+DELEGATE_REASON = {
+    "PAYLOAD_REQUIRED": 0, "OVER_LIMIT": 1, "MULTI_STEP": 2, "MIXED_ELEMENT_TYPES": 3,
+}
+NO_CALL_REASON = {
+    "CHITCHAT": 0, "CONCEPTUAL_QUESTION": 1, "UNSUPPORTED_CAPABILITY": 2,
+    "OUT_OF_SCOPE": 3, "MENTION_ONLY": 4,
+}
+SOURCE = {"USER": 0, "LINKED_ITEM": 1, "RESOLVER": 2, "MODEL": 3}
+MAX_LINKED = 8  # entity-reference head width (+1 for NONE)
+LINKED_KINDS = {"asset": 1, "document": 2, "object": 3, "data-object": 4, "folder": 5}
 
 
 @dataclass
@@ -54,6 +76,10 @@ class Prepared:
     # targets
     action: int
     tool: int  # candidate index or NO_TOOL
+    delegate_reason: int
+    no_call_reason: int
+    n_linked: int
+    linked_kinds: list[int]
     presence: list[list[int]]  # [n_tools][max_args]
     span_start: list[list[int]]
     span_end: list[list[int]]
@@ -66,6 +92,9 @@ class Prepared:
     weekday: list[list[int]]
     daypart: list[list[int]]
     month: list[list[int]]
+    source: list[list[int]]
+    entity_ref: list[list[int]]
+    unresolved_reason: list[list[int]]
 
 
 ACTION_IDS = {"CALL": 0, "ASK": 1, "NO_CALL": 2, "DELEGATE": 3}
@@ -101,6 +130,13 @@ def prepare_example(
 
     gold = ex["gold"]
     action = ACTION_IDS[gold["action"]]
+    delegate_reason = DELEGATE_REASON.get(gold.get("delegate_reason", ""), IGNORE)
+    no_call_reason = NO_CALL_REASON.get(gold.get("no_call_reason", ""), IGNORE)
+    linked = (ex.get("context") or {}).get("linked", [])
+    linked_index = {item["ref"]: i for i, item in enumerate(linked[:MAX_LINKED])}
+    linked_kinds = [
+        LINKED_KINDS.get(item.get("type", ""), 0) for item in linked[:MAX_LINKED]
+    ]
     tool_names = [c["id"] for c in canon]
     tool_label = tool_names.index(gold["tool"]) if gold.get("tool") else NO_TOOL
 
@@ -115,6 +151,9 @@ def prepare_example(
     unit = grid(IGNORE)
     magnitude = grid(0.0)
     magnitude_mask = [[False] * a for _ in range(n_tools)]
+    source = grid(IGNORE)
+    unresolved_reason = grid(IGNORE)
+    entity_ref = grid(IGNORE)
     relation = grid(IGNORE)
     weekday = grid(IGNORE)
     daypart = grid(IGNORE)
@@ -141,13 +180,27 @@ def prepare_example(
                 if name not in bound and name not in unresolved:
                     presence[t][k] = PRESENCE["NOT_APPLICABLE"]
         for name, reason in unresolved.items():
-            presence[t][arg_index[name]] = PRESENCE[reason]
+            k = arg_index.get(name)
+            if k is None:
+                continue  # unresolved names an argument the schema does not declare
+            presence[t][k] = UNRESOLVED_TO_PRESENCE.get(reason, PRESENCE["MISSING"])
+            unresolved_reason[t][k] = UNRESOLVED_REASON.get(reason, 0)
 
         for garg in gold.get("arguments", []):
             k = arg_index[garg["parameter"]]
             presence[t][k] = PRESENCE["PRESENT"]
             st = garg["semantic_type"]
             value = garg["value"]
+            source[t][k] = SOURCE.get(garg.get("source", "USER"), 0)
+            # Entity reference: which linked item this argument binds.
+            # Multi-ref bindings supervise on the first (the head is
+            # multi-select at decode time via a threshold).
+            refs = garg.get("linked_refs") or []
+            if refs:
+                idx = linked_index.get(refs[0])
+                entity_ref[t][k] = idx if idx is not None else len(linked_index)
+            elif garg.get("source") == "LINKED_ITEM":
+                entity_ref[t][k] = len(linked_index)
 
             if garg.get("char_span"):
                 ts = char_span_to_token_span(
@@ -156,7 +209,13 @@ def prepare_example(
                 if ts is not None:
                     span_start[t][k], span_end[t][k] = ts
 
-            if st == "ENUM":
+            if st == "LIST":
+                # Flat list: elements share one declared item_type.
+                items = value if isinstance(value, list) else value.get("items", [])
+                if items and isinstance(items[0], (int, float)) and not isinstance(items[0], bool):
+                    magnitude[t][k] = math.asinh(float(items[0]))
+                    magnitude_mask[t][k] = True
+            elif st == "ENUM":
                 enum[t][k] = value["index"]
             elif st == "BOOLEAN":
                 boolean[t][k] = int(bool(value))
@@ -175,6 +234,10 @@ def prepare_example(
 
     return Prepared(
         id=ex["id"], lang=ex["lang"], split=ex["split"], tags=ex.get("tags", []),
+        delegate_reason=delegate_reason, no_call_reason=no_call_reason,
+        n_linked=len(linked_index), linked_kinds=linked_kinds,
+        source=source, entity_ref=entity_ref,
+        unresolved_reason=unresolved_reason,
         utterance=ex["utterance"], utterance_ids=list(enc.ids),
         utterance_offsets=list(enc.offsets), tools=tools, canon=canon,
         action=action, tool=tool_label, presence=presence,
@@ -241,10 +304,18 @@ def make_batch(cfg: NtcArchConfig, items: list[Prepared]) -> dict[str, torch.Ten
         "arg_mask": torch.zeros(b, t, a, dtype=torch.bool),
         "enum_anchors": torch.zeros(b, t, a, e, dtype=torch.long),
         "enum_mask": torch.zeros(b, t, a, e, dtype=torch.bool),
+        "n_linked": torch.zeros(b, dtype=torch.long),
+        "linked_kinds": torch.zeros(b, MAX_LINKED, dtype=torch.long),
+        "linked_mask": torch.zeros(b, MAX_LINKED, dtype=torch.bool),
     }
     tgt = {
         "action": torch.zeros(b, dtype=torch.long),
         "tool": torch.zeros(b, dtype=torch.long),
+        "delegate_reason": torch.full((b,), IGNORE, dtype=torch.long),
+        "no_call_reason": torch.full((b,), IGNORE, dtype=torch.long),
+        "source": torch.full((b, t, a), IGNORE, dtype=torch.long),
+        "entity_ref": torch.full((b, t, a), IGNORE, dtype=torch.long),
+        "unresolved_reason": torch.full((b, t, a), IGNORE, dtype=torch.long),
         "presence": torch.full((b, t, a), IGNORE, dtype=torch.long),
         "span_start": torch.full((b, t, a), IGNORE, dtype=torch.long),
         "span_end": torch.full((b, t, a), IGNORE, dtype=torch.long),
@@ -266,6 +337,12 @@ def make_batch(cfg: NtcArchConfig, items: list[Prepared]) -> dict[str, torch.Ten
         out["tool_count"][bi] = len(it.tools)
         tgt["action"][bi] = it.action
         tgt["tool"][bi] = it.tool if it.tool != NO_TOOL else t
+        tgt["delegate_reason"][bi] = it.delegate_reason
+        tgt["no_call_reason"][bi] = it.no_call_reason
+        out["n_linked"][bi] = it.n_linked
+        for li, kind in enumerate(it.linked_kinds):
+            out["linked_kinds"][bi, li] = kind
+            out["linked_mask"][bi, li] = True
         for ti, p in enumerate(it.tools):
             out["schema_ids"][bi, ti] = torch.tensor(p.ids)
             out["schema_mask"][bi, ti] = torch.tensor(p.mask)
@@ -279,7 +356,8 @@ def make_batch(cfg: NtcArchConfig, items: list[Prepared]) -> dict[str, torch.Ten
                     out["enum_mask"][bi, ti, k, j] = True
             for name in (
                 "presence", "span_start", "span_end", "enum", "boolean", "unit",
-                "relation", "weekday", "daypart", "month",
+                "relation", "weekday", "daypart", "month", "source", "entity_ref",
+                "unresolved_reason",
             ):
                 vals = getattr(it, name)[ti]
                 tgt[name][bi, ti, : len(vals)] = torch.tensor(vals)

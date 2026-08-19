@@ -26,6 +26,11 @@ REPO = Path(__file__).resolve().parents[1]
 
 LOSS_WEIGHTS = {
     "action": 1.0,
+    "delegate_reason": 0.5,
+    "no_call_reason": 0.5,
+    "source": 0.75,
+    "entity_ref": 0.75,
+    "unresolved_reason": 0.4,
     "tool": 1.0,
     "presence": 0.5,
     "span": 1.0,
@@ -81,6 +86,47 @@ def xlam_config(vocab: int) -> NtcArchConfig:
     )
 
 
+def studio_config(vocab: int) -> NtcArchConfig:
+    """Arch for the Pimcore Studio corpus (specs/training).
+
+    Schema window covers the longest canonical text in the registry
+    (`propose_document_update`, 541 tokens) so nothing is silently dropped;
+    the slate is capped to 4 by the converter instead, because truncating
+    descriptions would delete the signal the adversarial cases test."""
+    return NtcArchConfig(
+        hidden=384,
+        heads=12,
+        ffn=1536,
+        vocab=vocab,
+        # The backbone ships 512 position embeddings and the longest tool
+        # (`propose_document_update`) canonicalizes to 541 tokens. Rather than
+        # drop 10% of the corpus — disproportionately the propose_* /
+        # PAYLOAD_REQUIRED cases — the table is extended at warm-start (see
+        # `extend_positions`). Only the schema encoder needs this many
+        # positions: tools are encoded independently, so the window covers one
+        # schema, not the packed fusion sequence.
+        max_positions=576,
+        encoder_layers=12,
+        schema_layers=2,
+        fusion_blocks=2,
+        # Compute-bound choice: fusion self-attends over n_tools x
+        # schema_tokens, so the corpus's full shape (4 slates x 576 tokens =
+        # 2305) costs ~63 min/epoch here. Narrowing the *slate* to 3 is the
+        # right lever; shortening the *window* is not — at 384 tokens 28% of
+        # examples drop, and they are disproportionately the long propose_*
+        # schemas, i.e. the biggest PAYLOAD_REQUIRED class. That would bias
+        # the very measurement this run exists for.
+        max_tools=3,
+        max_args=8,
+        # The registry's widest enum has 6 values (element types).
+        max_enum_values=6,
+        max_utterance_tokens=64,
+        max_schema_tokens=576,
+        layer_norm_eps=1e-12,
+        action_classes=4,
+    )
+
+
 def pimcore_config(vocab: int) -> NtcArchConfig:
     """Backbone dims with a wide schema window for the real Pimcore tools
     (longest canonical text ≈ 332 tokens) and retrieval-narrowed candidate
@@ -122,6 +168,26 @@ def mini_config(vocab: int) -> NtcArchConfig:
         max_utterance_tokens=64,
         max_schema_tokens=144,
     )
+
+
+def extend_positions(init_sd: dict, target: int) -> None:
+    """Grow a warm-start position table to `target` rows, in place.
+
+    New rows continue the learned drift at the tail rather than starting from
+    noise: each appended row is the last pretrained row plus the average
+    step across the final stretch. Positions beyond the pretrained range are
+    only ever reached by long tool schemas, and the schema encoder sees them
+    from the first step of fine-tuning.
+    """
+    pos = init_sd.get("pos_emb.weight")
+    if pos is None or pos.shape[0] >= target:
+        return
+    have = pos.shape[0]
+    tail = pos[-32:]
+    drift = (tail[1:] - tail[:-1]).mean(dim=0)
+    extra = torch.stack([pos[-1] + drift * (i + 1) for i in range(target - have)])
+    init_sd["pos_emb.weight"] = torch.cat([pos, extra], dim=0)
+    print(f"extended position embeddings {have} -> {target} for long tool schemas")
 
 
 def ce(
@@ -169,6 +235,11 @@ def compute_loss(
         "action": ce(out["action.logits"], tgt["action"]),
         "tool": ce(out["tool.logits"], tgt["tool"]),
         "presence": ce(out["presence.logits"], tgt["presence"], presence_weight),
+        "delegate_reason": ce(out["delegate_reason.logits"], tgt["delegate_reason"]),
+        "no_call_reason": ce(out["no_call_reason.logits"], tgt["no_call_reason"]),
+        "source": ce(out["source.logits"], tgt["source"]),
+        "entity_ref": ce(out["entity_ref.logits"], tgt["entity_ref"]),
+        "unresolved_reason": ce(out["unresolved_reason.logits"], tgt["unresolved_reason"]),
         "span": ce(out["span.start.logits"], tgt["span_start"])
         + ce(out["span.end.logits"], tgt["span_end"]),
         "enum": ce(out["enum.logits"], tgt["enum"]),
@@ -199,10 +270,14 @@ def evaluate(model, cfg, items, device, batch_size=32) -> dict[str, float]:
         "span_correct": 0, "span_total": 0,
         "enum_correct": 0, "enum_total": 0,
         "relation_correct": 0, "relation_total": 0,
+        "source_correct": 0, "source_total": 0,
+        "entity_correct": 0, "entity_total": 0,
+        "dreason_correct": 0, "dreason_total": 0,
     }
     for i in range(0, len(items), batch_size):
         batch = make_batch(cfg, items[i : i + batch_size])
         tgt = batch.pop("targets")
+        batch.pop("n_linked", None)
         batch = {k: v.to(device) for k, v in batch.items()}
         out = model(**batch)
         out = {k: v.cpu() for k, v in out.items()}
@@ -219,6 +294,9 @@ def evaluate(model, cfg, items, device, batch_size=32) -> dict[str, float]:
         agg["present_total"] = agg.get("present_total", 0) + int(pmask.sum())
 
         for name, logits, target in (
+            ("source", out["source.logits"], tgt["source"]),
+            ("entity", out["entity_ref.logits"], tgt["entity_ref"]),
+            ("dreason", out["delegate_reason.logits"], tgt["delegate_reason"]),
             ("presence", out["presence.logits"], tgt["presence"]),
             ("enum", out["enum.logits"], tgt["enum"]),
             ("relation", out["datetime.relation.logits"], tgt["relation"]),
@@ -249,6 +327,7 @@ def fit_temperatures(model, cfg, items, device) -> Calibration:
         for i in range(0, len(items), 32):
             batch = make_batch(cfg, items[i : i + 32])
             tgt = batch.pop("targets")
+            batch.pop("n_linked", None)
             out = model(**{k: v.to(device) for k, v in batch.items()})
             logits_action.append(out["action.logits"].cpu())
             y_action.append(tgt["action"])
@@ -284,7 +363,7 @@ def main() -> None:
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--seed", type=int, default=17)
     parser.add_argument("--limit", type=int, default=0, help="cap train examples (overfit checks)")
-    parser.add_argument("--arch", choices=["mini", "backbone", "pimcore", "xlam"], default="mini")
+    parser.add_argument("--arch", choices=["mini", "backbone", "pimcore", "xlam", "studio"], default="mini")
     parser.add_argument("--init", type=Path, default=None,
                         help="partial state_dict (runs/backbone/init.pt) to warm-start from")
     parser.add_argument("--backbone-lr", type=float, default=2e-5,
@@ -302,6 +381,7 @@ def main() -> None:
         "backbone": backbone_config,
         "pimcore": pimcore_config,
         "xlam": xlam_config,
+        "studio": studio_config,
     }[args.arch]
     cfg = make_cfg(tokenizer.get_vocab_size())
     print(f"device={device} arch={args.arch} vocab={cfg.vocab}")
@@ -326,6 +406,7 @@ def main() -> None:
     pretrained_names: set[str] = set()
     if args.init:
         init_sd = torch.load(args.init, map_location="cpu", weights_only=True)["state_dict"]
+        extend_positions(init_sd, cfg.max_positions)
         missing, unexpected = model.load_state_dict(init_sd, strict=False)
         assert not unexpected, f"unexpected init tensors: {unexpected[:5]}"
         pretrained_names = set(init_sd)
@@ -358,6 +439,7 @@ def main() -> None:
             for i in range(0, len(train_items), args.batch):
                 batch = make_batch(cfg, train_items[i : i + args.batch])
                 tgt = {k: v.to(device) for k, v in batch.pop("targets").items()}
+                batch.pop("n_linked", None)
                 batch = {k: v.to(device) for k, v in batch.items()}
                 out = model(**batch)
                 loss, parts = compute_loss(out, tgt, presence_weight)

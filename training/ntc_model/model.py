@@ -133,6 +133,11 @@ class MlpHead(nn.Module):
         return self.out(self.act(self.dense(x)))
 
 
+# Host element kinds a linked item can have (frozen order; index 0 = unknown).
+LINKED_KINDS = ["asset", "document", "object", "data-object", "folder"]
+MAX_LINKED = 8
+
+
 class NtcEncoderHeadsV1(nn.Module):
     """The complete model. See the module docstring for the forward contract."""
 
@@ -172,6 +177,18 @@ class NtcEncoderHeadsV1(nn.Module):
         self.datetime_weekday = nn.Linear(h, 8)
         self.datetime_daypart = nn.Linear(h, 6)
         self.datetime_month = nn.Linear(h, 13)
+        # Head codec v3: why the router escalated / declined, where each value
+        # comes from, which linked item it binds, and why one is unfillable.
+        self.delegate_reason_head = MlpHead(2 * h, h, 4)
+        self.no_call_reason_head = MlpHead(2 * h, h, 5)
+        self.source_out = nn.Linear(h, 4)
+        self.unresolved_reason_out = nn.Linear(h, 5)
+        # Linked items are described by a small typed embedding rather than
+        # text: the model needs their *kind* and position, not their key.
+        self.linked_kind_emb = nn.Embedding(len(LINKED_KINDS) + 1, h)
+        self.linked_pos_emb = nn.Embedding(MAX_LINKED + 1, h)
+        self.entity_proj = nn.Linear(h, h, bias=False)
+        self.entity_none = nn.Parameter(torch.empty(h).normal_(std=0.02))
 
     # -- encoders ----------------------------------------------------------
 
@@ -241,6 +258,8 @@ class NtcEncoderHeadsV1(nn.Module):
         arg_mask: Tensor,  # [B, T, A] bool — declared (real) args
         enum_anchors: Tensor,  # [B, T, A, E] long — enum-value anchor tokens
         enum_mask: Tensor,  # [B, T, A, E] bool — declared enum values
+        linked_kinds: Tensor | None = None,  # [B, N] long — context.linked types
+        linked_mask: Tensor | None = None,  # [B, N] bool
     ) -> dict[str, Tensor]:
         cfg = self.cfg
         b, t, ls = schema_ids.shape
@@ -306,6 +325,36 @@ class NtcEncoderHeadsV1(nn.Module):
         enum_scores = (self.enum_proj(arg_states)[:, :, :, None, :] * enum_targets).sum(-1)
         enum_allowed = enum_mask & arg_valid[..., None]
         out["enum.logits"] = enum_scores.masked_fill(~enum_allowed, MASK_VALUE)
+
+        # Escalation reasons read the same pooled state as the action head:
+        # they refine one whole-utterance verdict, not a per-argument one.
+        pooled = torch.cat([user_cls, global_state], dim=-1)
+        out["delegate_reason.logits"] = self.delegate_reason_head(pooled)
+        out["no_call_reason.logits"] = self.no_call_reason_head(pooled)
+
+        # Per-argument: where the value comes from, and why it is unfillable.
+        out["source.logits"] = mask_arg(self.source_out(arg_states))
+        out["unresolved_reason.logits"] = mask_arg(self.unresolved_reason_out(arg_states))
+
+        # Entity reference: bilinear match of each argument against the
+        # linked items, plus a learned NONE slot at the end.
+        n_linked = MAX_LINKED if linked_kinds is None else linked_kinds.shape[1]
+        if linked_kinds is None:
+            linked_kinds = torch.zeros(b, n_linked, dtype=torch.long, device=fused.device)
+            linked_mask = torch.zeros(b, n_linked, dtype=torch.bool, device=fused.device)
+        pos = torch.arange(n_linked, device=fused.device)
+        linked_states = self.linked_kind_emb(linked_kinds) + self.linked_pos_emb(pos)[None]
+        ent_scores = torch.einsum(
+            "btah,bnh->btan", self.entity_proj(arg_states), linked_states
+        )
+        none_score = (self.entity_proj(arg_states) * self.entity_none).sum(-1, keepdim=True)
+        ent_scores = torch.cat([ent_scores, none_score], dim=-1)
+        allowed = torch.cat(
+            [linked_mask[:, None, None, :].expand(b, t, a, n_linked),
+             torch.ones(b, t, a, 1, dtype=torch.bool, device=fused.device)],
+            dim=-1,
+        ) & arg_valid[..., None]
+        out["entity_ref.logits"] = ent_scores.masked_fill(~allowed, MASK_VALUE)
 
         return out
 
@@ -374,7 +423,21 @@ def tensor_specs(cfg: NtcArchConfig) -> list[tuple[str, list[int]]]:
         specs.append((f"{outp}.bias", [classes]))
     for name in ("heads.span.start.weight", "heads.span.end.weight", "heads.enum.weight"):
         specs.append((name, [h, h]))
+    specs.append(("heads.delegate_reason.dense.weight", [2 * h, h]))
+    specs.append(("heads.delegate_reason.dense.bias", [h]))
+    specs.append(("heads.delegate_reason.out.weight", [h, 4]))
+    specs.append(("heads.delegate_reason.out.bias", [4]))
+    specs.append(("heads.no_call_reason.dense.weight", [2 * h, h]))
+    specs.append(("heads.no_call_reason.dense.bias", [h]))
+    specs.append(("heads.no_call_reason.out.weight", [h, 5]))
+    specs.append(("heads.no_call_reason.out.bias", [5]))
+    specs.append(("heads.entity.proj.weight", [h, h]))
+    specs.append(("heads.entity.none.embedding", [h]))
+    specs.append(("context.linked_kind.weight", [len(LINKED_KINDS) + 1, h]))
+    specs.append(("context.linked_pos.weight", [MAX_LINKED + 1, h]))
     for name, classes in (
+        ("heads.source.out", 4),
+        ("heads.unresolved_reason.out", 5),
         ("heads.boolean.out", 2),
         ("heads.numeric.unit", 6),
         ("heads.numeric.magnitude", 1),
@@ -448,6 +511,16 @@ def export_tensors(model: NtcEncoderHeadsV1, cfg: NtcArchConfig) -> dict[str, np
     linear("heads.tool.out", model.tool_head.out)
     linear("heads.presence.dense", model.presence_head.dense)
     linear("heads.presence.out", model.presence_head.out)
+    linear("heads.delegate_reason.dense", model.delegate_reason_head.dense)
+    linear("heads.delegate_reason.out", model.delegate_reason_head.out)
+    linear("heads.no_call_reason.dense", model.no_call_reason_head.dense)
+    linear("heads.no_call_reason.out", model.no_call_reason_head.out)
+    linear("heads.source.out", model.source_out)
+    linear("heads.unresolved_reason.out", model.unresolved_reason_out)
+    linear("heads.entity.proj", model.entity_proj)
+    out["heads.entity.none.embedding"] = npy(model.entity_none)
+    out["context.linked_kind.weight"] = npy(model.linked_kind_emb.weight)
+    out["context.linked_pos.weight"] = npy(model.linked_pos_emb.weight)
     linear("heads.boolean.out", model.boolean_out)
     linear("heads.span.start", model.span_start)
     linear("heads.span.end", model.span_end)

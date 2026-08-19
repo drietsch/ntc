@@ -894,11 +894,43 @@
       "additionalProperties": false
     },
     "UnresolvedReason": {
-      "description": "Why an argument is unresolved (V1 subset of spec §16.3).",
-      "type": "string",
-      "enum": [
-        "MISSING",
-        "AMBIGUOUS"
+      "description": "Why an argument could not be filled (spec §16.3).\n\n`MISSING`/`AMBIGUOUS` are the V1 pair; the rest name failure modes a host with a selection frame and an identifier resolver can actually hit, so it can phrase a useful question instead of a generic one.",
+      "oneOf": [
+        {
+          "description": "Nothing in the utterance or context supplies it.",
+          "type": "string",
+          "enum": [
+            "MISSING"
+          ]
+        },
+        {
+          "description": "Several readings are equally good (two linked items of different type).",
+          "type": "string",
+          "enum": [
+            "AMBIGUOUS"
+          ]
+        },
+        {
+          "description": "The resolver returned nothing — deliberately indistinguishable from \"no permission\", per the corpus's label policy.",
+          "type": "string",
+          "enum": [
+            "NOT_FOUND"
+          ]
+        },
+        {
+          "description": "A value could be constructed, but the tool's own description says to look it up first (e.g. call `list_document_types`).",
+          "type": "string",
+          "enum": [
+            "RECOMMENDED"
+          ]
+        },
+        {
+          "description": "The available referent is the wrong element type for this tool.",
+          "type": "string",
+          "enum": [
+            "TYPE_CONFLICT"
+          ]
+        }
       ]
     },
     "Weekday": {

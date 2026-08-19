@@ -210,6 +210,7 @@ impl<B: Backend> NeuralToolCompiler<B> {
             utterance,
             utterance_text: &req.utterance,
             candidates: &candidates,
+            context: req.context.as_ref(),
             action_temperature: cal.action,
             tool_temperature: cal.tool,
             presence_temperature: cal.presence,

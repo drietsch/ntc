@@ -124,12 +124,26 @@ pub enum NoCallReason {
     MentionOnly,
 }
 
-/// Why an argument is unresolved (V1 subset of spec §16.3).
+/// Why an argument could not be filled (spec §16.3).
+///
+/// `MISSING`/`AMBIGUOUS` are the V1 pair; the rest name failure modes a host
+/// with a selection frame and an identifier resolver can actually hit, so it
+/// can phrase a useful question instead of a generic one.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum UnresolvedReason {
+    /// Nothing in the utterance or context supplies it.
     Missing,
+    /// Several readings are equally good (two linked items of different type).
     Ambiguous,
+    /// The resolver returned nothing — deliberately indistinguishable from
+    /// "no permission", per the corpus's label policy.
+    NotFound,
+    /// A value could be constructed, but the tool's own description says to
+    /// look it up first (e.g. call `list_document_types`).
+    Recommended,
+    /// The available referent is the wrong element type for this tool.
+    TypeConflict,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
