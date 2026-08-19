@@ -6,7 +6,7 @@
 //! head exists, and none is needed: separators and conjunctions are exact
 //! rules, so they belong in deterministic code.
 
-use ntc_core::ir::SemanticValue;
+use ntc_core::ir::{ListItem, ListItemType};
 use ntc_core::schema::ParamType;
 
 use crate::normalize::number;
@@ -73,29 +73,35 @@ fn split_on_conjunction(chunk: &str) -> Vec<String> {
 /// Parse one element by the declared item type. Returns `None` when the text
 /// cannot be interpreted as that type (the caller drops the element and, for
 /// required arguments, the policy escalates).
-pub fn parse_item(text: &str, item_type: ParamType) -> Option<SemanticValue> {
+pub fn parse_item(text: &str, item_type: ParamType) -> Option<ListItem> {
     let t = text.trim();
     if t.is_empty() {
         return None;
     }
     match item_type {
-        ParamType::Integer => {
-            number::parse_number(t).map(|v| SemanticValue::Integer(v.round() as i64))
-        }
-        ParamType::Float => number::parse_number(t).map(SemanticValue::Float),
+        ParamType::Integer => number::parse_number(t).map(|v| ListItem::Integer(v.round() as i64)),
+        ParamType::Float => number::parse_number(t).map(ListItem::Float),
         ParamType::Boolean => match t.to_lowercase().as_str() {
-            "true" | "yes" | "ja" | "oui" | "sí" | "si" | "1" => {
-                Some(SemanticValue::Boolean(true))
-            }
-            "false" | "no" | "nein" | "non" | "0" => Some(SemanticValue::Boolean(false)),
+            "true" | "yes" | "ja" | "oui" | "sí" | "si" | "1" => Some(ListItem::Boolean(true)),
+            "false" | "no" | "nein" | "non" | "0" => Some(ListItem::Boolean(false)),
             _ => None,
         },
-        _ => Some(SemanticValue::String(t.to_string())),
+        _ => Some(ListItem::String(t.to_string())),
+    }
+}
+
+/// The IR element type for a schema parameter type.
+pub fn list_item_type(item_type: ParamType) -> ListItemType {
+    match item_type {
+        ParamType::Integer => ListItemType::Integer,
+        ParamType::Float => ListItemType::Float,
+        ParamType::Boolean => ListItemType::Boolean,
+        _ => ListItemType::String,
     }
 }
 
 /// Split and parse a span's text into list elements.
-pub fn parse_list(text: &str, item_type: ParamType) -> Vec<SemanticValue> {
+pub fn parse_list(text: &str, item_type: ParamType) -> Vec<ListItem> {
     split_items(text)
         .iter()
         .filter_map(|part| parse_item(part, item_type))
@@ -129,16 +135,16 @@ mod tests {
         assert_eq!(
             parse_list("42, 55 and 101", ParamType::Integer),
             vec![
-                SemanticValue::Integer(42),
-                SemanticValue::Integer(55),
-                SemanticValue::Integer(101)
+                ListItem::Integer(42),
+                ListItem::Integer(55),
+                ListItem::Integer(101)
             ]
         );
         assert_eq!(
             parse_list("summer und archiv", ParamType::Text),
             vec![
-                SemanticValue::String("summer".into()),
-                SemanticValue::String("archiv".into())
+                ListItem::String("summer".into()),
+                ListItem::String("archiv".into())
             ]
         );
         // Non-numeric text under an INTEGER item type yields no elements.
@@ -149,7 +155,7 @@ mod tests {
     fn multilingual_booleans() {
         assert_eq!(
             parse_list("true, nein", ParamType::Boolean),
-            vec![SemanticValue::Boolean(true), SemanticValue::Boolean(false)]
+            vec![ListItem::Boolean(true), ListItem::Boolean(false)]
         );
     }
 }

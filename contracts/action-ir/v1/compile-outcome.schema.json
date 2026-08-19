@@ -125,11 +125,40 @@
             "$ref": "#/definitions/ArgumentBinding"
           }
         },
+        "delegate_reason": {
+          "description": "Present iff `action == DELEGATE`: why the router escalated.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/DelegateReason"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "ir_version": {
           "description": "Always [`crate::IR_VERSION`] for values produced by this crate.",
           "type": "integer",
           "format": "uint32",
           "minimum": 0.0
+        },
+        "no_call_reason": {
+          "description": "Present iff `action == NO_CALL`.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/NoCallReason"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "suggested_tool": {
+          "description": "Optional hint for the agent: the tool the router believes is involved (it just could not compile the call itself).",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "tool": {
           "description": "Present iff `action == CALL`.",
@@ -530,7 +559,7 @@
           }
         },
         {
-          "description": "Spec §19 `LIST<T>`: a homogeneous list of scalar values. The model marks one span covering the list region; deterministic code splits it and parses each element by the schema's declared item type.",
+          "description": "Spec §19 `LIST<T>`: a homogeneous list of scalar values.\n\nElements are flat values under a single declared `item_type` (matching the ABI's `ITEM <TYPE>` line) rather than individually tagged values — a list is homogeneous by construction, so tagging every element repeats the schema. Elements may come from one span the runtime splits deterministically, or from several linked items, so `element_provenance` records per-element origin when it differs from the argument's own.",
           "type": "object",
           "required": [
             "semantic_type",
@@ -546,13 +575,23 @@
             "value": {
               "type": "object",
               "required": [
+                "item_type",
                 "items"
               ],
               "properties": {
+                "element_provenance": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Provenance"
+                  }
+                },
+                "item_type": {
+                  "$ref": "#/definitions/ListItemType"
+                },
                 "items": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/definitions/SemanticValue"
+                    "$ref": "#/definitions/ListItem"
                   }
                 }
               }
@@ -707,6 +746,39 @@
         "NIGHT"
       ]
     },
+    "DelegateReason": {
+      "description": "Why a request is handed to a full LLM agent. The router does not just say \"not mine\" — it says *why*, so the host can route (a payload builder, a batching loop, a planner) and so failures are diagnosable.",
+      "oneOf": [
+        {
+          "description": "The call needs a nested object/array payload the structured heads cannot author (`propose_*`, `update_*`).",
+          "type": "string",
+          "enum": [
+            "PAYLOAD_REQUIRED"
+          ]
+        },
+        {
+          "description": "A single intent exceeding a hard per-call cap (max 5 elements, max 20 proposals, page-size limits) — needs a loop.",
+          "type": "string",
+          "enum": [
+            "OVER_LIMIT"
+          ]
+        },
+        {
+          "description": "Conjunctive or genuinely chained request.",
+          "type": "string",
+          "enum": [
+            "MULTI_STEP"
+          ]
+        },
+        {
+          "description": "The selection spans element types a single-type tool cannot accept.",
+          "type": "string",
+          "enum": [
+            "MIXED_ELEMENT_TYPES"
+          ]
+        }
+      ]
+    },
     "DurationUnit": {
       "type": "string",
       "enum": [
@@ -734,12 +806,76 @@
       },
       "additionalProperties": false
     },
+    "ListItem": {
+      "description": "One element of a `LIST`.",
+      "anyOf": [
+        {
+          "type": "integer",
+          "format": "int64"
+        },
+        {
+          "type": "number",
+          "format": "double"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "ListItemType": {
+      "description": "Element type of a `LIST` value (scalars only, mirroring the ABI).",
+      "type": "string",
+      "enum": [
+        "STRING",
+        "INTEGER",
+        "FLOAT",
+        "BOOLEAN"
+      ]
+    },
+    "NoCallReason": {
+      "description": "Why nothing should be executed.",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "CHITCHAT",
+            "CONCEPTUAL_QUESTION",
+            "UNSUPPORTED_CAPABILITY",
+            "OUT_OF_SCOPE"
+          ]
+        },
+        {
+          "description": "The utterance names a tool but only discusses it.",
+          "type": "string",
+          "enum": [
+            "MENTION_ONLY"
+          ]
+        }
+      ]
+    },
     "Provenance": {
       "type": "object",
       "required": [
         "source"
       ],
       "properties": {
+        "linked_refs": {
+          "description": "Refs into `CompileRequest.context.linked` (e.g. `[\"L1\", \"L3\"]`).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "resolver_token": {
+          "description": "The identifier token the host's resolver looked up.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "source": {
           "$ref": "#/definitions/ProvenanceSource"
         },
@@ -768,6 +904,20 @@
           ]
         },
         {
+          "description": "Bound from an item the user linked into the chat (Studio selection); `linked_refs` names which one(s).",
+          "type": "string",
+          "enum": [
+            "LINKED_ITEM"
+          ]
+        },
+        {
+          "description": "Resolved by the host's identifier pre-pass; `resolver_token` names the token that was looked up.",
+          "type": "string",
+          "enum": [
+            "RESOLVER"
+          ]
+        },
+        {
           "description": "Resolved from conversational context entities.",
           "type": "string",
           "enum": [
@@ -775,409 +925,11 @@
           ]
         },
         {
-          "description": "Inferred by the model without a source span.",
+          "description": "Constructed by the model with no source in the request (a PQL string, a default parent id).",
           "type": "string",
           "enum": [
             "MODEL"
           ]
-        }
-      ]
-    },
-    "SemanticValue": {
-      "description": "A semantic value as predicted by the model — richer than JSON types so deterministic code can canonicalize exactly (spec §19).\n\nWire shape (adjacent tagging) matches spec §18: `{ \"semantic_type\": \"DURATION\", \"value\": { \"magnitude\": 1, \"unit\": \"HOUR\" } }`",
-      "oneOf": [
-        {
-          "type": "object",
-          "required": [
-            "semantic_type",
-            "value"
-          ],
-          "properties": {
-            "semantic_type": {
-              "type": "string",
-              "enum": [
-                "STRING"
-              ]
-            },
-            "value": {
-              "type": "string"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "required": [
-            "semantic_type",
-            "value"
-          ],
-          "properties": {
-            "semantic_type": {
-              "type": "string",
-              "enum": [
-                "BOOLEAN"
-              ]
-            },
-            "value": {
-              "type": "boolean"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "required": [
-            "semantic_type",
-            "value"
-          ],
-          "properties": {
-            "semantic_type": {
-              "type": "string",
-              "enum": [
-                "INTEGER"
-              ]
-            },
-            "value": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "required": [
-            "semantic_type",
-            "value"
-          ],
-          "properties": {
-            "semantic_type": {
-              "type": "string",
-              "enum": [
-                "FLOAT"
-              ]
-            },
-            "value": {
-              "type": "number",
-              "format": "double"
-            }
-          }
-        },
-        {
-          "description": "Index + symbol into the canonical schema's enum-value list for the bound parameter. `index` is authoritative; `symbol` is redundancy the validator cross-checks.",
-          "type": "object",
-          "required": [
-            "semantic_type",
-            "value"
-          ],
-          "properties": {
-            "semantic_type": {
-              "type": "string",
-              "enum": [
-                "ENUM"
-              ]
-            },
-            "value": {
-              "type": "object",
-              "required": [
-                "index",
-                "symbol"
-              ],
-              "properties": {
-                "index": {
-                  "type": "integer",
-                  "format": "uint32",
-                  "minimum": 0.0
-                },
-                "symbol": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        },
-        {
-          "type": "object",
-          "required": [
-            "semantic_type",
-            "value"
-          ],
-          "properties": {
-            "semantic_type": {
-              "type": "string",
-              "enum": [
-                "ABSOLUTE_DATE"
-              ]
-            },
-            "value": {
-              "$ref": "#/definitions/CivilDate"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "required": [
-            "semantic_type",
-            "value"
-          ],
-          "properties": {
-            "semantic_type": {
-              "type": "string",
-              "enum": [
-                "RELATIVE_DATE"
-              ]
-            },
-            "value": {
-              "type": "object",
-              "required": [
-                "relation"
-              ],
-              "properties": {
-                "offset": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/definitions/DurationValue"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                },
-                "relation": {
-                  "$ref": "#/definitions/DateRelation"
-                },
-                "weekday": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/definitions/Weekday"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        {
-          "description": "RFC 3339 timestamp, e.g. `2026-08-19T15:00:00+02:00`.",
-          "type": "object",
-          "required": [
-            "semantic_type",
-            "value"
-          ],
-          "properties": {
-            "semantic_type": {
-              "type": "string",
-              "enum": [
-                "ABSOLUTE_DATETIME"
-              ]
-            },
-            "value": {
-              "type": "string"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "required": [
-            "semantic_type",
-            "value"
-          ],
-          "properties": {
-            "semantic_type": {
-              "type": "string",
-              "enum": [
-                "RELATIVE_DATETIME"
-              ]
-            },
-            "value": {
-              "type": "object",
-              "required": [
-                "relation"
-              ],
-              "properties": {
-                "daypart": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/definitions/Daypart"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                },
-                "offset": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/definitions/DurationValue"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                },
-                "relation": {
-                  "$ref": "#/definitions/DateRelation"
-                },
-                "time": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/definitions/CivilTime"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                },
-                "weekday": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/definitions/Weekday"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        {
-          "type": "object",
-          "required": [
-            "semantic_type",
-            "value"
-          ],
-          "properties": {
-            "semantic_type": {
-              "type": "string",
-              "enum": [
-                "TIME_OF_DAY"
-              ]
-            },
-            "value": {
-              "$ref": "#/definitions/CivilTime"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "required": [
-            "semantic_type",
-            "value"
-          ],
-          "properties": {
-            "semantic_type": {
-              "type": "string",
-              "enum": [
-                "DAYPART"
-              ]
-            },
-            "value": {
-              "$ref": "#/definitions/Daypart"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "required": [
-            "semantic_type",
-            "value"
-          ],
-          "properties": {
-            "semantic_type": {
-              "type": "string",
-              "enum": [
-                "DURATION"
-              ]
-            },
-            "value": {
-              "$ref": "#/definitions/DurationValue"
-            }
-          }
-        },
-        {
-          "description": "Person reference by surface text in V1 (no context-entity resolution).",
-          "type": "object",
-          "required": [
-            "semantic_type",
-            "value"
-          ],
-          "properties": {
-            "semantic_type": {
-              "type": "string",
-              "enum": [
-                "PERSON_REF"
-              ]
-            },
-            "value": {
-              "type": "object",
-              "required": [
-                "text"
-              ],
-              "properties": {
-                "text": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        },
-        {
-          "type": "object",
-          "required": [
-            "semantic_type",
-            "value"
-          ],
-          "properties": {
-            "semantic_type": {
-              "type": "string",
-              "enum": [
-                "LOCATION"
-              ]
-            },
-            "value": {
-              "type": "object",
-              "required": [
-                "text"
-              ],
-              "properties": {
-                "text": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        },
-        {
-          "description": "Spec §19 `LIST<T>`: a homogeneous list of scalar values. The model marks one span covering the list region; deterministic code splits it and parses each element by the schema's declared item type.",
-          "type": "object",
-          "required": [
-            "semantic_type",
-            "value"
-          ],
-          "properties": {
-            "semantic_type": {
-              "type": "string",
-              "enum": [
-                "LIST"
-              ]
-            },
-            "value": {
-              "type": "object",
-              "required": [
-                "items"
-              ],
-              "properties": {
-                "items": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/SemanticValue"
-                  }
-                }
-              }
-            }
-          }
         }
       ]
     },
@@ -1239,6 +991,13 @@
         "confidence": {
           "type": "number",
           "format": "float"
+        },
+        "hint": {
+          "description": "Machine-readable cause, so the host can phrase the question (e.g. `TWO_LINKED_ITEMS_OF_DIFFERENT_TYPE`).",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "parameter": {
           "type": "string"

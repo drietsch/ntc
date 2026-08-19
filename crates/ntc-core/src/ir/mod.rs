@@ -57,6 +57,16 @@ pub struct ActionIr {
     /// Fields the model could not resolve; drives `ASK`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub unresolved: Vec<UnresolvedField>,
+    /// Present iff `action == DELEGATE`: why the router escalated.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub delegate_reason: Option<DelegateReason>,
+    /// Optional hint for the agent: the tool the router believes is involved
+    /// (it just could not compile the call itself).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub suggested_tool: Option<String>,
+    /// Present iff `action == NO_CALL`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub no_call_reason: Option<NoCallReason>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -84,6 +94,36 @@ pub struct ArgumentBinding {
     pub provenance: Option<Provenance>,
 }
 
+/// Why a request is handed to a full LLM agent. The router does not just
+/// say "not mine" — it says *why*, so the host can route (a payload builder,
+/// a batching loop, a planner) and so failures are diagnosable.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum DelegateReason {
+    /// The call needs a nested object/array payload the structured heads
+    /// cannot author (`propose_*`, `update_*`).
+    PayloadRequired,
+    /// A single intent exceeding a hard per-call cap (max 5 elements, max 20
+    /// proposals, page-size limits) — needs a loop.
+    OverLimit,
+    /// Conjunctive or genuinely chained request.
+    MultiStep,
+    /// The selection spans element types a single-type tool cannot accept.
+    MixedElementTypes,
+}
+
+/// Why nothing should be executed.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum NoCallReason {
+    Chitchat,
+    ConceptualQuestion,
+    UnsupportedCapability,
+    OutOfScope,
+    /// The utterance names a tool but only discusses it.
+    MentionOnly,
+}
+
 /// Why an argument is unresolved (V1 subset of spec §16.3).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -98,27 +138,45 @@ pub struct UnresolvedField {
     pub parameter: String,
     pub reason: UnresolvedReason,
     pub confidence: f32,
+    /// Machine-readable cause, so the host can phrase the question
+    /// (e.g. `TWO_LINKED_ITEMS_OF_DIFFERENT_TYPE`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hint: Option<String>,
 }
 
 /// Where a bound value came from.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ProvenanceSource {
+    #[default]
     /// Extracted from the user utterance (span points into its tokens).
     User,
+    /// Bound from an item the user linked into the chat (Studio selection);
+    /// `linked_refs` names which one(s).
+    LinkedItem,
+    /// Resolved by the host's identifier pre-pass; `resolver_token` names the
+    /// token that was looked up.
+    Resolver,
     /// Resolved from conversational context entities.
     Context,
-    /// Inferred by the model without a source span.
+    /// Constructed by the model with no source in the request (a PQL string,
+    /// a default parent id).
     Model,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct Provenance {
     pub source: ProvenanceSource,
     /// `[start, end)` token indices over the tokenized utterance.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub token_span: Option<TokenSpan>,
+    /// Refs into `CompileRequest.context.linked` (e.g. `["L1", "L3"]`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub linked_refs: Vec<String>,
+    /// The identifier token the host's resolver looked up.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resolver_token: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -211,6 +269,26 @@ pub struct CivilTime {
     pub minute: u8,
 }
 
+/// Element type of a `LIST` value (scalars only, mirroring the ABI).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ListItemType {
+    String,
+    Integer,
+    Float,
+    Boolean,
+}
+
+/// One element of a `LIST`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(untagged)]
+pub enum ListItem {
+    Integer(i64),
+    Float(f64),
+    Boolean(bool),
+    String(String),
+}
+
 /// A semantic value as predicted by the model — richer than JSON types so
 /// deterministic code can canonicalize exactly (spec §19).
 ///
@@ -268,11 +346,87 @@ pub enum SemanticValue {
     PersonRef { text: String },
     #[serde(rename = "LOCATION")]
     Location { text: String },
-    /// Spec §19 `LIST<T>`: a homogeneous list of scalar values. The model
-    /// marks one span covering the list region; deterministic code splits it
-    /// and parses each element by the schema's declared item type.
+    /// Spec §19 `LIST<T>`: a homogeneous list of scalar values.
+    ///
+    /// Elements are flat values under a single declared `item_type` (matching
+    /// the ABI's `ITEM <TYPE>` line) rather than individually tagged values —
+    /// a list is homogeneous by construction, so tagging every element
+    /// repeats the schema. Elements may come from one span the runtime splits
+    /// deterministically, or from several linked items, so `element_provenance`
+    /// records per-element origin when it differs from the argument's own.
     #[serde(rename = "LIST")]
-    List { items: Vec<SemanticValue> },
+    List {
+        item_type: ListItemType,
+        items: Vec<ListItem>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        element_provenance: Vec<Provenance>,
+    },
+}
+
+impl ActionIr {
+    /// A bare verdict with no tool, arguments or reasons.
+    pub fn bare(action: ActionState, confidence: f32) -> Self {
+        Self {
+            ir_version: crate::IR_VERSION,
+            action,
+            action_confidence: confidence,
+            tool: None,
+            arguments: vec![],
+            unresolved: vec![],
+            delegate_reason: None,
+            suggested_tool: None,
+            no_call_reason: None,
+        }
+    }
+}
+
+impl UnresolvedField {
+    pub fn missing(parameter: impl Into<String>, confidence: f32) -> Self {
+        Self {
+            parameter: parameter.into(),
+            reason: UnresolvedReason::Missing,
+            confidence,
+            hint: None,
+        }
+    }
+
+    pub fn ambiguous(parameter: impl Into<String>, confidence: f32) -> Self {
+        Self {
+            parameter: parameter.into(),
+            reason: UnresolvedReason::Ambiguous,
+            confidence,
+            hint: None,
+        }
+    }
+}
+
+impl Provenance {
+    /// A value read out of the utterance at `span`.
+    pub fn from_utterance(span: TokenSpan) -> Self {
+        Self {
+            source: ProvenanceSource::User,
+            token_span: Some(span),
+            ..Default::default()
+        }
+    }
+
+    /// A value bound from linked context items (Studio selection).
+    pub fn from_linked(refs: Vec<String>) -> Self {
+        Self {
+            source: ProvenanceSource::LinkedItem,
+            linked_refs: refs,
+            ..Default::default()
+        }
+    }
+
+    /// A value the host's identifier pre-pass resolved.
+    pub fn from_resolver(token: impl Into<String>) -> Self {
+        Self {
+            source: ProvenanceSource::Resolver,
+            resolver_token: Some(token.into()),
+            ..Default::default()
+        }
+    }
 }
 
 impl SemanticValue {
@@ -302,7 +456,67 @@ impl SemanticValue {
 // Compile request (the other half of the runtime boundary)
 // ---------------------------------------------------------------------------
 
-/// A known conversational context entity (thin in V1).
+/// An element the user linked into the chat — the host's current selection.
+/// Arguments may bind these instead of extracting from the utterance
+/// ("tag *this*"), which is what makes an in-application router useful.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct LinkedItem {
+    /// Stable handle within this request (`L1`, `L2`, …) that argument
+    /// provenance points at.
+    #[serde(rename = "ref")]
+    pub reference: String,
+    /// Host element type (`asset`, `document`, `object`, …). Tools disagree
+    /// on the symbol for the same thing (`object` vs `data-object`), so the
+    /// binding layer maps it per tool rather than assuming one vocabulary.
+    #[serde(rename = "type")]
+    pub kind: String,
+    pub id: i64,
+    #[serde(default)]
+    pub key: String,
+    #[serde(default)]
+    pub path: String,
+    #[serde(default)]
+    pub is_folder: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub class_name: Option<String>,
+}
+
+/// One candidate interpretation of an identifier-like token.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct ResolverCandidate {
+    #[serde(rename = "type")]
+    pub kind: String,
+    pub id: i64,
+    #[serde(default)]
+    pub key: String,
+}
+
+/// The host's identifier pre-pass: integer-like tokens in the utterance,
+/// looked up before the model runs. An empty `candidates` list means "not
+/// found", which is deliberately indistinguishable from "no permission".
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct ResolverEntry {
+    pub token: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub char_span: Option<CharSpan>,
+    #[serde(default)]
+    pub candidates: Vec<ResolverCandidate>,
+}
+
+/// `[start, end)` character offsets (host-facing; token spans are the
+/// model-facing form).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct CharSpan {
+    pub start: u32,
+    pub end: u32,
+}
+
+/// A known conversational context entity (generic; hosts without a selection
+/// model can use this instead of [`LinkedItem`]).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct ContextEntity {
@@ -312,9 +526,23 @@ pub struct ContextEntity {
     pub display: String,
 }
 
+/// Everything the host knows about the moment the utterance was typed.
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct RequestContext {
+    /// Items linked into the chat (the current selection).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub linked: Vec<LinkedItem>,
+    /// Identifier pre-pass results.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub resolver: Vec<ResolverEntry>,
+    /// Total selection size when it exceeds what `linked` enumerates — the
+    /// signal that a request is bulk and may exceed a tool's per-call cap.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selection_count: Option<u32>,
+    /// Where in the host UI the user is (list, detail, …).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub studio_view: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub entities: Vec<ContextEntity>,
 }
@@ -361,10 +589,7 @@ mod tests {
                     parameter: "title".into(),
                     value: SemanticValue::String("Zahnarzttermin".into()),
                     confidence: 0.995,
-                    provenance: Some(Provenance {
-                        source: ProvenanceSource::User,
-                        token_span: Some(TokenSpan { start: 7, end: 9 }),
-                    }),
+                    provenance: Some(Provenance::from_utterance(TokenSpan { start: 7, end: 9 })),
                 },
                 ArgumentBinding {
                     parameter: "start".into(),
@@ -389,6 +614,7 @@ mod tests {
                 },
             ],
             unresolved: vec![],
+            ..ActionIr::bare(ActionState::Call, 0.0)
         };
 
         let json = serde_json::to_value(&ir).unwrap();

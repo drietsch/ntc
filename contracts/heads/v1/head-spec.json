@@ -1,6 +1,6 @@
 {
-  "head_spec_version": 2,
-  "comment": "Neural output ABI for ntc_encoder_heads_v1. Class orderings are FROZEN and append-only: new classes may only be appended (v2 appended DELEGATE to the action head, width recorded in .ntc model.action_classes). Otherwise: changing any list requires a head_spec_version bump. Output tensor names are what Backend::run returns and what the PyTorch reference dumps for parity fixtures. Shapes use T=max_tools(+1 for NO_TOOL where noted), A=max_args, E=max_enum_values, Lu=max_utterance_tokens.",
+  "head_spec_version": 3,
+  "comment": "Neural output ABI for ntc_encoder_heads_v1. Class orderings are FROZEN and append-only: new classes may only be appended (v2 appended DELEGATE to the action head, width recorded in .ntc model.action_classes; v3 added delegate_reason, no_call_reason, source, entity_ref and unresolved_hint heads — absent heads simply are not emitted, so v2 models still load). Otherwise: changing any list requires a head_spec_version bump. Output tensor names are what Backend::run returns and what the PyTorch reference dumps for parity fixtures. Shapes use T=max_tools(+1 for NO_TOOL where noted), A=max_args, E=max_enum_values, Lu=max_utterance_tokens.",
   "inputs": {
     "max_utterance_tokens": 96,
     "max_tools": 16,
@@ -180,6 +180,69 @@
         "DECEMBER"
       ],
       "decode": "relation ABSOLUTE -> parse the span text deterministically; relation IN/AGO take magnitude/unit from the numeric head; factored fields with class NONE are omitted from the IR value"
+    },
+    "delegate_reason": {
+      "output": "delegate_reason.logits",
+      "shape": [
+        "4"
+      ],
+      "classes": [
+        "PAYLOAD_REQUIRED",
+        "OVER_LIMIT",
+        "MULTI_STEP",
+        "MIXED_ELEMENT_TYPES"
+      ],
+      "decode": "read only when action == DELEGATE; tells the host WHICH escalation path applies (payload builder, batching loop, planner, type split) instead of a bare 'not mine'"
+    },
+    "no_call_reason": {
+      "output": "no_call_reason.logits",
+      "shape": [
+        "5"
+      ],
+      "classes": [
+        "CHITCHAT",
+        "CONCEPTUAL_QUESTION",
+        "UNSUPPORTED_CAPABILITY",
+        "OUT_OF_SCOPE",
+        "MENTION_ONLY"
+      ],
+      "decode": "read only when action == NO_CALL"
+    },
+    "source": {
+      "output": "source.logits",
+      "shape": [
+        "T",
+        "A",
+        "4"
+      ],
+      "classes": [
+        "UTTERANCE",
+        "LINKED_ITEM",
+        "RESOLVER",
+        "INFERRED"
+      ],
+      "decode": "per PRESENT argument, where the value comes from. Gates the other value heads: UTTERANCE -> span head; LINKED_ITEM -> entity-reference head over context.linked; RESOLVER -> the host's pre-pass token; INFERRED -> no provenance, value constructed"
+    },
+    "entity_ref": {
+      "output": "entity_ref.logits",
+      "shape": [
+        "T",
+        "A",
+        "N_linked + 1"
+      ],
+      "classes": "index into context.linked (L1..Ln); last index = NONE",
+      "decode": "consulted when the source head says LINKED_ITEM. Multi-select (linked_refs) takes every index above the calibrated threshold, so 'tag all of these' binds several items",
+      "note": "specified since v1 but unimplemented until a corpus with a real selection frame existed"
+    },
+    "unresolved_hint": {
+      "output": "unresolved_hint.logits",
+      "shape": [
+        "T",
+        "A",
+        "H"
+      ],
+      "classes": "host-defined hint vocabulary from .ntc metadata (e.g. TWO_LINKED_ITEMS_OF_DIFFERENT_TYPE); index 0 = NONE",
+      "decode": "read for arguments whose presence is MISSING/AMBIGUOUS, so the host can phrase the question"
     }
   },
   "pooling": {

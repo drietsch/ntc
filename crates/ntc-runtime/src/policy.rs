@@ -1,7 +1,7 @@
 //! Confidence policy (spec §46): threshold-driven downgrades applied to the
 //! decoded IR before validation and serialization.
 
-use ntc_core::ir::{ActionIr, ActionState, UnresolvedField, UnresolvedReason};
+use ntc_core::ir::{ActionIr, ActionState, UnresolvedField};
 use ntc_core::schema::CanonicalTool;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -75,11 +75,8 @@ impl ConfidencePolicy {
                 let bound = ir.arguments.iter().any(|b| b.parameter == arg.name);
                 let listed = ir.unresolved.iter().any(|u| u.parameter == arg.name);
                 if !bound && !listed {
-                    ir.unresolved.push(UnresolvedField {
-                        parameter: arg.name.clone(),
-                        reason: UnresolvedReason::Missing,
-                        confidence: 0.0,
-                    });
+                    ir.unresolved
+                        .push(UnresolvedField::missing(arg.name.clone(), 0.0));
                 }
             }
 
@@ -87,11 +84,10 @@ impl ConfidencePolicy {
             ir.arguments.retain(|b| {
                 let required = tool.arg(&b.parameter).map(|a| a.required).unwrap_or(false);
                 if required && b.confidence < self.required_arg_threshold {
-                    demoted.push(UnresolvedField {
-                        parameter: b.parameter.clone(),
-                        reason: UnresolvedReason::Ambiguous,
-                        confidence: b.confidence,
-                    });
+                    demoted.push(UnresolvedField::ambiguous(
+                        b.parameter.clone(),
+                        b.confidence,
+                    ));
                     false
                 } else {
                     true

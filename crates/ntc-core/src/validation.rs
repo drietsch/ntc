@@ -4,7 +4,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::error::TaxonomyCode;
-use crate::ir::{ActionIr, ActionState, SemanticValue};
+use crate::ir::{ActionIr, ActionState, ListItem, ListItemType, SemanticValue};
 use crate::schema::{CanonicalTool, ParamType};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -83,15 +83,27 @@ pub fn validate(ir: &ActionIr, tool: Option<&CanonicalTool>) -> ValidationReport
     report
 }
 
-/// Element-level compatibility used for `LIST` items.
-fn scalar_binds(value: &SemanticValue, item_type: ParamType) -> bool {
+/// Does the IR's declared list element type agree with the schema's?
+fn item_type_matches(declared: ListItemType, schema: ParamType) -> bool {
     matches!(
-        (value, item_type),
-        (SemanticValue::String(_), ParamType::Text)
-            | (SemanticValue::Integer(_), ParamType::Integer)
-            | (SemanticValue::Integer(_), ParamType::Float)
-            | (SemanticValue::Float(_), ParamType::Float)
-            | (SemanticValue::Boolean(_), ParamType::Boolean)
+        (declared, schema),
+        (ListItemType::String, ParamType::Text)
+            | (ListItemType::Integer, ParamType::Integer)
+            | (ListItemType::Integer, ParamType::Float)
+            | (ListItemType::Float, ParamType::Float)
+            | (ListItemType::Boolean, ParamType::Boolean)
+    )
+}
+
+/// Does one element fit the list's declared element type?
+fn element_fits(item: &ListItem, item_type: ListItemType) -> bool {
+    matches!(
+        (item, item_type),
+        (ListItem::String(_), ListItemType::String)
+            | (ListItem::Integer(_), ListItemType::Integer)
+            | (ListItem::Integer(_), ListItemType::Float)
+            | (ListItem::Float(_), ListItemType::Float)
+            | (ListItem::Boolean(_), ListItemType::Boolean)
     )
 }
 
@@ -137,24 +149,32 @@ fn validate_call(ir: &ActionIr, tool: &CanonicalTool, report: &mut ValidationRep
 
         // A LIST binding must match a LIST parameter, and every element must
         // be compatible with the declared item type.
-        if let SemanticValue::List { items } = &binding.value {
+        // A LIST binding must match a LIST parameter, its declared element
+        // type must agree with the schema, and every element must fit it.
+        if let SemanticValue::List {
+            item_type, items, ..
+        } = &binding.value
+        {
             if arg.param_type != ParamType::List {
                 report.push(
                     TaxonomyCode::E07WrongType,
                     Some(&binding.parameter),
                     format!("LIST cannot bind to parameter type {:?}", arg.param_type),
                 );
-            } else if let Some(item_type) = arg.item_type {
+            } else if let Some(declared) = arg.item_type {
+                if !item_type_matches(*item_type, declared) {
+                    report.push(
+                        TaxonomyCode::E07WrongType,
+                        Some(&binding.parameter),
+                        format!("list item_type {item_type:?} does not match schema {declared:?}"),
+                    );
+                }
                 for (i, item) in items.iter().enumerate() {
-                    if !scalar_binds(item, item_type) {
+                    if !element_fits(item, *item_type) {
                         report.push(
                             TaxonomyCode::E07WrongType,
                             Some(&binding.parameter),
-                            format!(
-                                "list element {i} has semantic type {}, expected {:?}",
-                                item.semantic_type_name(),
-                                item_type
-                            ),
+                            format!("list element {i} does not fit item_type {item_type:?}"),
                         );
                     }
                 }
@@ -271,7 +291,7 @@ mod tests {
                 confidence: 0.99,
             }),
             arguments,
-            unresolved: vec![],
+            ..ActionIr::bare(ActionState::Call, 0.99)
         }
     }
 

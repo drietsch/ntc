@@ -376,13 +376,17 @@ impl<B: Backend> NeuralToolCompiler<B> {
                 let t = policy.time_for(*d);
                 json!(format!("{:02}:{:02}", t.hour(), t.minute()))
             }
-            SemanticValue::List { items } => {
-                let mut out = Vec::with_capacity(items.len());
-                for item in items {
-                    out.push(self.json_value(item, arg, now, tz)?);
-                }
-                serde_json::Value::Array(out)
-            }
+            SemanticValue::List { items, .. } => serde_json::Value::Array(
+                items
+                    .iter()
+                    .map(|item| match item {
+                        ntc_core::ir::ListItem::Integer(v) => json!(v),
+                        ntc_core::ir::ListItem::Float(v) => json!(v),
+                        ntc_core::ir::ListItem::Boolean(v) => json!(v),
+                        ntc_core::ir::ListItem::String(v) => json!(v),
+                    })
+                    .collect(),
+            ),
             SemanticValue::Duration(d) => {
                 let target = units::target_unit(arg);
                 let converted = units::convert(d, target);
@@ -530,6 +534,7 @@ mod tests {
                 },
             ],
             unresolved: vec![],
+            ..ActionIr::bare(ActionState::Call, 0.0)
         };
         let tool = tool.clone();
         let req = CompileRequest {
@@ -626,15 +631,18 @@ mod tests {
             arguments: vec![ArgumentBinding {
                 parameter: "ids".into(),
                 value: SemanticValue::List {
+                    item_type: ntc_core::ir::ListItemType::Integer,
                     items: crate::normalize::list::parse_list(
                         "42, 55 and 101",
                         ntc_core::schema::ParamType::Integer,
                     ),
+                    element_provenance: vec![],
                 },
                 confidence: 0.95,
                 provenance: None,
             }],
             unresolved: vec![],
+            ..ActionIr::bare(ActionState::Call, 0.0)
         };
         assert!(validate(&ir, Some(&tool)).is_valid());
 
@@ -691,6 +699,7 @@ mod tests {
                 provenance: None,
             }],
             unresolved: vec![],
+            ..ActionIr::bare(ActionState::Call, 0.0)
         };
         ConfidencePolicy::default().apply(&mut ir, Some(&tool));
         assert_eq!(ir.action, ActionState::Delegate);
@@ -723,6 +732,7 @@ mod tests {
                 provenance: None,
             }],
             unresolved: vec![],
+            ..ActionIr::bare(ActionState::Call, 0.0)
         };
         ConfidencePolicy::default().apply(&mut ir, Some(&tool));
         assert_eq!(ir.action, ActionState::Delegate);

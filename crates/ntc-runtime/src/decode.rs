@@ -5,8 +5,7 @@
 
 use ntc_core::ir::{
     ActionIr, ActionState, ArgumentBinding, CivilDate, DateRelation, Daypart, DurationUnit,
-    DurationValue, Provenance, ProvenanceSource, SemanticValue, TokenSpan, UnresolvedField,
-    UnresolvedReason, Weekday,
+    DurationValue, Provenance, SemanticValue, TokenSpan, UnresolvedField, Weekday,
 };
 use ntc_core::schema::{CanonicalTool, ParamType};
 use ntc_core::tokenizer::TokenSeq;
@@ -179,10 +178,7 @@ impl<'a> Decoder<'a> {
     ) -> Result<Option<(SemanticValue, f32, Option<Provenance>)>, NtcError> {
         let arg = &tool.args[arg_idx];
         let (span, span_conf, span_text) = self.span(tool_idx, arg_idx)?;
-        let provenance = Some(Provenance {
-            source: ProvenanceSource::User,
-            token_span: Some(span),
-        });
+        let provenance = Some(Provenance::from_utterance(span));
 
         // Spec §40/§44: an INTEGER/FLOAT parameter annotated as a duration
         // (e.g. `duration_minutes` with SEMANTIC DURATION) carries duration
@@ -288,9 +284,15 @@ impl<'a> Decoder<'a> {
                     .as_deref()
                     .map(|t| crate::normalize::list::parse_list(t, item_type))
                 {
-                    Some(items) if !items.is_empty() => {
-                        Some((SemanticValue::List { items }, span_conf, provenance))
-                    }
+                    Some(items) if !items.is_empty() => Some((
+                        SemanticValue::List {
+                            item_type: crate::normalize::list::list_item_type(item_type),
+                            items,
+                            element_provenance: vec![],
+                        },
+                        span_conf,
+                        provenance,
+                    )),
                     _ => None,
                 }
             }
@@ -415,6 +417,7 @@ impl<'a> Decoder<'a> {
             tool: None,
             arguments: vec![],
             unresolved: vec![],
+            ..ActionIr::bare(ActionState::Call, 0.0)
         };
 
         // DELEGATE is a whole-utterance verdict: no tool, no arguments.
@@ -442,23 +445,17 @@ impl<'a> Decoder<'a> {
                         confidence: (p_conf * v_conf).clamp(0.0, 1.0),
                         provenance,
                     }),
-                    None if arg.required => ir.unresolved.push(UnresolvedField {
-                        parameter: arg.name.clone(),
-                        reason: UnresolvedReason::Missing,
-                        confidence: p_conf,
-                    }),
+                    None if arg.required => ir
+                        .unresolved
+                        .push(UnresolvedField::missing(arg.name.clone(), p_conf)),
                     None => {}
                 },
-                PresenceState::Missing if arg.required => ir.unresolved.push(UnresolvedField {
-                    parameter: arg.name.clone(),
-                    reason: UnresolvedReason::Missing,
-                    confidence: p_conf,
-                }),
-                PresenceState::Ambiguous if arg.required => ir.unresolved.push(UnresolvedField {
-                    parameter: arg.name.clone(),
-                    reason: UnresolvedReason::Ambiguous,
-                    confidence: p_conf,
-                }),
+                PresenceState::Missing if arg.required => ir
+                    .unresolved
+                    .push(UnresolvedField::missing(arg.name.clone(), p_conf)),
+                PresenceState::Ambiguous if arg.required => ir
+                    .unresolved
+                    .push(UnresolvedField::ambiguous(arg.name.clone(), p_conf)),
                 _ => {}
             }
         }

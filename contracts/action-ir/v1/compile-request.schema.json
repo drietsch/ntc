@@ -54,8 +54,29 @@
   },
   "additionalProperties": false,
   "definitions": {
+    "CharSpan": {
+      "description": "`[start, end)` character offsets (host-facing; token spans are the model-facing form).",
+      "type": "object",
+      "required": [
+        "end",
+        "start"
+      ],
+      "properties": {
+        "end": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "start": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      },
+      "additionalProperties": false
+    },
     "ContextEntity": {
-      "description": "A known conversational context entity (thin in V1).",
+      "description": "A known conversational context entity (generic; hosts without a selection model can use this instead of [`LinkedItem`]).",
       "type": "object",
       "required": [
         "display",
@@ -76,7 +97,50 @@
       },
       "additionalProperties": false
     },
+    "LinkedItem": {
+      "description": "An element the user linked into the chat — the host's current selection. Arguments may bind these instead of extracting from the utterance (\"tag *this*\"), which is what makes an in-application router useful.",
+      "type": "object",
+      "required": [
+        "id",
+        "ref",
+        "type"
+      ],
+      "properties": {
+        "class_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "is_folder": {
+          "default": false,
+          "type": "boolean"
+        },
+        "key": {
+          "default": "",
+          "type": "string"
+        },
+        "path": {
+          "default": "",
+          "type": "string"
+        },
+        "ref": {
+          "description": "Stable handle within this request (`L1`, `L2`, …) that argument provenance points at.",
+          "type": "string"
+        },
+        "type": {
+          "description": "Host element type (`asset`, `document`, `object`, …). Tools disagree on the symbol for the same thing (`object` vs `data-object`), so the binding layer maps it per tool rather than assuming one vocabulary.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
     "RequestContext": {
+      "description": "Everything the host knows about the moment the utterance was typed.",
       "type": "object",
       "properties": {
         "entities": {
@@ -84,6 +148,88 @@
           "items": {
             "$ref": "#/definitions/ContextEntity"
           }
+        },
+        "linked": {
+          "description": "Items linked into the chat (the current selection).",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LinkedItem"
+          }
+        },
+        "resolver": {
+          "description": "Identifier pre-pass results.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ResolverEntry"
+          }
+        },
+        "selection_count": {
+          "description": "Total selection size when it exceeds what `linked` enumerates — the signal that a request is bulk and may exceed a tool's per-call cap.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "studio_view": {
+          "description": "Where in the host UI the user is (list, detail, …).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "ResolverCandidate": {
+      "description": "One candidate interpretation of an identifier-like token.",
+      "type": "object",
+      "required": [
+        "id",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "key": {
+          "default": "",
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ResolverEntry": {
+      "description": "The host's identifier pre-pass: integer-like tokens in the utterance, looked up before the model runs. An empty `candidates` list means \"not found\", which is deliberately indistinguishable from \"no permission\".",
+      "type": "object",
+      "required": [
+        "token"
+      ],
+      "properties": {
+        "candidates": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ResolverCandidate"
+          }
+        },
+        "char_span": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CharSpan"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "token": {
+          "type": "string"
         }
       },
       "additionalProperties": false
