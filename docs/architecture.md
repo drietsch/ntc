@@ -7,15 +7,45 @@ the concept onto the code.
 
 ```
 CompileRequest ──► NtcTokenizer (ntc-core)             tokenize + offsets
-              ──► ToolRegistry.resolve_candidates      ≤16 candidates (V1)
+              ──► ToolRegistry.resolve_candidates      ≤256 tools offered
+              ──► shortlist (if wider than one slate)  N/slate scoring passes
               ──► ModelInputs::pack (ntc-model)        pad + segment kinds + anchors
               ──► Backend::run                         CpuRefBackend | WgpuBackend
               ──► Decoder (ntc-runtime)                logits → typed predictions
               ──► ConfidencePolicy                     spec §46 downgrades
               ──► validate (ntc-core)                  §64 taxonomy codes
               ──► normalize + serialize (ntc-runtime)  jiff dates, units → JSON
-              ──► CompileOutcome { CALL | ASK | NO_CALL }
+              ──► CompileOutcome { CALL | ASK | NO_CALL | DELEGATE }
 ```
+
+## Candidate narrowing (spec §21–22)
+
+The model reads a fixed-width slate; an MCP host registers everything it has.
+Something must choose, and "whatever the caller passed" is not a strategy —
+it makes the host responsible for the router's accuracy. So a wide tool set is
+narrowed by the model itself, in two steps:
+
+1. **Shortlist** — the set is split into slate-sized groups and each is scored.
+   A tool's score is its logit's margin over **that group's own NO_TOOL**.
+   NO_TOOL is the only option present in every group, so it is the one usable
+   common reference; raw logits are not comparable across groups, and per-group
+   softmax is worse than nothing, because a group of three strong candidates
+   splits its mass while a group of three decoys does not.
+2. **Decide** — one pass over the survivors *together*. Groups are scored
+   independently, so the survivors have been ranked against a baseline but
+   never compared with each other. Fusion's schema self-attention is what
+   discriminates near-identical siblings (`get_asset` / `list_assets` /
+   `search_assets`), and it only sees tools that share a slate.
+
+Cost is about `N/slate + 1` forward passes, which is why `MAX_CANDIDATES` is a
+cost bound (256) rather than a model bound. The 10,000-tool case needs the
+embedding retriever of §21–22, not an exhaustive sweep; `CandidateSelector` is
+the seam for it. Per-tool schema encodings are independent (block-diagonal), so
+caching them across the shortlist rounds is the obvious next optimization.
+
+`NeuralToolCompiler::shortlist` is public and returns *every* tool's score, not
+just the survivors, so a host can distinguish one clear winner from a field
+bunched inside the noise — the latter is an ASK signal, not a coin flip.
 
 ## Model (ntc_encoder_heads_v1)
 
