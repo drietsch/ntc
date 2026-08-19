@@ -374,3 +374,78 @@ fn action_head_width_follows_config() {
         &cpu_out.get("action.logits").unwrap().data,
     );
 }
+
+/// Parity at a sequence length that forces attention head-chunking.
+///
+/// The other tests use tiny fixtures whose fusion sequence fits one chunk, so
+/// they cannot see bugs in the chunked path — and WebGPU is the shipping
+/// target, so "passes on small inputs" is not evidence. This config mirrors
+/// the Studio arch's shape (12 heads, long schema window) at a tiny vocab.
+#[test]
+fn parity_at_chunking_scale() {
+    let ctx = match pollster::block_on(WgpuContext::new()) {
+        Ok(ctx) => ctx,
+        Err(e) => {
+            eprintln!("skipping GPU test: {e}");
+            return;
+        }
+    };
+
+    let mut cfg = tiny_config();
+    cfg.hidden = 384;
+    cfg.heads = 12;
+    cfg.ffn = 1536;
+    // The fusion sequence must exceed ~1673 tokens for 12 heads of f32
+    // scores to cross the 128 MiB storage-binding limit and force chunking;
+    // 3 x 576 + 1 = 1729 does, and mirrors the Studio arch exactly.
+    cfg.max_positions = 640;
+    cfg.max_schema_tokens = 576;
+    cfg.max_tools = 3;
+    cfg.max_utterance_tokens = 32;
+    cfg.encoder_layers = 12;
+    cfg.schema_layers = 2;
+    cfg.fusion_blocks = 2;
+
+    let tokenizer = NtcTokenizer::from_bytes(test_tokenizer_json().as_bytes()).unwrap();
+    let tools = tools();
+    let weights = random_weights(&cfg, 3);
+    let mut gpu = WgpuBackend::new(cfg.clone(), &weights, ctx).unwrap();
+    let mut cpu = CpuRefBackend::new(cfg.clone(), random_weights(&cfg, 3));
+
+    // Vary the slate size and utterance length: real requests do, and a
+    // shorter slate shortens the packed fusion sequence, changing both the
+    // masking and the head-chunk arithmetic.
+    for (n_tools, text) in [
+        (2usize, "tag this"),
+        (1, "x"),
+        (2, "tag this one now please"),
+    ] {
+        let refs: Vec<&_> = tools.iter().take(n_tools).collect();
+        let utterance = tokenizer.encode_utterance(text).unwrap();
+        let inputs = ModelInputs::pack(&cfg, &tokenizer, &utterance, &refs).unwrap();
+        let cpu_out = cpu.run(&inputs).unwrap();
+        let gpu_out = gpu.run(&inputs).unwrap();
+        for (name, want) in &cpu_out.tensors {
+            let got = gpu_out.get(name).unwrap();
+            assert_eq!(got.shape, want.shape, "{name} @ {n_tools} tools");
+            assert_close(&format!("{name} @ {n_tools} tools"), &got.data, &want.data);
+        }
+    }
+
+    let refs: Vec<&_> = tools.iter().collect();
+    let utterance = tokenizer.encode_utterance("tag this one now").unwrap();
+    let inputs = ModelInputs::pack(&cfg, &tokenizer, &utterance, &refs).unwrap();
+    let cpu_out = cpu.run(&inputs).unwrap();
+    let gpu_out = gpu.run(&inputs).unwrap();
+
+    // Every head, not just the action head: the real-model divergence showed
+    // up in `tool.logits` while `action.logits` matched exactly.
+    let mut names: Vec<&String> = cpu_out.tensors.keys().collect();
+    names.sort();
+    for name in names {
+        let want = &cpu_out.tensors[name];
+        let got = gpu_out.get(name).unwrap();
+        assert_eq!(got.shape, want.shape, "{name}: shape");
+        assert_close(name, &got.data, &want.data);
+    }
+}

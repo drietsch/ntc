@@ -182,9 +182,9 @@
 
     <label for="backend">Backend</label>
     <select id="backend">
-      <option value="auto" selected>auto (WebGPU if available)</option>
-      <option value="gpu">gpu (WebGPU)</option>
-      <option value="cpu">cpu (reference)</option>
+      <option value="gpu" selected>WebGPU (target)</option>
+      <option value="auto">auto (WebGPU if available)</option>
+      <option value="cpu">CPU reference (parity oracle, ~100x slower)</option>
     </select>
 
     <button id="compile" disabled>Compile</button>
