@@ -57,6 +57,30 @@ def backbone_config(vocab: int) -> NtcArchConfig:
     )
 
 
+def xlam_config(vocab: int) -> NtcArchConfig:
+    """Stage-2 schema-grounding arch for the xLAM corpus: 4 candidates (the
+    converter caps them), wide-ish schema window (p95 of xLAM canonical texts
+    is ~260 tokens), 12 args. Same backbone dims as `pimcore_config` so a
+    Stage-2 checkpoint fine-tunes onto Pimcore without reshaping."""
+    return NtcArchConfig(
+        hidden=384,
+        heads=12,
+        ffn=1536,
+        vocab=vocab,
+        max_positions=512,
+        encoder_layers=12,
+        schema_layers=2,
+        fusion_blocks=2,
+        max_tools=4,
+        max_args=12,
+        max_enum_values=4,
+        max_utterance_tokens=96,
+        max_schema_tokens=256,
+        layer_norm_eps=1e-12,
+        action_classes=4,
+    )
+
+
 def pimcore_config(vocab: int) -> NtcArchConfig:
     """Backbone dims with a wide schema window for the real Pimcore tools
     (longest canonical text ≈ 332 tokens) and retrieval-narrowed candidate
@@ -260,7 +284,7 @@ def main() -> None:
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--seed", type=int, default=17)
     parser.add_argument("--limit", type=int, default=0, help="cap train examples (overfit checks)")
-    parser.add_argument("--arch", choices=["mini", "backbone", "pimcore"], default="mini")
+    parser.add_argument("--arch", choices=["mini", "backbone", "pimcore", "xlam"], default="mini")
     parser.add_argument("--init", type=Path, default=None,
                         help="partial state_dict (runs/backbone/init.pt) to warm-start from")
     parser.add_argument("--backbone-lr", type=float, default=2e-5,
@@ -273,12 +297,17 @@ def main() -> None:
 
     tok_dir = "tokenizer" if args.arch == "mini" else "tokenizer-any"
     tokenizer = Tokenizer.from_file(str(REPO / "contracts" / tok_dir / "tokenizer.json"))
-    make_cfg = {"mini": mini_config, "backbone": backbone_config, "pimcore": pimcore_config}[args.arch]
+    make_cfg = {
+        "mini": mini_config,
+        "backbone": backbone_config,
+        "pimcore": pimcore_config,
+        "xlam": xlam_config,
+    }[args.arch]
     cfg = make_cfg(tokenizer.get_vocab_size())
     print(f"device={device} arch={args.arch} vocab={cfg.vocab}")
 
-    train_items = load_and_prepare(cfg, tokenizer, args.data / "train.jsonl")
-    dev_items = load_and_prepare(cfg, tokenizer, args.data / "dev.jsonl")
+    train_items = load_and_prepare(cfg, tokenizer, args.data / "train.jsonl", skip_oversize=True)
+    dev_items = load_and_prepare(cfg, tokenizer, args.data / "dev.jsonl", skip_oversize=True)
     if args.limit:
         train_items = train_items[: args.limit]
     print(f"train={len(train_items)} dev={len(dev_items)}")

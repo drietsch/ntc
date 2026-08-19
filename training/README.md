@@ -108,3 +108,20 @@ everything.
 
 This matters at full scale too: with 16 candidate tools the share only grows,
 so the weighting (or a focal-loss variant) should stay in the objective.
+
+## Where the data lives
+
+| path | tracked? | what |
+|---|---|---|
+| `data/pimcore/` | **yes** | assembled Pimcore train/dev/test (463/46/68) |
+| `data/live/` | **yes** | live `claude -p` teacher shards + provenance manifests — not reproducible on a rerun |
+| `data/delegate/` | **yes** | hand-authored DELEGATE templates |
+| `data/mini`, `data/any` | no | deterministic, regenerate with `datasets.generator` / `tools.merge_data` |
+| `data/xlam` | no | 35 MB, regenerate with `tools.convert_xlam` from the CC-BY source |
+
+Rebuild the assembled Pimcore set from the tracked shards:
+
+```sh
+uv run python -m datasets.delegate_gen
+uv run python -m tools.build_pimcore_dataset
+```

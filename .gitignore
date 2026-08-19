@@ -13,7 +13,19 @@ uv.lock.orig
 .pytest_cache/
 
 # Data & runs (large artifacts stay out of git)
-training/data/
+# Third-party source corpora: large, and licensed for use but not for
+# redistribution here (see NOTICE). Place them in the repo root manually.
+/salesforce-training-data.json
+/glaive-function-calling-v2.json
+
+# Derived / bulk corpora are regenerable — see training/README.md.
+training/data/*
+# ...but the curated Pimcore sets ARE tracked: the live teacher shards cost
+# real `claude -p` calls and would come back different on a rerun, and the
+# DELEGATE templates are hand-authored.
+!training/data/live/
+!training/data/delegate/
+!training/data/pimcore/
 training/runs/
 wandb/
 *.safetensors

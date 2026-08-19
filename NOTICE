@@ -1,0 +1,32 @@
+# Third-party data and models
+
+## Salesforce/xlam-function-calling-60k
+Licensed CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/).
+Used as a Stage-2 schema-grounding corpus, converted into NTC dataset
+examples by `training/tools/convert_xlam.py`. The converted corpus and any
+model weights trained on it inherit the attribution requirement.
+
+  Zhang et al., "xLAM: A Family of Large Action Models to Empower AI Agent
+  Systems" (Salesforce AI Research), dataset: Salesforce/xlam-function-calling-60k
+
+The source file is NOT redistributed in this repository (it is gated on
+Hugging Face); place it at `salesforce-training-data.json` in the repo root.
+
+## sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+Apache-2.0. Used as the pretrained multilingual backbone (vocabulary pruned
+to ~34k for EN/DE/FR/ES by `training/tools/prune_backbone.py`); its
+tokenizer is embedded in `contracts/tokenizer-any/tokenizer.json` and in
+every `.ntc` model built from it.
+
+## Pimcore agent bundle (pimcore/pimcore-agent-bundle)
+Pimcore Open Core License. Only the MCP tool *schemas* are derived, by
+`training/tools/extract_pimcore_tools.py` reading the `#[McpTool]` /
+`#[Schema]` PHP attributes; no Pimcore source is vendored here.
+
+## Datasets evaluated but not used
+- gorilla-llm/APIBench (Apache-2.0) — measured 0.1% of argument values appear
+  in the instruction, so it cannot supervise NTC's span-based argument heads.
+- glaiveai/glaive-function-calling-v2 (Apache-2.0) — 64% span-alignable, 44%
+  no-call records; a candidate for NO_CALL supervision, not yet converted.
+- Nexusflow/NexusRaven-V2-13B — model licensed "other" with commercial-use
+  restrictions; deliberately not used.

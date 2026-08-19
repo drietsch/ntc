@@ -185,7 +185,10 @@ def prepare_example(
 
 
 def load_and_prepare(
-    cfg: NtcArchConfig, tokenizer: Tokenizer, path: Path
+    cfg: NtcArchConfig,
+    tokenizer: Tokenizer,
+    path: Path,
+    skip_oversize: bool = False,
 ) -> list[Prepared]:
     examples = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
@@ -202,7 +205,21 @@ def load_and_prepare(
     )
     cache = dict(zip(keys, results, strict=False))
 
-    return [prepare_example(cfg, tokenizer, ex, cache) for ex in examples]
+    out: list[Prepared] = []
+    skipped = 0
+    for ex in examples:
+        try:
+            out.append(prepare_example(cfg, tokenizer, ex, cache))
+        except ValueError:
+            # Utterance or canonical schema longer than the model's window.
+            # Packing fails loudly by design; corpora with a long tail (xLAM)
+            # opt into skipping instead of aborting the run.
+            if not skip_oversize:
+                raise
+            skipped += 1
+    if skipped:
+        print(f"{path.name}: skipped {skipped}/{len(examples)} examples exceeding the window")
+    return out
 
 
 def make_batch(cfg: NtcArchConfig, items: list[Prepared]) -> dict[str, torch.Tensor]:
