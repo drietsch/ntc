@@ -558,6 +558,11 @@ pub struct RequestContext {
     /// Where in the host UI the user is (list, detail, …).
     #[serde(default, alias = "studioView", skip_serializing_if = "Option::is_none")]
     pub studio_view: Option<String>,
+    /// UI locale of the session. Redundant with `CompileRequest.locale` when
+    /// both are given; hosts that build one context object per turn tend to
+    /// put it here.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub locale: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub entities: Vec<ContextEntity>,
 }

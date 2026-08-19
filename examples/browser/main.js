@@ -13,6 +13,7 @@ let gpuAvailable = false;
 
 // Selectable models; missing files are disabled at boot.
 const MODELS = {
+  studio: "../../models/ntc-studio-v1/model.ntc",
   any: "../../models/ntc-any-v1/model.ntc",
   mini: "../../models/ntc-mini-v1/model.ntc",
   fixture: "../../fixtures/models/tiny-v1/tiny.ntc",
@@ -50,23 +51,6 @@ async function boot() {
   await init();
   $("version").textContent = `ntc-wasm v${version()}`;
 
-  const t0 = performance.now();
-  let loaded = null;
-  for (const url of MODEL_URLS) {
-    const resp = await fetch(url);
-    if (resp.ok) {
-      modelBytes = new Uint8Array(await resp.arrayBuffer());
-      loaded = url;
-      break;
-    }
-  }
-  if (!loaded) {
-    throw new Error(
-      "no model reachable. Serve the repository root, not examples/browser/ — see README.md."
-    );
-  }
-  const fetchMs = performance.now() - t0;
-
   gpuAvailable = !!navigator.gpu;
   const be = $("backend");
   if (be && !gpuAvailable) {
@@ -74,11 +58,26 @@ async function boot() {
     if (be.value === "gpu" || be.value === "auto") be.value = "cpu";
   }
 
+  // Disable models that are not present (they are gitignored and rebuilt
+  // locally), and default to the first one that is.
+  const sel = $("model");
+  let defaultKey = null;
+  for (const [key, url] of Object.entries(MODELS)) {
+    const head = await fetch(url, { method: "HEAD" });
+    const opt = sel && sel.querySelector(`option[value="${key}"]`);
+    if (opt) opt.disabled = !head.ok;
+    if (head.ok && defaultKey === null) defaultKey = key;
+  }
+  if (defaultKey === null) {
+    throw new Error(
+      "no model reachable. Serve the repository root, not examples/browser/ — see README.md."
+    );
+  }
+  if (sel) sel.value = defaultKey;
+  await loadModel(defaultKey);
   button.disabled = false;
-  status.textContent =
-    `Model ${loaded.split("/").pop()} loaded (${(modelBytes.length / 1024).toFixed(0)} KiB ` +
-    `in ${fetchMs.toFixed(0)} ms). Ready.`;
 }
+
 
 async function compile() {
   output.textContent = "";
@@ -101,9 +100,17 @@ async function compile() {
     if (!Array.isArray(tools)) throw new Error("tools must be a JSON array");
     for (const tool of tools) ntc.register_tool(JSON.stringify(tool));
 
+    let context;
+    try {
+      const raw = $("context").value.trim();
+      context = raw ? JSON.parse(raw) : undefined;
+    } catch (e) {
+      throw new Error(`context is not valid JSON: ${e.message}`);
+    }
+
     const started = performance.now();
     const result = await ntc.compile_async(
-      JSON.stringify({ utterance: $("utterance").value, timezone })
+      JSON.stringify({ utterance: $("utterance").value, timezone, context })
     );
     const ms = performance.now() - started;
 
@@ -117,6 +124,45 @@ async function compile() {
     if (ntc) ntc.free();
   }
 }
+
+// Studio scenarios — utterance AND selection, because the whole point is
+// that "tag this" depends on what "this" is.
+const SCENARIOS = [
+  {
+    label: "linked asset",
+    utterance: "tag this with Freigegeben",
+    context: { linked: [{ ref: "L1", type: "asset", id: 4711, key: "winterjacke-hero.jpg", path: "/Produktfotos/", isFolder: false }], locale: "de" },
+  },
+  {
+    label: "bulk over limit",
+    utterance: "apply the publish transition to all of these",
+    context: {
+      linked: [
+        { ref: "L1", type: "asset", id: 4711, key: "hero.jpg", path: "/Fotos/", isFolder: false },
+        { ref: "L2", type: "document", id: 3108, key: "spring-sale", path: "/en/", isFolder: false },
+        { ref: "L3", type: "object", id: 36192, key: "loyalty-flyer", path: "/Rendition/", isFolder: false },
+      ],
+      selectionCount: 37,
+      locale: "en",
+    },
+  },
+  {
+    label: "payload write",
+    utterance: "update document 355 and set its headline to Autumn Sale",
+    context: { linked: [], resolver: [], locale: "en" },
+  },
+  {
+    label: "conceptual",
+    utterance: "was macht das search_assets tool eigentlich?",
+    context: { linked: [], locale: "de" },
+  },
+  {
+    label: "no selection",
+    utterance: "montre-moi les groupes cibles",
+    context: { linked: [], locale: "fr" },
+  },
+];
+let scenarioIdx = -1;
 
 // In-distribution example utterances (the mini tokenizer is case-sensitive
 // and trained on lowercase corpus text).
@@ -153,6 +199,18 @@ for (const lang of Object.keys(EXAMPLES)) {
     const list = EXAMPLES[lang];
     exampleIdx[lang] = ((exampleIdx[lang] ?? -1) + 1) % list.length;
     $("utterance").value = list[exampleIdx[lang]];
+    compile();
+  });
+}
+
+const scenarioBtn = $("scenario");
+if (scenarioBtn) {
+  scenarioBtn.addEventListener("click", () => {
+    scenarioIdx = (scenarioIdx + 1) % SCENARIOS.length;
+    const sc = SCENARIOS[scenarioIdx];
+    $("utterance").value = sc.utterance;
+    $("context").value = JSON.stringify(sc.context, null, 1);
+    scenarioBtn.textContent = `Studio scenario: ${sc.label}`;
     compile();
   });
 }

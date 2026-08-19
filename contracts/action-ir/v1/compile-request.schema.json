@@ -155,6 +155,13 @@
             "$ref": "#/definitions/LinkedItem"
           }
         },
+        "locale": {
+          "description": "UI locale of the session. Redundant with `CompileRequest.locale` when both are given; hosts that build one context object per turn tend to put it here.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "resolver": {
           "description": "Identifier pre-pass results.",
           "type": "array",

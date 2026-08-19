@@ -332,3 +332,45 @@ fn full_backend_parity() {
         }
     }
 }
+
+/// The action head is config-width (3 classes, or 4 once DELEGATE exists).
+/// The tiny fixture uses 3, so a hardcoded width in one backend passed every
+/// parity test and only surfaced on a real 4-class model in the browser.
+/// This pins both backends to the configured width.
+#[test]
+fn action_head_width_follows_config() {
+    let ctx = match pollster::block_on(WgpuContext::new()) {
+        Ok(ctx) => ctx,
+        Err(e) => {
+            eprintln!("skipping GPU test: {e}");
+            return;
+        }
+    };
+
+    let mut cfg = tiny_config();
+    cfg.action_classes = 4;
+    let tokenizer = NtcTokenizer::from_bytes(test_tokenizer_json().as_bytes()).unwrap();
+    let tools = tools();
+    let refs: Vec<&_> = tools.iter().collect();
+    let utterance = tokenizer.encode_utterance("tag this one").unwrap();
+    let inputs = ModelInputs::pack(&cfg, &tokenizer, &utterance, &refs).unwrap();
+
+    let weights = random_weights(&cfg, 7);
+    let mut gpu = WgpuBackend::new(cfg.clone(), &weights, ctx).unwrap();
+    let mut cpu = CpuRefBackend::new(cfg.clone(), random_weights(&cfg, 7));
+    let cpu_out = cpu.run(&inputs).unwrap();
+    let gpu_out = gpu.run(&inputs).unwrap();
+
+    for (label, out) in [("cpu", &cpu_out), ("gpu", &gpu_out)] {
+        assert_eq!(
+            out.get("action.logits").unwrap().shape,
+            vec![4],
+            "{label} action head must emit `action_classes` logits"
+        );
+    }
+    assert_close(
+        "action.logits (4-class)",
+        &gpu_out.get("action.logits").unwrap().data,
+        &cpu_out.get("action.logits").unwrap().data,
+    );
+}

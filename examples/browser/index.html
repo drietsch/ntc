@@ -77,80 +77,96 @@
     </label>
     <input id="utterance" value="schedule a dentist appointment tomorrow afternoon for one and a half hours">
 
+    <label for="context">Studio context (linked selection, resolver)
+      <span style="float:right"><button id="scenario" type="button">Studio scenario</button></span>
+    </label>
+    <textarea id="context" rows="7" spellcheck="false">{
+ "linked": [
+  {"ref": "L1", "type": "asset", "id": 4711, "key": "winterjacke-hero.jpg", "path": "/Produktfotos/", "isFolder": false}
+ ],
+ "locale": "de"
+}</textarea>
+
     <label for="tools">Tools (JSON array of schemas)</label>
-    <textarea id="tools" rows="18" spellcheck="false">[
-  {
-    "name": "calendar.create",
-    "description": "Create a calendar event",
-    "parameters": {
-      "title": {
-        "type": "string",
-        "description": "event title",
-        "required": true
-      },
-      "start": {
-        "type": "string",
-        "format": "date-time",
-        "required": true
-      },
-      "duration_minutes": {
-        "type": "integer",
-        "semantic": "DURATION",
-        "description": "length of the event"
-      }
-    }
-  },
-  {
-    "name": "email.send",
-    "description": "Send an email to somebody",
-    "parameters": {
-      "recipient": {
-        "type": "string",
-        "description": "who receives it",
-        "required": true
-      },
-      "subject": {
-        "type": "string",
-        "description": "what it is about"
-      }
-    }
-  },
-  {
-    "name": "timer.set",
-    "description": "Start a countdown timer",
-    "parameters": {
-      "length": {
-        "type": "string",
-        "format": "duration",
-        "semantic": "DURATION",
-        "description": "how long the timer runs",
-        "required": true
-      },
-      "label": {
-        "type": "string",
-        "description": "name of the timer"
-      }
-    }
-  },
-  {
-    "name": "light.set",
-    "description": "Switch a light on or off",
-    "parameters": {
-      "room": {
-        "type": "string",
-        "description": "which room",
-        "required": true
-      },
-      "state": {
-        "type": "string",
-        "enum": [
-          "on",
-          "off"
-        ],
-        "required": true
-      }
-    }
+    <textarea id="tools" rows="12" spellcheck="false">[
+ {
+  "name": "assign_tag",
+  "description": "Assign an existing tag to an element (data object, asset, or document). Use list_tags to find tag IDs.",
+  "parameters": {
+   "elementType": {
+    "type": "string",
+    "description": "object",
+    "enum": [
+     "object",
+     "asset",
+     "document"
+    ],
+    "required": true
+   },
+   "elementId": {
+    "type": "integer",
+    "description": "The element ID to tag.",
+    "required": true
+   },
+   "tagId": {
+    "type": "integer",
+    "description": "The tag ID to assign.",
+    "required": true
+   }
   }
+ },
+ {
+  "name": "list_tags",
+  "description": "List available tags. Optionally filter by parent tag to browse the tag hierarchy.",
+  "parameters": {
+   "parentId": {
+    "type": "integer",
+    "description": "Parent tag ID to list children of. Omit or set to 0 to list root-level tags."
+   },
+   "filter": {
+    "type": "string",
+    "description": "Filter tags by name (substring match)."
+   },
+   "page": {
+    "type": "integer",
+    "description": "Page number (1-based). Default: 1."
+   },
+   "pageSize": {
+    "type": "integer",
+    "description": "Results per page. Default: 50."
+   },
+   "timeoutMs": {
+    "type": "integer",
+    "description": "Soft wall-clock budget in milliseconds. Default: 5000."
+   }
+  }
+ },
+ {
+  "name": "get_workflow_graph",
+  "description": "Render a workflow diagram for a specific element as SVG. Returns the raw SVG string.",
+  "parameters": {
+   "elementId": {
+    "type": "integer",
+    "description": "Pimcore element ID.",
+    "required": true
+   },
+   "elementType": {
+    "type": "string",
+    "description": "Element type: \"asset\" | \"document\" | \"data-object\".",
+    "enum": [
+     "asset",
+     "document",
+     "data-object"
+    ],
+    "required": true
+   },
+   "workflowName": {
+    "type": "string",
+    "description": "Workflow name.",
+    "required": true
+   }
+  }
+ }
 ]</textarea>
 
     <label for="timezone">Timezone (IANA)</label>
@@ -158,6 +174,7 @@
 
     <label for="model">Model</label>
     <select id="model">
+      <option value="studio">Studio router (Pimcore tools + context, 87 MB)</option>
       <option value="any">any-word (pretrained backbone, ~72 MB)</option>
       <option value="mini">mini (templates only, 2.8 MB)</option>
       <option value="fixture">random fixture (plumbing test)</option>
