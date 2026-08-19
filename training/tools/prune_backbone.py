@@ -115,6 +115,11 @@ def main() -> None:
 
     # ---- rebuild tokenizer.json ---------------------------------------
     data["model"]["vocab"] = new_vocab
+    # sentence-transformers ships truncation=128 inside tokenizer.json —
+    # NEVER truncate silently in the NTC contract (the packer enforces
+    # explicit limits and fails loudly).
+    data["truncation"] = None
+    data["padding"] = None
     data["added_tokens"] = [t for t in data["added_tokens"] if t["content"] != "<mask>"]
     pruned = Tokenizer.from_str(json.dumps(data))
 

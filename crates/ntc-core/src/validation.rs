@@ -70,13 +70,47 @@ pub fn validate(ir: &ActionIr, tool: Option<&CanonicalTool>) -> ValidationReport
                 );
             }
         }
+        ActionState::Delegate => {
+            if ir.tool.is_some() || !ir.arguments.is_empty() {
+                report.push(
+                    TaxonomyCode::E01WrongActionState,
+                    None,
+                    "DELEGATE must not carry a tool or arguments",
+                );
+            }
+        }
     }
     report
+}
+
+/// Element-level compatibility used for `LIST` items.
+fn scalar_binds(value: &SemanticValue, item_type: ParamType) -> bool {
+    matches!(
+        (value, item_type),
+        (SemanticValue::String(_), ParamType::Text)
+            | (SemanticValue::Integer(_), ParamType::Integer)
+            | (SemanticValue::Integer(_), ParamType::Float)
+            | (SemanticValue::Float(_), ParamType::Float)
+            | (SemanticValue::Boolean(_), ParamType::Boolean)
+    )
 }
 
 fn validate_call(ir: &ActionIr, tool: &CanonicalTool, report: &mut ValidationReport) {
     // Required fields present?
     for arg in tool.args.iter().filter(|a| a.required) {
+        if arg.param_type == ParamType::Opaque {
+            // Agent-only argument: policy routes the utterance to DELEGATE
+            // before validation, so a CALL reaching here is already wrong.
+            report.push(
+                TaxonomyCode::E01WrongActionState,
+                Some(&arg.name),
+                format!(
+                    "tool `{}` requires OPAQUE argument `{}` — this request needs an agent",
+                    tool.id, arg.name
+                ),
+            );
+            continue;
+        }
         let bound = ir.arguments.iter().any(|b| b.parameter == arg.name);
         let unresolved = ir.unresolved.iter().any(|u| u.parameter == arg.name);
         if !bound && !unresolved {
@@ -100,6 +134,53 @@ fn validate_call(ir: &ActionIr, tool: &CanonicalTool, report: &mut ValidationRep
             );
             continue;
         };
+
+        // A LIST binding must match a LIST parameter, and every element must
+        // be compatible with the declared item type.
+        if let SemanticValue::List { items } = &binding.value {
+            if arg.param_type != ParamType::List {
+                report.push(
+                    TaxonomyCode::E07WrongType,
+                    Some(&binding.parameter),
+                    format!("LIST cannot bind to parameter type {:?}", arg.param_type),
+                );
+            } else if let Some(item_type) = arg.item_type {
+                for (i, item) in items.iter().enumerate() {
+                    if !scalar_binds(item, item_type) {
+                        report.push(
+                            TaxonomyCode::E07WrongType,
+                            Some(&binding.parameter),
+                            format!(
+                                "list element {i} has semantic type {}, expected {:?}",
+                                item.semantic_type_name(),
+                                item_type
+                            ),
+                        );
+                    }
+                }
+            }
+            if items.is_empty() && arg.required {
+                report.push(
+                    TaxonomyCode::E05WrongArgumentValue,
+                    Some(&binding.parameter),
+                    "required LIST argument is empty",
+                );
+            }
+            continue;
+        }
+
+        // An OPAQUE parameter can never carry a compiled value.
+        if arg.param_type == ParamType::Opaque {
+            report.push(
+                TaxonomyCode::E07WrongType,
+                Some(&binding.parameter),
+                format!(
+                    "parameter `{}` is OPAQUE (agent-only); no typed value can bind to it",
+                    binding.parameter
+                ),
+            );
+            continue;
+        }
 
         // Type compatibility: which semantic values may bind to which
         // canonical parameter types (normative table, docs/action-ir.md).

@@ -35,6 +35,12 @@ pub struct RawParameter {
     pub required: Option<bool>,
     #[serde(rename = "enum", default)]
     pub enum_values: Option<Vec<Value>>,
+    /// JSON-Schema `items` for array parameters (element schema).
+    #[serde(default)]
+    pub items: Option<Value>,
+    /// JSON-Schema `properties` for object parameters.
+    #[serde(default)]
+    pub properties: Option<Value>,
     /// Semantic annotation, accepted as `semantic`, `semantic_type`, or
     /// `x-semantic` (aliases handled in [`RawToolSchema::normalized_parameters`]).
     #[serde(default)]
@@ -54,9 +60,18 @@ pub struct NormalizedParam {
     pub required: bool,
     pub enum_values: Vec<String>,
     pub semantic: Option<String>,
+    /// Element schema of an `array` parameter.
+    pub items: Option<Value>,
+    /// Declared properties of an `object` parameter.
+    pub properties: Option<Value>,
 }
 
 impl RawToolSchema {
+    /// Stable registry id for this tool (the declared name).
+    pub fn id_or_name(&self) -> String {
+        self.name.clone()
+    }
+
     /// Detect the parameter style and normalize to ordered `(name, param)`
     /// pairs. Order is the declaration order in the JSON document (serde_json
     /// must be built with `preserve_order`; enforced by a unit test).
@@ -128,6 +143,8 @@ fn parse_flat_param(tool: &str, name: &str, v: &Value) -> Result<NormalizedParam
         required: raw.required.unwrap_or(false),
         enum_values,
         semantic: raw.semantic.or(raw.semantic_type).or(raw.x_semantic),
+        items: raw.items,
+        properties: raw.properties,
     })
 }
 

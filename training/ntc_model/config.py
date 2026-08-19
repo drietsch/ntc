@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 ARCHITECTURE = "ntc_encoder_heads_v1"
 
 #: Number of segment-kind embedding rows (crates/ntc-model/src/inputs.rs).
-SEGMENT_KINDS = 10
+SEGMENT_KINDS = 11
 
 
 class Calibration(BaseModel):
@@ -42,6 +42,7 @@ class NtcArchConfig(BaseModel):
     max_utterance_tokens: int = Field(gt=0)
     max_schema_tokens: int = Field(gt=0)
     layer_norm_eps: float = 1e-5
+    action_classes: int = Field(default=3, ge=3, le=4)
     calibration: Calibration = Field(default_factory=Calibration)
 
     @model_validator(mode="after")

@@ -63,6 +63,15 @@ pub enum CompileOutcome {
     NoCall {
         ir: ActionIr,
     },
+    /// Beyond a single typed call — the host should hand `utterance` to a
+    /// full LLM agent (which may use the same tools over several turns).
+    Delegate {
+        utterance: String,
+        /// Registry ids offered to the router, so the host can pass the same
+        /// candidate set to the agent.
+        candidates: Vec<String>,
+        ir: ActionIr,
+    },
 }
 
 pub struct NeuralToolCompiler<B: Backend> {
@@ -233,6 +242,11 @@ impl<B: Backend> NeuralToolCompiler<B> {
                 ir,
             }),
             ActionState::NoCall => Ok(CompileOutcome::NoCall { ir }),
+            ActionState::Delegate => Ok(CompileOutcome::Delegate {
+                utterance: req.utterance.clone(),
+                candidates: candidates.iter().map(|t| t.id.clone()).collect(),
+                ir,
+            }),
         }
     }
 
@@ -269,7 +283,21 @@ impl<B: Backend> NeuralToolCompiler<B> {
                 .arg(&binding.parameter)
                 .expect("validated: binding exists on tool");
             let value = self.json_value(&binding.value, arg, now, &tz)?;
-            args.insert(binding.parameter.clone(), value);
+            // Flattened object properties (`data.key`) re-nest into the
+            // object the provider schema declared (schema compiler tier 2).
+            match binding.parameter.split_once('.') {
+                Some((parent, child)) => {
+                    let entry = args
+                        .entry(parent.to_string())
+                        .or_insert_with(|| serde_json::Value::Object(serde_json::Map::new()));
+                    if let Some(obj) = entry.as_object_mut() {
+                        obj.insert(child.to_string(), value);
+                    }
+                }
+                None => {
+                    args.insert(binding.parameter.clone(), value);
+                }
+            }
         }
         Ok(CompiledCall {
             name: tool.id.clone(),
@@ -347,6 +375,13 @@ impl<B: Backend> NeuralToolCompiler<B> {
             SemanticValue::Daypart(d) => {
                 let t = policy.time_for(*d);
                 json!(format!("{:02}:{:02}", t.hour(), t.minute()))
+            }
+            SemanticValue::List { items } => {
+                let mut out = Vec::with_capacity(items.len());
+                for item in items {
+                    out.push(self.json_value(item, arg, now, tz)?);
+                }
+                serde_json::Value::Array(out)
             }
             SemanticValue::Duration(d) => {
                 let target = units::target_unit(arg);
@@ -542,16 +577,166 @@ mod tests {
         let ir = match &a {
             CompileOutcome::Call { ir, .. }
             | CompileOutcome::Ask { ir, .. }
-            | CompileOutcome::NoCall { ir } => ir,
+            | CompileOutcome::NoCall { ir }
+            | CompileOutcome::Delegate { ir, .. } => ir,
         };
         assert_eq!(ir.ir_version, 1);
         match ir.action {
             ActionState::Call => assert!(ir.tool.is_some() && ir.unresolved.is_empty()),
             ActionState::Ask => assert!(!ir.unresolved.is_empty()),
-            ActionState::NoCall => {
+            ActionState::NoCall | ActionState::Delegate => {
                 assert!(ir.tool.is_none() && ir.arguments.is_empty())
             }
         }
+    }
+
+    /// A `LIST<INTEGER>` argument compiles from ONE span: the model marks the
+    /// list region, deterministic code splits and parses it (spec §6.2).
+    #[test]
+    fn list_argument_compiles_from_one_span() {
+        let mut c = compiler();
+        c.register_tool(
+            serde_json::from_value(serde_json::json!({
+                "name": "get_data_object",
+                "description": "get data objects by id",
+                "parameters": {
+                    "ids": {"type": "array", "items": {"type": "integer"}, "required": true}
+                }
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        let (_, tool) = c.registry.get_by_registry_id("get_data_object").unwrap();
+        let tool = tool.clone();
+        assert_eq!(tool.args[0].param_type, ntc_core::schema::ParamType::List);
+        assert_eq!(
+            tool.args[0].item_type,
+            Some(ntc_core::schema::ParamType::Integer)
+        );
+
+        let ir = ActionIr {
+            ir_version: 1,
+            action: ActionState::Call,
+            action_confidence: 0.99,
+            tool: Some(ToolSelection {
+                candidate_index: 0,
+                registry_id: "get_data_object".into(),
+                confidence: 0.99,
+            }),
+            arguments: vec![ArgumentBinding {
+                parameter: "ids".into(),
+                value: SemanticValue::List {
+                    items: crate::normalize::list::parse_list(
+                        "42, 55 and 101",
+                        ntc_core::schema::ParamType::Integer,
+                    ),
+                },
+                confidence: 0.95,
+                provenance: None,
+            }],
+            unresolved: vec![],
+        };
+        assert!(validate(&ir, Some(&tool)).is_valid());
+
+        let req = CompileRequest {
+            utterance: "show data objects 42, 55 and 101".into(),
+            locale: None,
+            timezone: None,
+            now: Some("2026-08-19T10:00:00+02:00".into()),
+            candidates: None,
+            context: None,
+        };
+        let call = c.serialize_call(&ir, &tool, &req).unwrap();
+        assert_eq!(call.arguments, serde_json::json!({"ids": [42, 55, 101]}));
+    }
+
+    /// A tool whose required argument is OPAQUE (free-form object / list of
+    /// objects) cannot be compiled into one typed call — policy routes the
+    /// utterance to an LLM agent instead of guessing.
+    #[test]
+    fn opaque_required_argument_routes_to_delegate() {
+        use crate::policy::ConfidencePolicy;
+
+        let mut c = compiler();
+        c.register_tool(
+            serde_json::from_value(serde_json::json!({
+                "name": "apply_transition",
+                "description": "apply a workflow transition",
+                "parameters": {
+                    "elements": {"type": "array", "items": {"type": "object"}, "required": true},
+                    "workflowName": {"type": "string", "required": true}
+                }
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        let (_, tool) = c.registry.get_by_registry_id("apply_transition").unwrap();
+        let tool = tool.clone();
+        assert_eq!(tool.args[0].param_type, ntc_core::schema::ParamType::Opaque);
+        assert!(tool.requires_agent());
+
+        let mut ir = ActionIr {
+            ir_version: 1,
+            action: ActionState::Call,
+            action_confidence: 0.96,
+            tool: Some(ToolSelection {
+                candidate_index: 0,
+                registry_id: "apply_transition".into(),
+                confidence: 0.96,
+            }),
+            arguments: vec![ArgumentBinding {
+                parameter: "workflowName".into(),
+                value: SemanticValue::String("product_review".into()),
+                confidence: 0.9,
+                provenance: None,
+            }],
+            unresolved: vec![],
+        };
+        ConfidencePolicy::default().apply(&mut ir, Some(&tool));
+        assert_eq!(ir.action, ActionState::Delegate);
+        assert!(ir.tool.is_none() && ir.arguments.is_empty());
+    }
+
+    /// DELEGATE passes through policy untouched and surfaces the utterance
+    /// plus the candidate set, so the host can hand both to an LLM agent.
+    #[test]
+    fn delegate_outcome_carries_utterance_and_candidates() {
+        use crate::policy::ConfidencePolicy;
+
+        let c = compiler();
+        let (_, tool) = c.registry.get_by_registry_id("calendar.create").unwrap();
+        let tool = tool.clone();
+        let mut ir = ActionIr {
+            ir_version: 1,
+            action: ActionState::Delegate,
+            action_confidence: 0.97,
+            // A model could still emit a tool guess; policy must clear it.
+            tool: Some(ToolSelection {
+                candidate_index: 0,
+                registry_id: "calendar.create".into(),
+                confidence: 0.4,
+            }),
+            arguments: vec![ArgumentBinding {
+                parameter: "title".into(),
+                value: SemanticValue::String("x".into()),
+                confidence: 0.5,
+                provenance: None,
+            }],
+            unresolved: vec![],
+        };
+        ConfidencePolicy::default().apply(&mut ir, Some(&tool));
+        assert_eq!(ir.action, ActionState::Delegate);
+        assert!(ir.tool.is_none() && ir.arguments.is_empty() && ir.unresolved.is_empty());
+
+        // Validation accepts a bare DELEGATE and rejects a decorated one.
+        assert!(validate(&ir, Some(&tool)).is_valid());
+        let mut bad = ir.clone();
+        bad.tool = Some(ToolSelection {
+            candidate_index: 0,
+            registry_id: "calendar.create".into(),
+            confidence: 0.9,
+        });
+        assert!(!validate(&bad, Some(&tool)).is_valid());
     }
 
     #[test]

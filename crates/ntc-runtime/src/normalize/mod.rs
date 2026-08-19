@@ -2,5 +2,6 @@
 //! duration/unit conversion, and multilingual number parsing.
 
 pub mod datetime;
+pub mod list;
 pub mod number;
 pub mod units;

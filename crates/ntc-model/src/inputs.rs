@@ -27,6 +27,8 @@ pub enum SegmentKind {
     Semantic = 7,
     EnumValue = 8,
     Pad = 9,
+    /// `ITEM <TYPE>` — element type of a LIST argument (ABI v2).
+    Item = 10,
 }
 
 impl From<LineKind> for SegmentKind {
@@ -40,6 +42,7 @@ impl From<LineKind> for SegmentKind {
             LineKind::Required => SegmentKind::Required,
             LineKind::Semantic => SegmentKind::Semantic,
             LineKind::EnumValue => SegmentKind::EnumValue,
+            LineKind::Item => SegmentKind::Item,
         }
     }
 }

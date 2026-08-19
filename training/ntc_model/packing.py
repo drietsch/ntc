@@ -33,6 +33,7 @@ SEGMENT_KIND_IDS = {
     "REQUIRED": 6,
     "SEMANTIC": 7,
     "ENUM_VALUE": 8,
+    "ITEM": 10,
 }
 
 DEFAULT_NTC_BIN = Path(__file__).resolve().parents[2] / "target" / "debug" / "ntc"

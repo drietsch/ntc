@@ -88,18 +88,30 @@ def build_verify_vote_prompt(example: dict[str, Any]) -> str:
 # --- teacher invocation -----------------------------------------------------
 
 
+# Transient process-level failures (empty stderr, exit 1) happen under
+# concurrency; retry with exponential backoff before giving up on a prompt.
+PROCESS_RETRIES = 3
+BACKOFF_BASE_S = 4.0
+
+
 async def _run_claude_once(prompt: str, cmd: Sequence[str] = CLAUDE_CMD) -> str:
-    """Default runner: one headless-Claude call, prompt on stdin."""
-    proc = await asyncio.create_subprocess_exec(
-        *cmd,
-        stdin=asyncio.subprocess.PIPE,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    stdout, stderr = await proc.communicate(prompt.encode())
-    if proc.returncode != 0:
-        raise TeacherError(f"claude exited {proc.returncode}: {stderr.decode()[:500]}")
-    return stdout.decode()
+    """Default runner: one headless-Claude call, prompt on stdin, retried on
+    transient process failures."""
+    last: str = ""
+    for attempt in range(PROCESS_RETRIES):
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await proc.communicate(prompt.encode())
+        if proc.returncode == 0:
+            return stdout.decode()
+        last = f"claude exited {proc.returncode}: {stderr.decode()[:300]}"
+        if attempt < PROCESS_RETRIES - 1:
+            await asyncio.sleep(BACKOFF_BASE_S * (2**attempt))
+    raise TeacherError(last)
 
 
 def parse_claude_envelope(raw_stdout: str) -> str:

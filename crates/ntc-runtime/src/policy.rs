@@ -30,7 +30,31 @@ impl ConfidencePolicy {
     /// 4. ASK with nothing unresolved → NO_CALL (a model inconsistency;
     ///    fail closed rather than asking an empty question).
     /// 5. NO_CALL drops tool/arguments.
+    /// 6. DELEGATE passes through untouched (host escalates to an LLM agent).
+    /// 7. A CALL selecting a tool with a required OPAQUE argument becomes
+    ///    DELEGATE — no single typed call can express it.
     pub fn apply(&self, ir: &mut ActionIr, tool: Option<&CanonicalTool>) {
+        // DELEGATE hands the utterance to the host's LLM agent: nothing to
+        // validate, threshold or serialize here.
+        if ir.action == ActionState::Delegate {
+            ir.tool = None;
+            ir.arguments.clear();
+            ir.unresolved.clear();
+            return;
+        }
+
+        // A tool whose required arguments include an OPAQUE (free-form
+        // object / list-of-objects) payload cannot be satisfied by a single
+        // typed call — that is agent work, not a NO_CALL (spec §19,
+        // docs/delegation.md).
+        if ir.action == ActionState::Call && tool.is_some_and(|t| t.requires_agent()) {
+            ir.action = ActionState::Delegate;
+            ir.tool = None;
+            ir.arguments.clear();
+            ir.unresolved.clear();
+            return;
+        }
+
         if ir.action == ActionState::Call {
             match (&ir.tool, tool) {
                 (Some(sel), Some(_)) if sel.confidence < self.tool_threshold => {

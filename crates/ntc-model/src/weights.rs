@@ -13,7 +13,7 @@
 //! encoder.layer.{i}.ffn.up.{weight,bias}      [H, F] / [F]
 //! encoder.layer.{i}.ffn.down.{weight,bias}    [F, H] / [H]
 //! encoder.layer.{i}.ffn.norm.{weight,bias}
-//! schema.embeddings.segment_kind.weight  [10, H]
+//! schema.embeddings.segment_kind.weight  [11, H]
 //! schema.embeddings.tool_index.weight    [max_tools+1, H]
 //! schema.embeddings.norm.{weight,bias}
 //! schema.layer.{i}.*                     (same shape family as encoder.layer)
@@ -55,7 +55,7 @@ use crate::config::NtcArchConfig;
 use crate::tensor::Tensor;
 
 /// Number of segment-kind embedding rows (see [`crate::inputs::SegmentKind`]).
-pub const SEGMENT_KINDS: usize = 10;
+pub const SEGMENT_KINDS: usize = 11;
 
 #[derive(Debug)]
 pub struct ModelWeights {
@@ -178,7 +178,7 @@ pub fn tensor_specs(cfg: &NtcArchConfig) -> Vec<(String, Vec<usize>)> {
 
     // Heads (shapes per contracts/heads/v1/head-spec.json).
     for (dense, out, classes) in [
-        ("heads.action.dense", "heads.action.out", 3usize),
+        ("heads.action.dense", "heads.action.out", cfg.action_classes),
         ("heads.tool.dense", "heads.tool.out", 1),
         ("heads.presence.dense", "heads.presence.out", 4),
     ] {

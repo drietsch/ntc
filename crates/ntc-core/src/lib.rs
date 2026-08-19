@@ -29,7 +29,11 @@ pub use schema::{
 /// Version of the canonical Tool ABI text rendering. Bump on any change to
 /// `CanonicalTool::to_neural_text` output. Recorded in `.ntc` metadata and
 /// `contracts/VERSIONS.md`.
-pub const ABI_VERSION: u32 = 1;
+///
+/// v2 added composite value types (spec §19): `TYPE LIST` with an `ITEM
+/// <TYPE>` line, `TYPE OPAQUE` for agent-only payloads, and flattened
+/// `parent.child` arguments for objects with declared scalar properties.
+pub const ABI_VERSION: u32 = 2;
 
 /// Version of the Typed Action IR emitted and accepted by this crate.
 pub const IR_VERSION: u32 = 1;

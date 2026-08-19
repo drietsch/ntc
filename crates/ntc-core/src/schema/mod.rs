@@ -54,6 +54,17 @@ pub enum ParamType {
     Duration,
     Person,
     Location,
+    /// A homogeneous list of scalars (spec §19 `LIST<T>`); the element type
+    /// lives in [`CanonicalArg::item_type`]. The model marks one span
+    /// covering the whole list region and deterministic code splits and
+    /// parses the elements (spec §6.2).
+    List,
+    /// A value the structured heads cannot produce: free-form objects,
+    /// lists of objects, nested payloads. The tool stays a candidate — the
+    /// model may still *select* it — but a required OPAQUE argument means no
+    /// single typed call can be compiled, so the runtime routes the
+    /// utterance to an LLM agent (`DELEGATE`). See docs/delegation.md.
+    Opaque,
 }
 
 impl ParamType {
@@ -69,6 +80,8 @@ impl ParamType {
             ParamType::Duration => "DURATION",
             ParamType::Person => "PERSON",
             ParamType::Location => "LOCATION",
+            ParamType::List => "LIST",
+            ParamType::Opaque => "OPAQUE",
         }
     }
 }
@@ -96,8 +109,11 @@ pub enum RiskClass {
 pub struct CanonicalArg {
     pub name: String,
     pub param_type: ParamType,
+    /// Element type for `LIST` arguments (scalar types only).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub item_type: Option<ParamType>,
     /// The provider-facing JSON type this argument serializes to:
-    /// `string` | `integer` | `number` | `boolean`.
+    /// `string` | `integer` | `number` | `boolean` | `array` | `object`.
     pub json_type: String,
     pub required: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -133,6 +149,8 @@ pub enum LineKind {
     ArgName,
     Info,
     Type,
+    /// `ITEM <TYPE>` — element type of a `LIST` argument.
+    Item,
     Required,
     Semantic,
     EnumValue,
@@ -235,6 +253,16 @@ impl CanonicalTool {
                 Some(k),
                 None,
             );
+            if let Some(item) = arg.item_type {
+                push(
+                    &mut text,
+                    LineKind::Item,
+                    format!("ITEM {}", item.as_str()),
+                    None,
+                    Some(k),
+                    None,
+                );
+            }
             push(
                 &mut text,
                 LineKind::Required,
@@ -273,6 +301,15 @@ impl CanonicalTool {
     pub fn arg(&self, name: &str) -> Option<&CanonicalArg> {
         self.args.iter().find(|a| a.name == name)
     }
+
+    /// True when a required argument is [`ParamType::Opaque`], i.e. no single
+    /// typed call can satisfy this tool and the request belongs to an LLM
+    /// agent (`ActionState::Delegate`).
+    pub fn requires_agent(&self) -> bool {
+        self.args
+            .iter()
+            .any(|a| a.required && a.param_type == ParamType::Opaque)
+    }
 }
 
 /// Normative text normalization for canonical rendering: NFC, collapse all
@@ -296,6 +333,17 @@ pub fn normalize_text(s: &str) -> String {
 }
 
 /// Compile a raw provider schema into the canonical Tool ABI (spec §39).
+///
+/// Composite parameters (spec §19 `LIST<T>` / `OBJECT<T>`) resolve in three
+/// tiers, cheapest first:
+/// 1. `array` of scalars → [`ParamType::List`] with an `item_type`; the model
+///    marks one span and deterministic code splits it.
+/// 2. `object` with declared scalar properties → **flattened** into dotted
+///    pseudo-arguments (`data.key`); the backend re-nests them on
+///    serialization, so prediction stays scalar.
+/// 3. anything else (free-form objects, arrays of objects) →
+///    [`ParamType::Opaque`]; required opaque arguments make the tool
+///    agent-only ([`CanonicalTool::requires_agent`]).
 pub fn compile_schema(raw: &RawToolSchema) -> Result<CanonicalTool, NtcError> {
     if raw.name.trim().is_empty() {
         return Err(NtcError::Schema("tool name must be non-empty".into()));
@@ -303,49 +351,144 @@ pub fn compile_schema(raw: &RawToolSchema) -> Result<CanonicalTool, NtcError> {
     let params = raw.normalized_parameters()?;
     let mut args = Vec::with_capacity(params.len());
     for (name, p) in params {
-        let has_enum = !p.enum_values.is_empty();
         if p.enum_values.len() > MAX_ENUM_VALUES {
             return Err(NtcError::Schema(format!(
                 "argument `{name}`: {} enum values exceeds the V1 limit of {MAX_ENUM_VALUES}",
                 p.enum_values.len()
             )));
         }
-        let param_type = map_param_type(&p, has_enum, &name)?;
-        let json_type = match param_type {
-            ParamType::Integer => "integer",
-            ParamType::Float => "float",
-            ParamType::Boolean => "boolean",
-            _ => "string",
-        };
-        let json_type = match p.json_type.as_str() {
-            // Preserve the declared JSON type when it is one of the four
-            // provider-facing types (e.g. integer-typed durations).
-            t @ ("string" | "integer" | "number" | "boolean") => t.to_string(),
-            _ => match json_type {
-                "float" => "number".to_string(),
-                other => other.to_string(),
-            },
-        };
-        args.push(CanonicalArg {
-            name,
-            param_type,
-            json_type,
-            required: p.required,
-            semantic_type: p
-                .semantic
-                .as_deref()
-                .map(|s| SemanticTypeId(s.trim().to_uppercase())),
-            description: p.description.unwrap_or_default(),
-            enum_values: p.enum_values,
-        });
+        // Tier 2: flatten an object with declared scalar properties.
+        if p.json_type == "object" {
+            if let Some(flat) = flatten_object(&name, &p)? {
+                args.extend(flat);
+                continue;
+            }
+        }
+        args.push(canonical_arg(name, &p)?);
     }
     Ok(CanonicalTool {
-        id: raw.name.clone(),
+        id: raw.id_or_name(),
         abi_version: crate::ABI_VERSION,
         description: raw.description.clone().unwrap_or_default(),
         risk: raw.risk.unwrap_or_default(),
         args,
     })
+}
+
+/// Build one canonical argument (tiers 1 and 3).
+fn canonical_arg(name: String, p: &raw::NormalizedParam) -> Result<CanonicalArg, NtcError> {
+    let has_enum = !p.enum_values.is_empty();
+    let (param_type, item_type) = match p.json_type.as_str() {
+        "array" => match scalar_item_type(p.items.as_ref()) {
+            Some(item) => (ParamType::List, Some(item)),
+            None => (ParamType::Opaque, None),
+        },
+        "object" => (ParamType::Opaque, None),
+        _ => (map_param_type(p, has_enum, &name)?, None),
+    };
+    let json_type = match param_type {
+        ParamType::List => "array".to_string(),
+        ParamType::Opaque => p.json_type.clone(),
+        _ => scalar_json_type(param_type, p),
+    };
+    Ok(CanonicalArg {
+        name,
+        param_type,
+        item_type,
+        json_type,
+        required: p.required,
+        semantic_type: p
+            .semantic
+            .as_deref()
+            .map(|s| SemanticTypeId(s.trim().to_uppercase())),
+        description: p.description.clone().unwrap_or_default(),
+        enum_values: p.enum_values.clone(),
+    })
+}
+
+/// Scalar element type of an `array` parameter, if the item schema declares a
+/// plain scalar (`{"type": "integer"}`). Objects and untyped items yield None.
+fn scalar_item_type(items: Option<&serde_json::Value>) -> Option<ParamType> {
+    let t = items?.get("type")?.as_str()?;
+    match t {
+        "string" => Some(ParamType::Text),
+        "integer" => Some(ParamType::Integer),
+        "number" => Some(ParamType::Float),
+        "boolean" => Some(ParamType::Boolean),
+        _ => None,
+    }
+}
+
+/// Flatten `{"type": "object", "properties": {...}}` into dotted pseudo-args
+/// when every declared property is scalar. Returns `None` when the object has
+/// no declared properties or any non-scalar property (→ opaque).
+fn flatten_object(
+    name: &str,
+    p: &raw::NormalizedParam,
+) -> Result<Option<Vec<CanonicalArg>>, NtcError> {
+    let Some(props) = p.properties.as_ref().and_then(|v| v.as_object()) else {
+        return Ok(None);
+    };
+    if props.is_empty() {
+        return Ok(None);
+    }
+    let required: Vec<&str> = p
+        .items // JSON-Schema puts object-level `required` next to properties;
+        .as_ref() // callers may also pass it via the raw value.
+        .and_then(|v| v.get("required"))
+        .and_then(|v| v.as_array())
+        .map(|a| a.iter().filter_map(|v| v.as_str()).collect())
+        .unwrap_or_default();
+
+    let mut out = Vec::with_capacity(props.len());
+    for (prop_name, schema) in props {
+        let ptype = schema
+            .get("type")
+            .and_then(|v| v.as_str())
+            .unwrap_or("string");
+        if !matches!(ptype, "string" | "integer" | "number" | "boolean") {
+            return Ok(None); // nested payload — keep the whole object opaque
+        }
+        let sub = raw::NormalizedParam {
+            json_type: ptype.to_string(),
+            description: schema
+                .get("description")
+                .and_then(|v| v.as_str())
+                .map(str::to_owned),
+            format: schema
+                .get("format")
+                .and_then(|v| v.as_str())
+                .map(str::to_owned),
+            required: p.required && required.contains(&prop_name.as_str()),
+            enum_values: schema
+                .get("enum")
+                .and_then(|v| v.as_array())
+                .map(|a| {
+                    a.iter()
+                        .filter_map(|v| v.as_str())
+                        .map(str::to_owned)
+                        .collect()
+                })
+                .unwrap_or_default(),
+            semantic: None,
+            items: None,
+            properties: None,
+        };
+        out.push(canonical_arg(format!("{name}.{prop_name}"), &sub)?);
+    }
+    Ok(Some(out))
+}
+
+fn scalar_json_type(param_type: ParamType, p: &raw::NormalizedParam) -> String {
+    match p.json_type.as_str() {
+        t @ ("string" | "integer" | "number" | "boolean") => t.to_string(),
+        _ => match param_type {
+            ParamType::Integer => "integer".into(),
+            ParamType::Float => "number".into(),
+            ParamType::Boolean => "boolean".into(),
+            _ => "string".into(),
+        },
+    }
 }
 
 /// Map raw JSON type + format to the canonical parameter type. Semantic

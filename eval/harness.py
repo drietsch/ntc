@@ -22,6 +22,7 @@ from typing import Any
 from eval.metrics import (
     Pair,
     ask_accuracy,
+    delegate_accuracy,
     hallucinated_arg_rate,
     no_call_precision_recall,
     required_arg_accuracy,
@@ -74,6 +75,7 @@ def pair_by_id(
 def evaluate(pairs: Sequence[Pair]) -> dict[str, Any]:
     """Aggregate all metrics over (prediction, gold) pairs."""
     no_call = no_call_precision_recall(pairs)
+    delegate = delegate_accuracy(pairs)
     error_counts: Counter[str] = Counter()
     exact = 0
     for pred, gold in pairs:
@@ -90,6 +92,7 @@ def evaluate(pairs: Sequence[Pair]) -> dict[str, Any]:
         "no_call_recall": no_call["recall"],
         "no_call_f1": no_call["f1"],
         "ask_accuracy": ask_accuracy(pairs),
+        **delegate,
         "error_counts": dict(sorted(error_counts.items())),
     }
 

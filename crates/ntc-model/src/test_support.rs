@@ -30,6 +30,7 @@ pub fn tiny_config() -> NtcArchConfig {
         max_utterance_tokens: 24,
         max_schema_tokens: 64,
         layer_norm_eps: 1e-5,
+        action_classes: 3,
         calibration: Calibration::default(),
     }
 }

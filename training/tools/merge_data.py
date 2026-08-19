@@ -18,11 +18,13 @@ def main() -> None:
     parser.add_argument("--base", type=Path, default=Path("data/mini"))
     parser.add_argument("--live", type=Path, default=Path("data/live"))
     parser.add_argument("--out", type=Path, default=Path("data/any"))
+    parser.add_argument("--holdout", type=float, default=0.0,
+                        help="fraction of live examples held out to test (by id hash)")
     args = parser.parse_args()
 
     args.out.mkdir(parents=True, exist_ok=True)
-    for split in ("dev", "test"):
-        shutil.copy(args.base / f"{split}.jsonl", args.out / f"{split}.jsonl")
+    holdout_rows: list[dict] = []
+    shutil.copy(args.base / "dev.jsonl", args.out / "dev.jsonl")
 
     seen: set[str] = set()
     n_base = n_live = 0
@@ -46,9 +48,19 @@ def main() -> None:
                 if ex["id"] in seen:
                     continue
                 seen.add(ex["id"])
+                if args.holdout and (int(ex["id"][:8], 16) % 100) < args.holdout * 100:
+                    ex["split"] = "test"
+                    holdout_rows.append(ex)
+                    continue
                 out.write(json.dumps(ex, ensure_ascii=False) + "\n")
                 n_live += 1
-    print(f"train: {n_base} template + {n_live} live-teacher -> {args.out}")
+    with (args.out / "test.jsonl").open("w") as tf:
+        for line in (args.base / "test.jsonl").read_text().splitlines():
+            tf.write(line + "\n")
+        for ex in holdout_rows:
+            tf.write(json.dumps(ex, ensure_ascii=False) + "\n")
+    print(f"train: {n_base} template + {n_live} live-teacher, "
+          f"{len(holdout_rows)} live held out to test -> {args.out}")
 
 
 if __name__ == "__main__":

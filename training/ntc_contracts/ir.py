@@ -13,7 +13,7 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, model_validator
 
-ActionState = Literal["CALL", "ASK", "NO_CALL"]
+ActionState = Literal["CALL", "ASK", "NO_CALL", "DELEGATE"]
 UnresolvedReason = Literal["MISSING", "AMBIGUOUS"]
 DateRelation = Literal["TODAY", "TOMORROW", "YESTERDAY", "THIS", "NEXT", "LAST", "IN", "AGO"]
 Weekday = Literal[
@@ -144,8 +144,19 @@ class LocationValue(_Strict):
     value: TextRef
 
 
+class ListItems(_Strict):
+    """Elements of a `LIST<T>` value: scalars only (spec §19)."""
+
+    items: list[StringValue | BooleanValue | IntegerValue | FloatValue]
+
+
+class ListValue(_Strict):
+    semantic_type: Literal["LIST"]
+    value: ListItems
+
+
 SemanticValue = Annotated[
-    StringValue | BooleanValue | IntegerValue | FloatValue | EnumValue | AbsoluteDateValue | RelativeDateValue | AbsoluteDatetimeValue | RelativeDatetimeValue | TimeOfDayValue | DaypartValue | DurationSemanticValue | PersonRefValue | LocationValue,
+    StringValue | BooleanValue | IntegerValue | FloatValue | EnumValue | AbsoluteDateValue | RelativeDateValue | AbsoluteDatetimeValue | RelativeDatetimeValue | TimeOfDayValue | DaypartValue | DurationSemanticValue | PersonRefValue | LocationValue | ListValue,
     Field(discriminator="semantic_type"),
 ]
 
@@ -164,6 +175,7 @@ SemanticType = Literal[
     "DURATION",
     "PERSON_REF",
     "LOCATION",
+    "LIST",
 ]
 
 _SEMANTIC_VALUE_ADAPTER: TypeAdapter[Any] = TypeAdapter(SemanticValue)

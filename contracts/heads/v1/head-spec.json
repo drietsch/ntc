@@ -1,7 +1,6 @@
 {
-  "head_spec_version": 1,
-  "comment": "Neural output ABI for ntc_encoder_heads_v1. Class orderings are FROZEN for this version: changing any list requires a head_spec_version bump. Output tensor names are what Backend::run returns and what the PyTorch reference dumps for parity fixtures. Shapes use T=max_tools(+1 for NO_TOOL where noted), A=max_args, E=max_enum_values, Lu=max_utterance_tokens.",
-
+  "head_spec_version": 2,
+  "comment": "Neural output ABI for ntc_encoder_heads_v1. Class orderings are FROZEN and append-only: new classes may only be appended (v2 appended DELEGATE to the action head, width recorded in .ntc model.action_classes). Otherwise: changing any list requires a head_spec_version bump. Output tensor names are what Backend::run returns and what the PyTorch reference dumps for parity fixtures. Shapes use T=max_tools(+1 for NO_TOOL where noted), A=max_args, E=max_enum_values, Lu=max_utterance_tokens.",
   "inputs": {
     "max_utterance_tokens": 96,
     "max_tools": 16,
@@ -10,47 +9,100 @@
     "max_schema_tokens_per_tool": 96,
     "packing": "See docs/model-format.md §input-packing: utterance encoded with tokenizer specials; each candidate tool's canonical ABI text encoded independently; arg/enum anchor positions are the first token whose offset covers the arg name / enum value in the canonical text; NO_TOOL is a learned pseudo-tool appended after the T candidates in fusion."
   },
-
   "heads": {
     "action": {
       "output": "action.logits",
-      "shape": ["3"],
-      "classes": ["CALL", "ASK", "NO_CALL"],
-      "decode": "argmax; softmax with calibration temperature -> action_confidence"
+      "shape": [
+        "action_classes (3 or 4; see .ntc model.action_classes)"
+      ],
+      "classes": [
+        "CALL",
+        "ASK",
+        "NO_CALL",
+        "DELEGATE"
+      ],
+      "decode": "argmax; softmax with calibration temperature -> action_confidence. Class order is FROZEN; a 3-wide head (models predating DELEGATE) simply never yields index 3. DELEGATE is a whole-utterance verdict: the runtime emits no tool/arguments/unresolved and the host escalates the utterance to a full LLM agent."
     },
     "tool": {
       "output": "tool.logits",
-      "shape": ["T+1"],
+      "shape": [
+        "T+1"
+      ],
       "classes": "candidate index 0..T-1 in request candidate order; index T = NO_TOOL",
       "decode": "argmax over the first n_candidates entries plus NO_TOOL; padded candidate slots are masked to -inf by the runtime before softmax; NO_TOOL argmax downgrades CALL to NO_CALL"
     },
     "presence": {
       "output": "presence.logits",
-      "shape": ["T", "A", "4"],
-      "classes": ["PRESENT", "MISSING", "AMBIGUOUS", "NOT_APPLICABLE"],
+      "shape": [
+        "T",
+        "A",
+        "4"
+      ],
+      "classes": [
+        "PRESENT",
+        "MISSING",
+        "AMBIGUOUS",
+        "NOT_APPLICABLE"
+      ],
       "decode": "argmax per declared arg of the selected tool; padded arg slots ignored; MISSING/AMBIGUOUS on a required arg emits an unresolved entry (reason MISSING/AMBIGUOUS)"
     },
     "boolean": {
       "output": "boolean.logits",
-      "shape": ["T", "A", "2"],
-      "classes": ["FALSE", "TRUE"],
+      "shape": [
+        "T",
+        "A",
+        "2"
+      ],
+      "classes": [
+        "FALSE",
+        "TRUE"
+      ],
       "decode": "argmax; consulted only for BOOLEAN-typed args with presence PRESENT"
     },
     "span": {
-      "output": ["span.start.logits", "span.end.logits"],
-      "shape": ["T", "A", "Lu"],
+      "output": [
+        "span.start.logits",
+        "span.end.logits"
+      ],
+      "shape": [
+        "T",
+        "A",
+        "Lu"
+      ],
       "decode": "start = argmax(start.logits); end = argmax over end.logits[start..start+MAX_SPAN) then +1 (end exclusive, end > start); MAX_SPAN = 32 tokens; padded utterance positions masked to -inf; consulted for TEXT/PERSON/LOCATION values and as the surface source for INTEGER/FLOAT/DATE/DATETIME deterministic parsing"
     },
     "enum": {
       "output": "enum.logits",
-      "shape": ["T", "A", "E"],
+      "shape": [
+        "T",
+        "A",
+        "E"
+      ],
       "decode": "argmax over the first n_enum_values entries of the bound arg (runtime masks the rest); index points into CanonicalArg.enum_values order"
     },
     "numeric": {
-      "output": ["numeric.unit.logits", "numeric.magnitude"],
-      "shape_unit": ["T", "A", "6"],
-      "shape_magnitude": ["T", "A", "1"],
-      "unit_classes": ["NONE", "SECOND", "MINUTE", "HOUR", "DAY", "WEEK"],
+      "output": [
+        "numeric.unit.logits",
+        "numeric.magnitude"
+      ],
+      "shape_unit": [
+        "T",
+        "A",
+        "6"
+      ],
+      "shape_magnitude": [
+        "T",
+        "A",
+        "1"
+      ],
+      "unit_classes": [
+        "NONE",
+        "SECOND",
+        "MINUTE",
+        "HOUR",
+        "DAY",
+        "WEEK"
+      ],
       "decode": "magnitude is predicted in asinh space: value = sinh(x). Primary numeric value comes from deterministic parsing of the span text; the regression is the fallback and consistency signal"
     },
     "datetime": {
@@ -61,19 +113,75 @@
         "datetime.month.logits"
       ],
       "shapes": {
-        "relation": ["T", "A", "10"],
-        "weekday": ["T", "A", "8"],
-        "daypart": ["T", "A", "6"],
-        "month": ["T", "A", "13"]
+        "relation": [
+          "T",
+          "A",
+          "10"
+        ],
+        "weekday": [
+          "T",
+          "A",
+          "8"
+        ],
+        "daypart": [
+          "T",
+          "A",
+          "6"
+        ],
+        "month": [
+          "T",
+          "A",
+          "13"
+        ]
       },
-      "relation_classes": ["NONE", "TODAY", "TOMORROW", "YESTERDAY", "THIS", "NEXT", "LAST", "IN", "AGO", "ABSOLUTE"],
-      "weekday_classes": ["NONE", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"],
-      "daypart_classes": ["NONE", "MORNING", "NOON", "AFTERNOON", "EVENING", "NIGHT"],
-      "month_classes": ["NONE", "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"],
+      "relation_classes": [
+        "NONE",
+        "TODAY",
+        "TOMORROW",
+        "YESTERDAY",
+        "THIS",
+        "NEXT",
+        "LAST",
+        "IN",
+        "AGO",
+        "ABSOLUTE"
+      ],
+      "weekday_classes": [
+        "NONE",
+        "MONDAY",
+        "TUESDAY",
+        "WEDNESDAY",
+        "THURSDAY",
+        "FRIDAY",
+        "SATURDAY",
+        "SUNDAY"
+      ],
+      "daypart_classes": [
+        "NONE",
+        "MORNING",
+        "NOON",
+        "AFTERNOON",
+        "EVENING",
+        "NIGHT"
+      ],
+      "month_classes": [
+        "NONE",
+        "JANUARY",
+        "FEBRUARY",
+        "MARCH",
+        "APRIL",
+        "MAY",
+        "JUNE",
+        "JULY",
+        "AUGUST",
+        "SEPTEMBER",
+        "OCTOBER",
+        "NOVEMBER",
+        "DECEMBER"
+      ],
       "decode": "relation ABSOLUTE -> parse the span text deterministically; relation IN/AGO take magnitude/unit from the numeric head; factored fields with class NONE are omitted from the IR value"
     }
   },
-
   "pooling": {
     "user": "utterance encoder state at token 0 (tokenizer BOS/CLS)",
     "global": "fusion state of the NO_TOOL pseudo-tool",
@@ -81,7 +189,6 @@
     "arg_state": "fusion state at the arg-name anchor token",
     "enum_state": "fusion state at the enum-value anchor token"
   },
-
   "confidence": {
     "method": "per-head temperature scaling; temperatures stored in .ntc metadata under model.calibration; default 1.0"
   }

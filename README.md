@@ -15,6 +15,11 @@ The neural network resolves only *uncertain semantics* (intent, tool choice,
 argument binding, references, confidence). Everything exact — JSON, types,
 enums, dates, units, policy, validation — is deterministic Rust.
 
+It is the **fast local tier** of an agent stack: it compiles what a single
+typed call can express and answers `DELEGATE` for work that needs a full LLM
+agent (multi-step chains over results, bulk mutations, open-ended reasoning).
+See [docs/delegation.md](docs/delegation.md).
+
 ## Repository layout
 
 | Path | What |
@@ -31,7 +36,7 @@ enums, dates, units, policy, validation — is deterministic Rust.
 | `training/` | PyTorch model + synthetic data engine (teacher: headless Claude Code) + `.ntc` exporter |
 | `eval/` | Metrics, error taxonomy, parity tooling |
 | `examples/browser/` | Static browser demo |
-| `docs/` | Normative docs: model format, Tool ABI, Action IR, parity testing |
+| `docs/` | Normative docs: model format, Tool ABI, Action IR, parity testing, [delegation boundary](docs/delegation.md) |
 
 ## Quick start
 

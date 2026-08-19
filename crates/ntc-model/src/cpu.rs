@@ -294,7 +294,10 @@ impl Backend for CpuRefBackend {
         cat.extend_from_slice(user_cls);
         cat.extend_from_slice(global);
         let action = self.mlp_head(&cat, "heads.action.dense", "heads.action.out")?;
-        out.insert("action.logits".into(), Tensor::from_vec(&[3], action));
+        out.insert(
+            "action.logits".into(),
+            Tensor::from_vec(&[cfg.action_classes], action),
+        );
 
         // tool: score each tool anchor + NO_TOOL
         let mut tool_logits = Vec::with_capacity(n_tools + 1);

@@ -8,6 +8,11 @@ fn default_eps() -> f32 {
     1e-5
 }
 
+/// Action-head width for models trained before `DELEGATE` existed.
+fn default_action_classes() -> usize {
+    3
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct NtcArchConfig {
@@ -28,6 +33,9 @@ pub struct NtcArchConfig {
     pub max_schema_tokens: usize,
     #[serde(default = "default_eps")]
     pub layer_norm_eps: f32,
+    /// Action-head width: 3 = CALL/ASK/NO_CALL, 4 adds DELEGATE.
+    #[serde(default = "default_action_classes")]
+    pub action_classes: usize,
     /// Per-head calibration temperatures (head codec §confidence).
     #[serde(default)]
     pub calibration: Calibration,
@@ -74,6 +82,12 @@ impl NtcArchConfig {
             return Err(NtcError::Format(format!(
                 "hidden {} must be a positive multiple of heads {}",
                 self.hidden, self.heads
+            )));
+        }
+        if !(3..=4).contains(&self.action_classes) {
+            return Err(NtcError::Format(format!(
+                "action_classes must be 3 or 4, got {}",
+                self.action_classes
             )));
         }
         if self.max_utterance_tokens > self.max_positions

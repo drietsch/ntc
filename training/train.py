@@ -57,6 +57,31 @@ def backbone_config(vocab: int) -> NtcArchConfig:
     )
 
 
+def pimcore_config(vocab: int) -> NtcArchConfig:
+    """Backbone dims with a wide schema window for the real Pimcore tools
+    (longest canonical text ≈ 332 tokens) and retrieval-narrowed candidate
+    sets (max_tools=4)."""
+    return NtcArchConfig(
+        hidden=384,
+        heads=12,
+        ffn=1536,
+        vocab=vocab,
+        max_positions=512,
+        encoder_layers=12,
+        schema_layers=2,
+        fusion_blocks=2,
+        max_tools=4,
+        max_args=8,
+        max_enum_values=4,
+        max_utterance_tokens=64,
+        max_schema_tokens=352,
+        layer_norm_eps=1e-12,
+        # CALL / ASK / NO_CALL / DELEGATE — the router can hand complex
+        # multi-step or open-ended work to a full LLM agent.
+        action_classes=4,
+    )
+
+
 def mini_config(vocab: int) -> NtcArchConfig:
     return NtcArchConfig(
         hidden=128,
@@ -198,7 +223,7 @@ def main() -> None:
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--seed", type=int, default=17)
     parser.add_argument("--limit", type=int, default=0, help="cap train examples (overfit checks)")
-    parser.add_argument("--arch", choices=["mini", "backbone"], default="mini")
+    parser.add_argument("--arch", choices=["mini", "backbone", "pimcore"], default="mini")
     parser.add_argument("--init", type=Path, default=None,
                         help="partial state_dict (runs/backbone/init.pt) to warm-start from")
     parser.add_argument("--backbone-lr", type=float, default=2e-5,
@@ -209,9 +234,9 @@ def main() -> None:
     rng = random.Random(args.seed)
     device = "mps" if torch.backends.mps.is_available() else "cpu"
 
-    tok_dir = "tokenizer-any" if args.arch == "backbone" else "tokenizer"
+    tok_dir = "tokenizer" if args.arch == "mini" else "tokenizer-any"
     tokenizer = Tokenizer.from_file(str(REPO / "contracts" / tok_dir / "tokenizer.json"))
-    make_cfg = backbone_config if args.arch == "backbone" else mini_config
+    make_cfg = {"mini": mini_config, "backbone": backbone_config, "pimcore": pimcore_config}[args.arch]
     cfg = make_cfg(tokenizer.get_vocab_size())
     print(f"device={device} arch={args.arch} vocab={cfg.vocab}")
 

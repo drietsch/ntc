@@ -179,6 +179,25 @@ def ask_accuracy(pairs: Sequence[Pair]) -> float | None:
 # --- error taxonomy ---------------------------------------------------------
 
 
+def delegate_accuracy(pairs: Sequence[Pair]) -> dict[str, float | None]:
+    """How well the router recognizes work that belongs to a full LLM agent.
+
+    Precision: of predicted DELEGATE, how many were gold DELEGATE.
+    Recall: of gold DELEGATE, how many were predicted DELEGATE.
+    """
+    tp = sum(1 for p, g in pairs if pred_action(p) == "DELEGATE" and g["action"] == "DELEGATE")
+    fp = sum(1 for p, g in pairs if pred_action(p) == "DELEGATE" and g["action"] != "DELEGATE")
+    fn = sum(1 for p, g in pairs if pred_action(p) != "DELEGATE" and g["action"] == "DELEGATE")
+    precision = tp / (tp + fp) if (tp + fp) else None
+    recall = tp / (tp + fn) if (tp + fn) else None
+    f1 = (
+        2 * precision * recall / (precision + recall)
+        if precision and recall
+        else (0.0 if (precision is not None and recall is not None) else None)
+    )
+    return {"delegate_precision": precision, "delegate_recall": recall, "delegate_f1": f1}
+
+
 def tag_errors(pred: dict[str, Any], gold: dict[str, Any]) -> list[str]:
     """Error tags for one (prediction, gold) pair. Empty list = correct.
 

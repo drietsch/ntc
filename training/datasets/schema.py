@@ -152,6 +152,16 @@ class DatasetExample(BaseModel):
         return self
 
     @model_validator(mode="after")
+    def _check_delegate_is_bare(self) -> DatasetExample:
+        """DELEGATE is a whole-utterance verdict: the router hands the request
+        to a full LLM agent, so it carries no tool, arguments or unresolved."""
+        if self.gold.action == "DELEGATE" and (
+            self.gold.tool or self.gold.arguments or self.gold.unresolved
+        ):
+            raise ValueError("action DELEGATE must not carry tool/arguments/unresolved")
+        return self
+
+    @model_validator(mode="after")
     def _check_call_has_tool(self) -> DatasetExample:
         if self.gold.action == "CALL":
             if self.gold.tool is None:

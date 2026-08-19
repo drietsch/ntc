@@ -25,7 +25,8 @@ STRING, BOOLEAN, INTEGER, FLOAT, ENUM {index, symbol}, ABSOLUTE_DATE
 {year, month, day}, RELATIVE_DATE {relation, weekday?, offset?},
 ABSOLUTE_DATETIME (RFC 3339 string), RELATIVE_DATETIME {relation, weekday?,
 daypart?, time?, offset?}, TIME_OF_DAY {hour, minute}, DAYPART, DURATION
-{magnitude, unit}, PERSON_REF {text}, LOCATION {text}.
+{magnitude, unit}, PERSON_REF {text}, LOCATION {text}, LIST {items: [scalar
+SemanticValue, ...]}.
 
 Vocabularies (mirrored in the head codec with a NONE class at index 0):
 relations TODAY TOMORROW YESTERDAY THIS NEXT LAST IN AGO (+ABSOLUTE at the

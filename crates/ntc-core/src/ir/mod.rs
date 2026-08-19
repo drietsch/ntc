@@ -16,13 +16,26 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-/// V1 action states (spec §73; the full §3 set arrives in later phases).
+/// V1 action states (spec §73) plus [`ActionState::Delegate`].
+///
+/// `DELEGATE` is the router's escape hatch: the request is real work, but not
+/// work a single typed call can express — a multi-step chain whose later
+/// steps depend on earlier *results*, a bulk mutation over an unknown result
+/// set, conditional/comparative logic, or open-ended authoring/reasoning.
+/// The host hands such utterances to a full LLM agent (which may itself use
+/// the same tools). It is deliberately distinct from `NO_CALL` ("nothing to
+/// execute here") and from `ASK` ("one missing argument away from a call").
+///
+/// Models trained before this variant existed emit 3-class action logits;
+/// `NtcArchConfig::action_classes` records the width, so old `.ntc` files
+/// keep loading and simply never predict `DELEGATE`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ActionState {
     Call,
     Ask,
     NoCall,
+    Delegate,
 }
 
 /// The typed action program produced by the neural compiler and consumed by
@@ -255,6 +268,11 @@ pub enum SemanticValue {
     PersonRef { text: String },
     #[serde(rename = "LOCATION")]
     Location { text: String },
+    /// Spec §19 `LIST<T>`: a homogeneous list of scalar values. The model
+    /// marks one span covering the list region; deterministic code splits it
+    /// and parses each element by the schema's declared item type.
+    #[serde(rename = "LIST")]
+    List { items: Vec<SemanticValue> },
 }
 
 impl SemanticValue {
@@ -275,6 +293,7 @@ impl SemanticValue {
             SemanticValue::Duration(_) => "DURATION",
             SemanticValue::PersonRef { .. } => "PERSON_REF",
             SemanticValue::Location { .. } => "LOCATION",
+            SemanticValue::List { .. } => "LIST",
         }
     }
 }

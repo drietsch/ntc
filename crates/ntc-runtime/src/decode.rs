@@ -63,10 +63,13 @@ impl<'a> Decoder<'a> {
     pub fn decode_action(&self) -> Result<DecodedAction, NtcError> {
         let action_logits = &self.outputs.get("action.logits")?.data;
         let (a_idx, a_conf) = argmax_softmax(action_logits, self.action_temperature);
+        // Head-codec class order is frozen: CALL, ASK, NO_CALL, [DELEGATE].
+        // A 3-wide head simply never yields index 3.
         let action = match a_idx {
             0 => ActionState::Call,
             1 => ActionState::Ask,
-            _ => ActionState::NoCall,
+            2 => ActionState::NoCall,
+            _ => ActionState::Delegate,
         };
 
         let tool_logits = &self.outputs.get("tool.logits")?.data;
@@ -277,6 +280,23 @@ impl<'a> Decoder<'a> {
                     )
                 })
             }
+            ParamType::List => {
+                // One span over the list region; deterministic splitting and
+                // per-element parsing (spec §6.2) — no list-specific head.
+                let item_type = arg.item_type.unwrap_or(ParamType::Text);
+                match span_text
+                    .as_deref()
+                    .map(|t| crate::normalize::list::parse_list(t, item_type))
+                {
+                    Some(items) if !items.is_empty() => {
+                        Some((SemanticValue::List { items }, span_conf, provenance))
+                    }
+                    _ => None,
+                }
+            }
+            // OPAQUE carries no compilable value; policy routes such tools to
+            // DELEGATE before decoding reaches here.
+            ParamType::Opaque => None,
             ParamType::Date | ParamType::Datetime => self.decode_datetime(
                 tool_idx,
                 arg_idx,
@@ -396,6 +416,11 @@ impl<'a> Decoder<'a> {
             arguments: vec![],
             unresolved: vec![],
         };
+
+        // DELEGATE is a whole-utterance verdict: no tool, no arguments.
+        if ir.action == ActionState::Delegate {
+            return Ok(ir);
+        }
 
         let Some((tool_idx, tool_conf)) = decoded.tool else {
             // NO_TOOL selected: a CALL cannot stand.

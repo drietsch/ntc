@@ -80,6 +80,7 @@ mod tests {
         CanonicalArg {
             name: name.into(),
             param_type: ParamType::Integer,
+            item_type: None,
             json_type: "integer".into(),
             required: false,
             semantic_type: semantic.map(|s| SemanticTypeId(s.into())),

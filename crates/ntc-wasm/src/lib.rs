@@ -89,23 +89,6 @@ impl NtcWeb {
         })
     }
 
-    /// Load a `.ntc` model onto the **WebGPU** backend (async: adapter and
-    /// device acquisition go through the browser). Use [`Self::compile_async`]
-    /// with instances created this way.
-    pub async fn new_gpu(
-        model_bytes: Vec<u8>,
-        config_json: Option<String>,
-    ) -> Result<NtcWeb, JsValue> {
-        console_error_panic_hook::set_once();
-        let config = parse_config(config_json.as_deref())?;
-        let compiler = ntc_webgpu::load_gpu(&model_bytes, config)
-            .await
-            .map_err(js_err)?;
-        Ok(NtcWeb {
-            inner: Inner::Gpu(compiler),
-        })
-    }
-
     /// Which backend this instance runs on: `"cpu"` or `"gpu"`.
     pub fn backend(&self) -> String {
         match &self.inner {
@@ -140,6 +123,29 @@ impl NtcWeb {
             }
         };
         serde_json::to_string(&outcome).map_err(js_err)
+    }
+}
+
+// Async methods live in their own block: `#[wasm_bindgen]` on an `async fn`
+// generates JS-promise glue that aborts if called outside wasm, so on native
+// targets these stay plain inherent methods (usable with any executor).
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
+impl NtcWeb {
+    /// Load a `.ntc` model onto the **WebGPU** backend (async: adapter and
+    /// device acquisition go through the browser). Use [`Self::compile_async`]
+    /// with instances created this way.
+    pub async fn new_gpu(
+        model_bytes: Vec<u8>,
+        config_json: Option<String>,
+    ) -> Result<NtcWeb, JsValue> {
+        console_error_panic_hook::set_once();
+        let config = parse_config(config_json.as_deref())?;
+        let compiler = ntc_webgpu::load_gpu(&model_bytes, config)
+            .await
+            .map_err(js_err)?;
+        Ok(NtcWeb {
+            inner: Inner::Gpu(compiler),
+        })
     }
 
     /// Async compile — required for GPU instances, works for CPU too.

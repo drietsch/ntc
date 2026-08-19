@@ -68,7 +68,7 @@ class Prepared:
     month: list[list[int]]
 
 
-ACTION_IDS = {"CALL": 0, "ASK": 1, "NO_CALL": 2}
+ACTION_IDS = {"CALL": 0, "ASK": 1, "NO_CALL": 2, "DELEGATE": 3}
 
 
 def char_span_to_token_span(
@@ -120,14 +120,15 @@ def prepare_example(
     daypart = grid(IGNORE)
     month = grid(IGNORE)
 
-    # Decoys (and every candidate on NO_CALL): declared args are NOT_APPLICABLE.
+    # Decoys (and every candidate on NO_CALL/DELEGATE): NOT_APPLICABLE.
+    no_tool_action = action in (ACTION_IDS["NO_CALL"], ACTION_IDS["DELEGATE"])
     for t, c in enumerate(canon):
-        if t == tool_label and action != ACTION_IDS["NO_CALL"]:
+        if t == tool_label and not no_tool_action:
             continue
         for k in range(len(c["tool"]["args"])):
             presence[t][k] = PRESENCE["NOT_APPLICABLE"]
 
-    if tool_label != NO_TOOL and action != ACTION_IDS["NO_CALL"]:
+    if tool_label != NO_TOOL and not no_tool_action:
         t = tool_label
         args = canon[t]["tool"]["args"]
         arg_index = {arg["name"]: k for k, arg in enumerate(args)}

@@ -159,7 +159,7 @@ class NtcEncoderHeadsV1(nn.Module):
         self.no_tool = nn.Parameter(torch.empty(h).normal_(std=0.02))
         self.fusion_blocks = nn.ModuleList(FusionBlock(cfg) for _ in range(cfg.fusion_blocks))
 
-        self.action_head = MlpHead(2 * h, h, 3)
+        self.action_head = MlpHead(2 * h, h, cfg.action_classes)
         self.tool_head = MlpHead(h, h, 1)
         self.presence_head = MlpHead(h, h, 4)
         self.boolean_out = nn.Linear(h, 2)
@@ -363,7 +363,7 @@ def tensor_specs(cfg: NtcArchConfig) -> list[tuple[str, list[int]]]:
         specs.append((f"fusion.block.{i}.ffn.norm.bias", [h]))
 
     for dense, outp, classes in (
-        ("heads.action.dense", "heads.action.out", 3),
+        ("heads.action.dense", "heads.action.out", cfg.action_classes),
         ("heads.tool.dense", "heads.tool.out", 1),
         ("heads.presence.dense", "heads.presence.out", 4),
     ):

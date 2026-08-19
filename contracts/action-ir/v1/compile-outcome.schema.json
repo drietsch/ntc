@@ -67,6 +67,37 @@
           ]
         }
       }
+    },
+    {
+      "description": "Beyond a single typed call — the host should hand `utterance` to a full LLM agent (which may use the same tools over several turns).",
+      "type": "object",
+      "required": [
+        "candidates",
+        "ir",
+        "outcome",
+        "utterance"
+      ],
+      "properties": {
+        "candidates": {
+          "description": "Registry ids offered to the router, so the host can pass the same candidate set to the agent.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ir": {
+          "$ref": "#/definitions/ActionIr"
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "DELEGATE"
+          ]
+        },
+        "utterance": {
+          "type": "string"
+        }
+      }
     }
   ],
   "definitions": {
@@ -122,12 +153,13 @@
       "additionalProperties": false
     },
     "ActionState": {
-      "description": "V1 action states (spec §73; the full §3 set arrives in later phases).",
+      "description": "V1 action states (spec §73) plus [`ActionState::Delegate`].\n\n`DELEGATE` is the router's escape hatch: the request is real work, but not work a single typed call can express — a multi-step chain whose later steps depend on earlier *results*, a bulk mutation over an unknown result set, conditional/comparative logic, or open-ended authoring/reasoning. The host hands such utterances to a full LLM agent (which may itself use the same tools). It is deliberately distinct from `NO_CALL` (\"nothing to execute here\") and from `ASK` (\"one missing argument away from a call\").\n\nModels trained before this variant existed emit 3-class action logits; `NtcArchConfig::action_classes` records the width, so old `.ntc` files keep loading and simply never predict `DELEGATE`.",
       "type": "string",
       "enum": [
         "CALL",
         "ASK",
-        "NO_CALL"
+        "NO_CALL",
+        "DELEGATE"
       ]
     },
     "ArgumentBinding": {
@@ -496,6 +528,36 @@
               }
             }
           }
+        },
+        {
+          "description": "Spec §19 `LIST<T>`: a homogeneous list of scalar values. The model marks one span covering the list region; deterministic code splits it and parses each element by the schema's declared item type.",
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "LIST"
+              ]
+            },
+            "value": {
+              "type": "object",
+              "required": [
+                "items"
+              ],
+              "properties": {
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/SemanticValue"
+                  }
+                }
+              }
+            }
+          }
         }
       ],
       "required": [
@@ -718,6 +780,404 @@
           "enum": [
             "MODEL"
           ]
+        }
+      ]
+    },
+    "SemanticValue": {
+      "description": "A semantic value as predicted by the model — richer than JSON types so deterministic code can canonicalize exactly (spec §19).\n\nWire shape (adjacent tagging) matches spec §18: `{ \"semantic_type\": \"DURATION\", \"value\": { \"magnitude\": 1, \"unit\": \"HOUR\" } }`",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "STRING"
+              ]
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "BOOLEAN"
+              ]
+            },
+            "value": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "INTEGER"
+              ]
+            },
+            "value": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "FLOAT"
+              ]
+            },
+            "value": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        },
+        {
+          "description": "Index + symbol into the canonical schema's enum-value list for the bound parameter. `index` is authoritative; `symbol` is redundancy the validator cross-checks.",
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "ENUM"
+              ]
+            },
+            "value": {
+              "type": "object",
+              "required": [
+                "index",
+                "symbol"
+              ],
+              "properties": {
+                "index": {
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0.0
+                },
+                "symbol": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "ABSOLUTE_DATE"
+              ]
+            },
+            "value": {
+              "$ref": "#/definitions/CivilDate"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "RELATIVE_DATE"
+              ]
+            },
+            "value": {
+              "type": "object",
+              "required": [
+                "relation"
+              ],
+              "properties": {
+                "offset": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/DurationValue"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "relation": {
+                  "$ref": "#/definitions/DateRelation"
+                },
+                "weekday": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/Weekday"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "description": "RFC 3339 timestamp, e.g. `2026-08-19T15:00:00+02:00`.",
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "ABSOLUTE_DATETIME"
+              ]
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "RELATIVE_DATETIME"
+              ]
+            },
+            "value": {
+              "type": "object",
+              "required": [
+                "relation"
+              ],
+              "properties": {
+                "daypart": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/Daypart"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "offset": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/DurationValue"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "relation": {
+                  "$ref": "#/definitions/DateRelation"
+                },
+                "time": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/CivilTime"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "weekday": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/Weekday"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "TIME_OF_DAY"
+              ]
+            },
+            "value": {
+              "$ref": "#/definitions/CivilTime"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "DAYPART"
+              ]
+            },
+            "value": {
+              "$ref": "#/definitions/Daypart"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "DURATION"
+              ]
+            },
+            "value": {
+              "$ref": "#/definitions/DurationValue"
+            }
+          }
+        },
+        {
+          "description": "Person reference by surface text in V1 (no context-entity resolution).",
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "PERSON_REF"
+              ]
+            },
+            "value": {
+              "type": "object",
+              "required": [
+                "text"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "LOCATION"
+              ]
+            },
+            "value": {
+              "type": "object",
+              "required": [
+                "text"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "description": "Spec §19 `LIST<T>`: a homogeneous list of scalar values. The model marks one span covering the list region; deterministic code splits it and parses each element by the schema's declared item type.",
+          "type": "object",
+          "required": [
+            "semantic_type",
+            "value"
+          ],
+          "properties": {
+            "semantic_type": {
+              "type": "string",
+              "enum": [
+                "LIST"
+              ]
+            },
+            "value": {
+              "type": "object",
+              "required": [
+                "items"
+              ],
+              "properties": {
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/SemanticValue"
+                  }
+                }
+              }
+            }
+          }
         }
       ]
     },

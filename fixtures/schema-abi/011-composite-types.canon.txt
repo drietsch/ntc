@@ -1,0 +1,22 @@
+TOOL 0
+DESC update several elements at once
+ARG 0 ids
+INFO element ids to update
+TYPE LIST
+ITEM INTEGER
+REQUIRED 1
+ARG 1 tags
+TYPE LIST
+ITEM TEXT
+REQUIRED 0
+ARG 2 payload
+INFO free-form field/value pairs
+TYPE OPAQUE
+REQUIRED 1
+ARG 3 options.published
+TYPE BOOLEAN
+REQUIRED 0
+ARG 4 options.note
+INFO change note
+TYPE TEXT
+REQUIRED 0
