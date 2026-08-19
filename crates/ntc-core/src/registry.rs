@@ -6,8 +6,21 @@ use std::collections::HashMap;
 use crate::error::NtcError;
 use crate::schema::{compile_schema, CanonicalTool, RawToolSchema};
 
-/// V1 candidate limit (spec §73).
-pub const MAX_CANDIDATES: usize = 16;
+/// Most tools one forward pass can weigh against each other. The model's own
+/// `max_tools` is usually smaller and wins; this is the ceiling the IR's
+/// candidate index is sized for.
+pub const MAX_SLATE: usize = 16;
+
+/// Most tools a single request may offer.
+///
+/// This is a **cost** bound, not a model bound: the compiler shortlists a wide
+/// set into one slate (`NeuralToolCompiler::shortlist`), which costs one
+/// forward pass per slate-sized group, so offering N tools costs about
+/// `N / slate_width + 1` passes. It is deliberately far above a realistic MCP
+/// server's tool count (Pimcore Studio has 49) and far below the 10,000-tool
+/// case, which needs the embedding retriever of spec §21–22 rather than an
+/// exhaustive sweep.
+pub const MAX_CANDIDATES: usize = 256;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct ToolId(pub u32);
@@ -87,7 +100,8 @@ impl ToolRegistry {
         }
         if ids.len() > MAX_CANDIDATES {
             return Err(NtcError::CandidateLimit(format!(
-                "{} candidates exceeds the V1 limit of {MAX_CANDIDATES}; pass an explicit candidate list",
+                "{} candidates exceeds the limit of {MAX_CANDIDATES}; a set this \
+                 wide needs a retriever, not an exhaustive shortlist",
                 ids.len()
             )));
         }

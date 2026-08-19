@@ -49,6 +49,24 @@ impl Default for CompilerConfig {
     }
 }
 
+/// What a shortlist round decided, and on what evidence.
+///
+/// Returned by [`NeuralToolCompiler::shortlist`] for callers that want to see
+/// or override the narrowing; `compile` uses only `kept`.
+#[derive(Debug, Clone)]
+pub struct Shortlist {
+    /// Tools offered before narrowing.
+    pub considered: usize,
+    /// Forward passes the narrowing cost.
+    pub rounds: usize,
+    /// Every tool with its margin over NO_TOOL, best first. Kept so a host can
+    /// tell "one clear winner" from "eight tools within noise of each other",
+    /// which is a genuine ASK signal rather than a coin flip.
+    pub scores: Vec<(ToolId, f32)>,
+    /// The slate handed to the deciding pass.
+    pub kept: Vec<ToolId>,
+}
+
 /// A validated, executable tool call (spec §4 backend output).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct CompiledCall {
@@ -179,10 +197,21 @@ impl<B: Backend> NeuralToolCompiler<B> {
         ),
         NtcError,
     > {
-        let limit = self.arch.max_tools.min(ntc_core::registry::MAX_CANDIDATES);
         let candidate_ids = self
             .registry
             .resolve_candidates(req.candidates.as_deref())?;
+        let (utterance, inputs) = self.prepare_slate(req, &candidate_ids)?;
+        Ok((candidate_ids, utterance, inputs))
+    }
+
+    /// Pack one explicit slate. Split out from [`Self::prepare`] so the
+    /// shortlist rounds can pack a slate the caller never asked for.
+    fn prepare_slate(
+        &self,
+        req: &CompileRequest,
+        candidate_ids: &[ntc_core::ToolId],
+    ) -> Result<(ntc_core::tokenizer::TokenSeq, ModelInputs), NtcError> {
+        let limit = self.slate_limit();
         if candidate_ids.len() > limit {
             return Err(NtcError::CandidateLimit(format!(
                 "{} candidates exceeds the model limit {limit}",
@@ -206,7 +235,12 @@ impl<B: Backend> NeuralToolCompiler<B> {
             &candidates,
             linked,
         )?;
-        Ok((candidate_ids, utterance, inputs))
+        Ok((utterance, inputs))
+    }
+
+    /// How many tools fit in one forward pass.
+    fn slate_limit(&self) -> usize {
+        self.arch.max_tools.min(ntc_core::registry::MAX_SLATE)
     }
 
     /// Steps 4–6: decode, policy, validation, serialization.
@@ -271,10 +305,92 @@ impl<B: Backend> NeuralToolCompiler<B> {
         }
     }
 
+    /// Compile one request.
+    ///
+    /// When the caller offers more tools than fit in a forward pass, this
+    /// runs a **shortlist round** first (see [`Self::shortlist`]) and decides
+    /// over the survivors. A slate that already fits is compiled directly, so
+    /// the single-pass path is unchanged.
     pub fn compile(&mut self, req: &CompileRequest) -> Result<CompileOutcome, NtcError> {
-        let (ids, utterance, inputs) = self.prepare(req)?;
+        let ids = self
+            .registry
+            .resolve_candidates(req.candidates.as_deref())?;
+        let ids = if ids.len() > self.slate_limit() {
+            self.shortlist(req, &ids)?.kept
+        } else {
+            ids
+        };
+        self.decide(req, &ids)
+    }
+
+    /// One forward pass over an already-narrow slate, decoded to an outcome.
+    fn decide(&mut self, req: &CompileRequest, ids: &[ToolId]) -> Result<CompileOutcome, NtcError> {
+        let (utterance, inputs) = self.prepare_slate(req, ids)?;
         let outputs = self.backend.run(&inputs)?;
-        self.postprocess(req, &ids, &utterance, &inputs, &outputs)
+        self.postprocess(req, ids, &utterance, &inputs, &outputs)
+    }
+
+    /// Narrow a wide tool set down to one slate, then let [`Self::decide`]
+    /// re-evaluate the survivors side by side.
+    ///
+    /// A real MCP host registers every tool it has — Pimcore Studio offers 49
+    /// — while the model reads a fixed-width slate. Something has to choose,
+    /// and "whatever the caller passed" is not a strategy: it silently makes
+    /// the host responsible for the accuracy of the router.
+    ///
+    /// So the tool set is split into slates and each is scored, keeping the
+    /// per-tool margin **against that slate's own NO_TOOL logit**. NO_TOOL is
+    /// the one option present in every round, which makes it a usable common
+    /// reference; raw logits and per-slate softmax probabilities are not
+    /// comparable across rounds, because a slate of three strong candidates
+    /// splits its mass while a slate of three decoys does not.
+    ///
+    /// Rounds are independent, so the survivors have never been *compared* —
+    /// only ranked against a shared baseline. That is what the deciding pass
+    /// is for: the fusion stack attends across the tools in a slate, which is
+    /// how near-identical siblings (`get_asset` / `list_assets` /
+    /// `search_assets`) get discriminated. Seeing them together is exactly the
+    /// case the model was trained on.
+    pub fn shortlist(
+        &mut self,
+        req: &CompileRequest,
+        ids: &[ToolId],
+    ) -> Result<Shortlist, NtcError> {
+        let width = self.slate_limit();
+        let mut scored: Vec<(ToolId, f32)> = Vec::with_capacity(ids.len());
+        let mut rounds = 0;
+
+        for chunk in ids.chunks(width) {
+            let (_, inputs) = self.prepare_slate(req, chunk)?;
+            let outputs = self.backend.run(&inputs)?;
+            rounds += 1;
+
+            let logits = &outputs.get("tool.logits")?.data;
+            // `[candidate_0 .. candidate_{n-1}, NO_TOOL]`, sized to the slate
+            // actually packed — not padded to the model width — so NO_TOOL
+            // sits at this chunk's length. A short final chunk is therefore
+            // scored against a shorter slate, which is fine: the margin is
+            // taken against that same slate's own NO_TOOL.
+            let no_tool = logits[chunk.len()];
+            for (i, id) in chunk.iter().enumerate() {
+                scored.push((id.clone(), logits[i] - no_tool));
+            }
+        }
+
+        // Ties are broken by the registry order the caller gave, so the same
+        // request always shortlists the same tools.
+        scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+        let kept: Vec<ToolId> = scored
+            .iter()
+            .take(width)
+            .map(|(id, _)| id.clone())
+            .collect();
+        Ok(Shortlist {
+            considered: ids.len(),
+            rounds,
+            scores: scored,
+            kept,
+        })
     }
 
     fn now_and_tz(&self, req: &CompileRequest) -> Result<(Timestamp, TimeZone), NtcError> {
@@ -788,5 +904,88 @@ mod tests {
             ..req
         };
         assert!(matches!(c.compile(&bad), Err(NtcError::UnknownTool(_))));
+    }
+
+    /// A host that registers more tools than fit in one pass used to get
+    /// `CandidateLimit` and had to narrow the set itself — which just moved
+    /// the routing problem into the host. It now shortlists and decides.
+    #[test]
+    fn wide_tool_set_shortlists_instead_of_erroring() {
+        let mut c = compiler();
+        let width = c.slate_limit();
+        for i in 0..width * 3 {
+            c.register_tool(
+                serde_json::from_value(serde_json::json!({
+                    "name": format!("filler.tool_{i}"),
+                    "description": "an unrelated tool",
+                    "parameters": {"q": {"type": "string", "required": true}}
+                }))
+                .unwrap(),
+            )
+            .unwrap();
+        }
+        assert!(c.registry().len() > width, "test needs an oversized set");
+
+        let req = CompileRequest {
+            utterance: "send an email to the dentist".into(),
+            locale: None,
+            timezone: None,
+            now: Some("2026-08-18T11:00:00+02:00".into()),
+            candidates: None, // the whole registry, as an MCP host would offer
+            context: None,
+        };
+        // Previously an error; now a decision.
+        c.compile(&req).unwrap();
+
+        let ids: Vec<ToolId> = c.registry().iter().map(|t| t.id.clone()).collect();
+        let s = c.shortlist(&req, &ids).unwrap();
+        assert_eq!(s.considered, ids.len());
+        assert_eq!(s.kept.len(), width, "shortlist fills exactly one slate");
+        assert_eq!(s.scores.len(), ids.len(), "every tool is scored");
+        assert_eq!(
+            s.rounds,
+            ids.len().div_ceil(width),
+            "one round per slate, no tool skipped"
+        );
+        // Scores are sorted, and `kept` is their prefix.
+        assert!(s.scores.windows(2).all(|w| w[0].1 >= w[1].1));
+        assert_eq!(
+            s.kept,
+            s.scores[..width]
+                .iter()
+                .map(|(i, _)| i.clone())
+                .collect::<Vec<_>>()
+        );
+    }
+
+    /// The narrowing must be a pure function of the request: same input, same
+    /// slate. Random weights make the *choice* arbitrary, which is precisely
+    /// why the property worth pinning is determinism, not which tool wins.
+    #[test]
+    fn shortlist_is_deterministic() {
+        let mut c = compiler();
+        for i in 0..8 {
+            c.register_tool(
+                serde_json::from_value(serde_json::json!({
+                    "name": format!("filler.tool_{i}"),
+                    "description": "an unrelated tool",
+                    "parameters": {"q": {"type": "string"}}
+                }))
+                .unwrap(),
+            )
+            .unwrap();
+        }
+        let req = CompileRequest {
+            utterance: "book me a dentist appointment tomorrow afternoon".into(),
+            locale: None,
+            timezone: None,
+            now: Some("2026-08-18T11:00:00+02:00".into()),
+            candidates: None,
+            context: None,
+        };
+        let ids: Vec<ToolId> = c.registry().iter().map(|t| t.id.clone()).collect();
+        let a = c.shortlist(&req, &ids).unwrap();
+        let b = c.shortlist(&req, &ids).unwrap();
+        assert_eq!(a.kept, b.kept);
     }
 }
