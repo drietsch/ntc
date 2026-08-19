@@ -11,11 +11,13 @@ import init, { NtcWeb, version } from "./pkg/ntc_wasm.js";
 
 let gpuAvailable = false;
 
-// Prefer the trained mini model; fall back to the random-weight fixture.
-const MODEL_URLS = [
-  "../../models/ntc-mini-v1/model.ntc",
-  "../../fixtures/models/tiny-v1/tiny.ntc",
-];
+// Selectable models; missing files are disabled at boot.
+const MODELS = {
+  any: "../../models/ntc-any-v1/model.ntc",
+  mini: "../../models/ntc-mini-v1/model.ntc",
+  fixture: "../../fixtures/models/tiny-v1/tiny.ntc",
+};
+const modelCache = new Map();
 
 const $ = (id) => document.getElementById(id);
 const output = $("output");
@@ -23,6 +25,21 @@ const status = $("status");
 const button = $("compile");
 
 let modelBytes = null;
+
+async function loadModel(key) {
+  const url = MODELS[key];
+  const t0 = performance.now();
+  if (!modelCache.has(key)) {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`fetching ${url} failed (HTTP ${resp.status})`);
+    modelCache.set(key, new Uint8Array(await resp.arrayBuffer()));
+  }
+  modelBytes = modelCache.get(key);
+  const ms = performance.now() - t0;
+  status.textContent =
+    `Model ${url.split("/").pop().replace("model.ntc", key + ".ntc")} loaded ` +
+    `(${(modelBytes.length / 1048576).toFixed(1)} MiB in ${ms.toFixed(0)} ms). Ready.`;
+}
 
 function showError(e) {
   // wasm-bindgen errors arrive as plain strings; JS errors have .message.
@@ -137,6 +154,19 @@ for (const lang of Object.keys(EXAMPLES)) {
     exampleIdx[lang] = ((exampleIdx[lang] ?? -1) + 1) % list.length;
     $("utterance").value = list[exampleIdx[lang]];
     compile();
+  });
+}
+
+const modelSel = $("model");
+if (modelSel) {
+  modelSel.addEventListener("change", async () => {
+    button.disabled = true;
+    try {
+      await loadModel(modelSel.value);
+    } catch (e) {
+      showError(e);
+    }
+    button.disabled = false;
   });
 }
 

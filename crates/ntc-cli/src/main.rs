@@ -85,6 +85,9 @@ enum Command {
         /// Also print raw head logits.
         #[arg(long)]
         dump_heads: bool,
+        /// Run on the native WebGPU backend instead of the CPU reference.
+        #[arg(long)]
+        gpu: bool,
     },
 }
 
@@ -109,7 +112,8 @@ fn main() -> Result<()> {
             timezone,
             now,
             dump_heads,
-        } => infer(&model, &utterance, &tools, timezone, now, dump_heads),
+            gpu,
+        } => infer(&model, &utterance, &tools, timezone, now, dump_heads, gpu),
     }
 }
 
@@ -341,6 +345,38 @@ fn batch_infer(
     Ok(())
 }
 
+fn infer_gpu(
+    bytes: &[u8],
+    utterance: &str,
+    tools: &std::path::Path,
+    timezone: Option<String>,
+    now: Option<String>,
+    config: ntc_runtime::CompilerConfig,
+) -> Result<()> {
+    let mut compiler = pollster::block_on(ntc_webgpu::load_gpu(bytes, config))
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
+    let tool_defs: Vec<serde_json::Value> = serde_json::from_str(&std::fs::read_to_string(tools)?)?;
+    for def in tool_defs {
+        let raw: ntc_core::schema::RawToolSchema = serde_json::from_value(def)?;
+        compiler
+            .register_tool(raw)
+            .map_err(|e| anyhow::anyhow!("{e}"))?;
+    }
+    let req = ntc_core::ir::CompileRequest {
+        utterance: utterance.to_string(),
+        locale: None,
+        timezone,
+        now,
+        candidates: None,
+        context: None,
+    };
+    let t0 = std::time::Instant::now();
+    let outcome = compiler.compile(&req).map_err(|e| anyhow::anyhow!("{e}"))?;
+    eprintln!("gpu compile: {:.1} ms", t0.elapsed().as_secs_f64() * 1000.0);
+    println!("{}", serde_json::to_string_pretty(&outcome)?);
+    Ok(())
+}
+
 #[allow(clippy::too_many_arguments)]
 fn infer(
     model: &std::path::Path,
@@ -349,6 +385,7 @@ fn infer(
     timezone: Option<String>,
     now: Option<String>,
     dump_heads: bool,
+    gpu: bool,
 ) -> Result<()> {
     use ntc_runtime::{CompilerConfig, NeuralToolCompiler};
 
@@ -356,6 +393,9 @@ fn infer(
     let mut config = CompilerConfig::default();
     if let Some(tz) = &timezone {
         config.timezone = tz.clone();
+    }
+    if gpu {
+        return infer_gpu(&bytes, utterance, tools, timezone, now, config);
     }
     let mut compiler =
         NeuralToolCompiler::load_cpu(&bytes, config).map_err(|e| anyhow::anyhow!("{e}"))?;

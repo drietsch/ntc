@@ -37,6 +37,26 @@ LOSS_WEIGHTS = {
 }
 
 
+def backbone_config(vocab: int) -> NtcArchConfig:
+    """paraphrase-multilingual-MiniLM-L12-v2 dims (runs/backbone/meta.json)."""
+    return NtcArchConfig(
+        hidden=384,
+        heads=12,
+        ffn=1536,
+        vocab=vocab,
+        max_positions=512,
+        encoder_layers=12,
+        schema_layers=2,
+        fusion_blocks=2,
+        max_tools=8,
+        max_args=8,
+        max_enum_values=4,
+        max_utterance_tokens=64,
+        max_schema_tokens=160,
+        layer_norm_eps=1e-12,
+    )
+
+
 def mini_config(vocab: int) -> NtcArchConfig:
     return NtcArchConfig(
         hidden=128,
@@ -178,15 +198,22 @@ def main() -> None:
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--seed", type=int, default=17)
     parser.add_argument("--limit", type=int, default=0, help="cap train examples (overfit checks)")
+    parser.add_argument("--arch", choices=["mini", "backbone"], default="mini")
+    parser.add_argument("--init", type=Path, default=None,
+                        help="partial state_dict (runs/backbone/init.pt) to warm-start from")
+    parser.add_argument("--backbone-lr", type=float, default=2e-5,
+                        help="learning rate for pretrained modules when --init is given")
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
     rng = random.Random(args.seed)
     device = "mps" if torch.backends.mps.is_available() else "cpu"
 
-    tokenizer = Tokenizer.from_file(str(REPO / "contracts" / "tokenizer" / "tokenizer.json"))
-    cfg = mini_config(tokenizer.get_vocab_size())
-    print(f"device={device} vocab={cfg.vocab}")
+    tok_dir = "tokenizer-any" if args.arch == "backbone" else "tokenizer"
+    tokenizer = Tokenizer.from_file(str(REPO / "contracts" / tok_dir / "tokenizer.json"))
+    make_cfg = backbone_config if args.arch == "backbone" else mini_config
+    cfg = make_cfg(tokenizer.get_vocab_size())
+    print(f"device={device} arch={args.arch} vocab={cfg.vocab}")
 
     train_items = load_and_prepare(cfg, tokenizer, args.data / "train.jsonl")
     dev_items = load_and_prepare(cfg, tokenizer, args.data / "dev.jsonl")
@@ -197,10 +224,27 @@ def main() -> None:
     model = NtcEncoderHeadsV1(cfg).to(device)
     n_params = sum(p.numel() for p in model.parameters())
     print(f"params={n_params / 1e6:.2f}M")
-    opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)
+
+    pretrained_names: set[str] = set()
+    if args.init:
+        init_sd = torch.load(args.init, map_location="cpu", weights_only=True)["state_dict"]
+        missing, unexpected = model.load_state_dict(init_sd, strict=False)
+        assert not unexpected, f"unexpected init tensors: {unexpected[:5]}"
+        pretrained_names = set(init_sd)
+        print(f"warm-started {len(init_sd)} tensors from {args.init}; "
+              f"{len(missing)} stay random (fusion/heads/structural)")
+        groups = [
+            {"params": [p for n, p in model.named_parameters() if n in pretrained_names],
+             "lr": args.backbone_lr},
+            {"params": [p for n, p in model.named_parameters() if n not in pretrained_names],
+             "lr": args.lr},
+        ]
+        opt = torch.optim.AdamW(groups, weight_decay=0.01)
+    else:
+        opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)
     sched = torch.optim.lr_scheduler.OneCycleLR(
         opt,
-        max_lr=args.lr,
+        max_lr=[g.get("lr", args.lr) for g in opt.param_groups],
         total_steps=args.epochs * math.ceil(len(train_items) / args.batch),
         pct_start=0.1,
     )

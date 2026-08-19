@@ -13,6 +13,7 @@ refuses mismatches at load time.
 | Canonical Tool ABI + rendering | **1** | `crates/ntc-core/src/schema/mod.rs` (single implementation; Python via `ntc schemac`) | `contracts/tool-abi/v1/tool-abi.schema.json` | golden corpus `fixtures/schema-abi/*.{json,canon.txt}` byte-compare |
 | Head codec (neural output ABI) | **1** | `contracts/heads/v1/head-spec.json` (jointly authored) | itself | tensor names/shapes checked by `ntc_model::weights::tensor_specs` + PyTorch `ntc_model` head names; tiny-model decision parity |
 | Tokenizer artifact | **frozen (mini)** | `contracts/tokenizer/tokenizer.json` — 642-piece Unigram trained on the mini EN/DE/FR/ES corpus (`training/tools/train_tokenizer.py`); the full-scale pruned-mE5 tokenizer will re-freeze with a version bump | sha256 embedded in `.ntc` header | golden vectors `fixtures/tokenizer/vectors.jsonl` (ids + byte offsets), pinned by `crates/ntc-core/tests/tokenizer_vectors.rs` |
+| Tokenizer artifact (any-word) | **frozen** | `contracts/tokenizer-any/tokenizer.json` — pretrained XLM-R SentencePiece pruned 250k→33.9k for EN/DE/FR/ES (`training/tools/prune_backbone.py`; 0% token inflation, 0 unks on corpus); embedded per-model, sha256-pinned | sha256 embedded in `.ntc` header | golden vectors `fixtures/tokenizer-any/vectors.jsonl`, pinned by `crates/ntc-core/tests/tokenizer_vectors.rs` |
 | Architecture id | `ntc_encoder_heads_v1` | `crates/ntc-model` | `.ntc` metadata `architecture` | loader rejects unknown ids |
 
 ## Library version pins (train/serve parity)

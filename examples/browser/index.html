@@ -156,6 +156,13 @@
     <label for="timezone">Timezone (IANA)</label>
     <input id="timezone" value="Europe/Berlin">
 
+    <label for="model">Model</label>
+    <select id="model">
+      <option value="any">any-word (pretrained backbone, ~72 MB)</option>
+      <option value="mini">mini (templates only, 2.8 MB)</option>
+      <option value="fixture">random fixture (plumbing test)</option>
+    </select>
+
     <label for="backend">Backend</label>
     <select id="backend">
       <option value="auto" selected>auto (WebGPU if available)</option>

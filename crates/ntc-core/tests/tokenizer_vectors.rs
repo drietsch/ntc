@@ -20,10 +20,9 @@ struct Vector {
     offsets: Vec<(usize, usize)>,
 }
 
-#[test]
-fn frozen_tokenizer_matches_golden_vectors() {
-    let tok_path = repo("contracts/tokenizer/tokenizer.json");
-    let vec_path = repo("fixtures/tokenizer/vectors.jsonl");
+fn check_vectors(tok_rel: &str, vec_rel: &str, min: usize) {
+    let tok_path = repo(tok_rel);
+    let vec_path = repo(vec_rel);
     let (Ok(tok_bytes), Ok(vectors)) =
         (std::fs::read(&tok_path), std::fs::read_to_string(&vec_path))
     else {
@@ -44,7 +43,27 @@ fn frozen_tokenizer_matches_golden_vectors() {
         checked += 1;
     }
     assert!(
-        checked >= 15,
-        "expected ≥15 golden vectors, found {checked}"
+        checked >= min,
+        "expected ≥{min} golden vectors, found {checked}"
+    );
+}
+
+#[test]
+fn frozen_mini_tokenizer_matches_golden_vectors() {
+    check_vectors(
+        "contracts/tokenizer/tokenizer.json",
+        "fixtures/tokenizer/vectors.jsonl",
+        15,
+    );
+}
+
+/// The pruned pretrained-backbone tokenizer (any-word coverage), incl. its
+/// Precompiled (spm charsmap) normalizer.
+#[test]
+fn frozen_any_tokenizer_matches_golden_vectors() {
+    check_vectors(
+        "contracts/tokenizer-any/tokenizer.json",
+        "fixtures/tokenizer-any/vectors.jsonl",
+        10,
     );
 }

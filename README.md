@@ -91,6 +91,14 @@ examples/browser/build.sh && python3 -m http.server  # then open /examples/brows
       wasm-CPU path, identical outcomes (`docs/benchmarking.md`)
 - [x] WebGPU-in-browser: async wgpu path (`NtcWeb.new_gpu` + `compile_async`)
 
+- [x] **Any-word model** (`models/ntc-any-v1`, 44M params, ~89 MB — gitignored,
+      rebuild recipe in .gitignore): pretrained multilingual MiniLM backbone
+      with vocab pruned 250k→33.9k (0% token inflation, 0 unks), fine-tuned on
+      templates + a live `claude -p` diversity batch. Understands arbitrary
+      wording: "Hey, could you kill the lights in the bathroom?" → correct
+      `light.set` call. Selectable in the browser demo next to the 2.8 MB mini
+      model.
+
 Mini-scale caveats (documented limits, not defects): the 1.4M model does not
 generalize to unseen tool families (0% on that split — the capability the
 full-scale 250M pretrained backbone exists to provide), and the 642-piece

@@ -1,0 +1,774 @@
+{
+  "dev": {
+    "metrics": {
+      "all": {
+        "n": 112,
+        "n_examples": 112,
+        "exact_match": 0.9285714285714286,
+        "tool_selection_accuracy": 0.9404761904761905,
+        "required_arg_accuracy": 0.9432624113475178,
+        "hallucinated_arg_rate": 0.036231884057971016,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E01": 3,
+          "E02": 2,
+          "E03": 1,
+          "E04": 2,
+          "E12": 3
+        }
+      },
+      "lang:de": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.9285714285714286,
+        "tool_selection_accuracy": 0.9523809523809523,
+        "required_arg_accuracy": 0.9459459459459459,
+        "hallucinated_arg_rate": 0.07894736842105263,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E02": 1,
+          "E04": 1
+        }
+      },
+      "lang:en": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.8928571428571429,
+        "tool_selection_accuracy": 0.9047619047619048,
+        "required_arg_accuracy": 0.8787878787878788,
+        "hallucinated_arg_rate": 0.0,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E01": 2,
+          "E03": 1,
+          "E12": 2
+        }
+      },
+      "lang:es": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.9642857142857143,
+        "tool_selection_accuracy": 0.9523809523809523,
+        "required_arg_accuracy": 0.9714285714285714,
+        "hallucinated_arg_rate": 0.02857142857142857,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E02": 1
+        }
+      },
+      "lang:fr": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.9285714285714286,
+        "tool_selection_accuracy": 0.9523809523809523,
+        "required_arg_accuracy": 0.9722222222222222,
+        "hallucinated_arg_rate": 0.027777777777777776,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E01": 1,
+          "E04": 1,
+          "E12": 1
+        }
+      },
+      "seen×de": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.9285714285714286,
+        "tool_selection_accuracy": 0.9523809523809523,
+        "required_arg_accuracy": 0.9459459459459459,
+        "hallucinated_arg_rate": 0.07894736842105263,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E02": 1,
+          "E04": 1
+        }
+      },
+      "seen×en": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.8928571428571429,
+        "tool_selection_accuracy": 0.9047619047619048,
+        "required_arg_accuracy": 0.8787878787878788,
+        "hallucinated_arg_rate": 0.0,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E01": 2,
+          "E03": 1,
+          "E12": 2
+        }
+      },
+      "seen×es": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.9642857142857143,
+        "tool_selection_accuracy": 0.9523809523809523,
+        "required_arg_accuracy": 0.9714285714285714,
+        "hallucinated_arg_rate": 0.02857142857142857,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E02": 1
+        }
+      },
+      "seen×fr": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.9285714285714286,
+        "tool_selection_accuracy": 0.9523809523809523,
+        "required_arg_accuracy": 0.9722222222222222,
+        "hallucinated_arg_rate": 0.027777777777777776,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E01": 1,
+          "E04": 1,
+          "E12": 1
+        }
+      },
+      "split:seen": {
+        "n": 112,
+        "n_examples": 112,
+        "exact_match": 0.9285714285714286,
+        "tool_selection_accuracy": 0.9404761904761905,
+        "required_arg_accuracy": 0.9432624113475178,
+        "hallucinated_arg_rate": 0.036231884057971016,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E01": 3,
+          "E02": 2,
+          "E03": 1,
+          "E04": 2,
+          "E12": 3
+        }
+      },
+      "_infer_errors": 0
+    },
+    "ic25": {
+      "n": 112,
+      "action_agreement": 0.9732142857142857,
+      "tool_agreement": 1.0,
+      "disagreements": [
+        {
+          "id": "cb1f6d7d3fb4e26e",
+          "rust": {
+            "action": "ASK",
+            "tool": "email.send"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "email.send"
+          }
+        },
+        {
+          "id": "274767093a03cc59",
+          "rust": {
+            "action": "ASK",
+            "tool": "reminder.set"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "reminder.set"
+          }
+        },
+        {
+          "id": "37643b90e1652ea2",
+          "rust": {
+            "action": "ASK",
+            "tool": "weather.lookup"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "weather.lookup"
+          }
+        }
+      ]
+    }
+  },
+  "test": {
+    "metrics": {
+      "all": {
+        "n": 222,
+        "n_examples": 222,
+        "exact_match": 0.6666666666666666,
+        "tool_selection_accuracy": 0.6086956521739131,
+        "required_arg_accuracy": 0.6996197718631179,
+        "hallucinated_arg_rate": 0.07537688442211055,
+        "no_call_precision": 0.3333333333333333,
+        "no_call_recall": 1.0,
+        "no_call_f1": 0.5,
+        "ask_accuracy": 0.9545454545454546,
+        "error_counts": {
+          "E01": 63,
+          "E02": 10,
+          "E03": 1,
+          "E11": 1,
+          "E12": 31
+        }
+      },
+      "lang:de": {
+        "n": 55,
+        "n_examples": 55,
+        "exact_match": 0.6181818181818182,
+        "tool_selection_accuracy": 0.574468085106383,
+        "required_arg_accuracy": 0.6666666666666666,
+        "hallucinated_arg_rate": 0.1320754716981132,
+        "no_call_precision": 0.2727272727272727,
+        "no_call_recall": 1.0,
+        "no_call_f1": 0.42857142857142855,
+        "ask_accuracy": 0.8,
+        "error_counts": {
+          "E01": 17,
+          "E02": 4,
+          "E11": 1,
+          "E12": 9
+        }
+      },
+      "lang:en": {
+        "n": 52,
+        "n_examples": 52,
+        "exact_match": 0.6538461538461539,
+        "tool_selection_accuracy": 0.6046511627906976,
+        "required_arg_accuracy": 0.6779661016949152,
+        "hallucinated_arg_rate": 0.024390243902439025,
+        "no_call_precision": 0.2857142857142857,
+        "no_call_recall": 1.0,
+        "no_call_f1": 0.4444444444444445,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E01": 16,
+          "E02": 1,
+          "E03": 1,
+          "E12": 6
+        }
+      },
+      "lang:es": {
+        "n": 58,
+        "n_examples": 58,
+        "exact_match": 0.6724137931034483,
+        "tool_selection_accuracy": 0.5869565217391305,
+        "required_arg_accuracy": 0.6612903225806451,
+        "hallucinated_arg_rate": 0.06818181818181818,
+        "no_call_precision": 0.3125,
+        "no_call_recall": 1.0,
+        "no_call_f1": 0.47619047619047616,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E01": 17,
+          "E02": 2,
+          "E12": 6
+        }
+      },
+      "lang:fr": {
+        "n": 57,
+        "n_examples": 57,
+        "exact_match": 0.7192982456140351,
+        "tool_selection_accuracy": 0.6666666666666666,
+        "required_arg_accuracy": 0.7808219178082192,
+        "hallucinated_arg_rate": 0.06557377049180328,
+        "no_call_precision": 0.5714285714285714,
+        "no_call_recall": 1.0,
+        "no_call_f1": 0.7272727272727273,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E01": 13,
+          "E02": 3,
+          "E12": 10
+        }
+      },
+      "masked_names×de": {
+        "n": 11,
+        "n_examples": 11,
+        "exact_match": 0.7272727272727273,
+        "tool_selection_accuracy": 0.7,
+        "required_arg_accuracy": 0.7222222222222222,
+        "hallucinated_arg_rate": 0.2777777777777778,
+        "no_call_precision": null,
+        "no_call_recall": null,
+        "no_call_f1": null,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E02": 3
+        }
+      },
+      "masked_names×en": {
+        "n": 8,
+        "n_examples": 8,
+        "exact_match": 0.75,
+        "tool_selection_accuracy": 0.8333333333333334,
+        "required_arg_accuracy": 0.6666666666666666,
+        "hallucinated_arg_rate": 0.0,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E01": 1,
+          "E03": 1,
+          "E12": 1
+        }
+      },
+      "masked_names×es": {
+        "n": 14,
+        "n_examples": 14,
+        "exact_match": 0.8571428571428571,
+        "tool_selection_accuracy": 0.7777777777777778,
+        "required_arg_accuracy": 0.7857142857142857,
+        "hallucinated_arg_rate": 0.21428571428571427,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E02": 2
+        }
+      },
+      "masked_names×fr": {
+        "n": 13,
+        "n_examples": 13,
+        "exact_match": 1.0,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 1.0,
+        "hallucinated_arg_rate": 0.0,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {}
+      },
+      "seen×de": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.9285714285714286,
+        "tool_selection_accuracy": 0.9523809523809523,
+        "required_arg_accuracy": 0.9428571428571428,
+        "hallucinated_arg_rate": 0.05714285714285714,
+        "no_call_precision": 0.75,
+        "no_call_recall": 1.0,
+        "no_call_f1": 0.8571428571428571,
+        "ask_accuracy": 0.75,
+        "error_counts": {
+          "E01": 1,
+          "E02": 1,
+          "E11": 1
+        }
+      },
+      "seen×en": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 1.0,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 1.0,
+        "hallucinated_arg_rate": 0.0,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {}
+      },
+      "seen×es": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 0.9642857142857143,
+        "tool_selection_accuracy": 0.9523809523809523,
+        "required_arg_accuracy": 0.9375,
+        "hallucinated_arg_rate": 0.0,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E01": 1,
+          "E12": 1
+        }
+      },
+      "seen×fr": {
+        "n": 28,
+        "n_examples": 28,
+        "exact_match": 1.0,
+        "tool_selection_accuracy": 1.0,
+        "required_arg_accuracy": 1.0,
+        "hallucinated_arg_rate": 0.0,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {}
+      },
+      "split:masked_names": {
+        "n": 46,
+        "n_examples": 46,
+        "exact_match": 0.8478260869565217,
+        "tool_selection_accuracy": 0.8333333333333334,
+        "required_arg_accuracy": 0.819672131147541,
+        "hallucinated_arg_rate": 0.13793103448275862,
+        "no_call_precision": 1.0,
+        "no_call_recall": 1.0,
+        "no_call_f1": 1.0,
+        "ask_accuracy": 1.0,
+        "error_counts": {
+          "E01": 1,
+          "E02": 5,
+          "E03": 1,
+          "E12": 1
+        }
+      },
+      "split:seen": {
+        "n": 112,
+        "n_examples": 112,
+        "exact_match": 0.9732142857142857,
+        "tool_selection_accuracy": 0.9761904761904762,
+        "required_arg_accuracy": 0.9710144927536232,
+        "hallucinated_arg_rate": 0.014705882352941176,
+        "no_call_precision": 0.9230769230769231,
+        "no_call_recall": 1.0,
+        "no_call_f1": 0.9600000000000001,
+        "ask_accuracy": 0.9375,
+        "error_counts": {
+          "E01": 2,
+          "E02": 1,
+          "E11": 1,
+          "E12": 1
+        }
+      },
+      "split:unseen_family": {
+        "n": 64,
+        "n_examples": 64,
+        "exact_match": 0.0,
+        "tool_selection_accuracy": 0.0,
+        "required_arg_accuracy": 0.0,
+        "hallucinated_arg_rate": 1.0,
+        "no_call_precision": 0.0,
+        "no_call_recall": null,
+        "no_call_f1": null,
+        "ask_accuracy": null,
+        "error_counts": {
+          "E01": 60,
+          "E02": 4,
+          "E12": 29
+        }
+      },
+      "unseen_family×de": {
+        "n": 16,
+        "n_examples": 16,
+        "exact_match": 0.0,
+        "tool_selection_accuracy": 0.0,
+        "required_arg_accuracy": 0.0,
+        "hallucinated_arg_rate": null,
+        "no_call_precision": 0.0,
+        "no_call_recall": null,
+        "no_call_f1": null,
+        "ask_accuracy": null,
+        "error_counts": {
+          "E01": 16,
+          "E12": 9
+        }
+      },
+      "unseen_family×en": {
+        "n": 16,
+        "n_examples": 16,
+        "exact_match": 0.0,
+        "tool_selection_accuracy": 0.0,
+        "required_arg_accuracy": 0.0,
+        "hallucinated_arg_rate": 1.0,
+        "no_call_precision": 0.0,
+        "no_call_recall": null,
+        "no_call_f1": null,
+        "ask_accuracy": null,
+        "error_counts": {
+          "E01": 15,
+          "E02": 1,
+          "E12": 5
+        }
+      },
+      "unseen_family×es": {
+        "n": 16,
+        "n_examples": 16,
+        "exact_match": 0.0,
+        "tool_selection_accuracy": 0.0,
+        "required_arg_accuracy": 0.0,
+        "hallucinated_arg_rate": null,
+        "no_call_precision": 0.0,
+        "no_call_recall": null,
+        "no_call_f1": null,
+        "ask_accuracy": null,
+        "error_counts": {
+          "E01": 16,
+          "E12": 5
+        }
+      },
+      "unseen_family×fr": {
+        "n": 16,
+        "n_examples": 16,
+        "exact_match": 0.0,
+        "tool_selection_accuracy": 0.0,
+        "required_arg_accuracy": 0.0,
+        "hallucinated_arg_rate": 1.0,
+        "no_call_precision": 0.0,
+        "no_call_recall": null,
+        "no_call_f1": null,
+        "ask_accuracy": null,
+        "error_counts": {
+          "E01": 13,
+          "E02": 3,
+          "E12": 10
+        }
+      },
+      "_infer_errors": 0
+    },
+    "ic25": {
+      "n": 222,
+      "action_agreement": 0.7522522522522522,
+      "tool_agreement": 0.8603603603603603,
+      "disagreements": [
+        {
+          "id": "e1ea43d942d8bb0a",
+          "rust": {
+            "action": "ASK",
+            "tool": "reminder.set"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "reminder.set"
+          }
+        },
+        {
+          "id": "9c18fb0ed7e0bcfb",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "ASK",
+            "tool": "reminder.set"
+          }
+        },
+        {
+          "id": "df81f33b835942cb",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "ASK",
+            "tool": "music.play"
+          }
+        },
+        {
+          "id": "118802e0980a95e3",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "ASK",
+            "tool": "music.play"
+          }
+        },
+        {
+          "id": "49907db9d716873a",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "ASK",
+            "tool": "task.create"
+          }
+        },
+        {
+          "id": "dbe7a5bba2ce8e7c",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "ASK",
+            "tool": "music.play"
+          }
+        },
+        {
+          "id": "9c7bb0a4065b5bbb",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "ASK",
+            "tool": "task.create"
+          }
+        },
+        {
+          "id": "fa48d4f843cfe44a",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "ASK",
+            "tool": "music.play"
+          }
+        },
+        {
+          "id": "e40ca9640086acae",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "ASK",
+            "tool": "music.play"
+          }
+        },
+        {
+          "id": "448c02d23879fc5c",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "ASK",
+            "tool": "timer.set"
+          }
+        },
+        {
+          "id": "92e921666722a76e",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "ASK",
+            "tool": "email.send"
+          }
+        },
+        {
+          "id": "115192b456061931",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "ASK",
+            "tool": "task.create"
+          }
+        },
+        {
+          "id": "1049fe7718b5f43c",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "ASK",
+            "tool": "task.create"
+          }
+        },
+        {
+          "id": "4dcef76ea17dbe12",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "ASK",
+            "tool": "timer.set"
+          }
+        },
+        {
+          "id": "86be36a1ab3096e7",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "ASK",
+            "tool": "music.play"
+          }
+        },
+        {
+          "id": "b2504833815ae5ee",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "ASK",
+            "tool": "music.play"
+          }
+        },
+        {
+          "id": "42a5fd980bc4e7f5",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "ASK",
+            "tool": "music.play"
+          }
+        },
+        {
+          "id": "35d4e8813c8f53fd",
+          "rust": {
+            "action": "ASK",
+            "tool": "music.play"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "music.play"
+          }
+        },
+        {
+          "id": "e82807ed2328985b",
+          "rust": {
+            "action": "NO_CALL",
+            "tool": null
+          },
+          "python": {
+            "action": "ASK",
+            "tool": "task.create"
+          }
+        },
+        {
+          "id": "5ec71c219779737b",
+          "rust": {
+            "action": "ASK",
+            "tool": "light.set"
+          },
+          "python": {
+            "action": "CALL",
+            "tool": "light.set"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -20,7 +20,7 @@ from ntc_model.model import NtcEncoderHeadsV1, export_tensors
 REPO = Path(__file__).resolve().parents[2]
 
 
-def export(ckpt_path: Path, out_path: Path, model_version: str) -> None:
+def export(ckpt_path: Path, out_path: Path, model_version: str, tokenizer_dir: str = "tokenizer") -> None:
     ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
     cfg = NtcArchConfig(**ckpt["cfg"])
     if "calibration" in ckpt:
@@ -29,7 +29,7 @@ def export(ckpt_path: Path, out_path: Path, model_version: str) -> None:
     model.load_state_dict(ckpt["state_dict"])
     model.eval()
 
-    tokenizer_bytes = (REPO / "contracts" / "tokenizer" / "tokenizer.json").read_bytes()
+    tokenizer_bytes = (REPO / "contracts" / tokenizer_dir / "tokenizer.json").read_bytes()
     metadata = {
         "architecture": "ntc_encoder_heads_v1",
         "model_version": model_version,
@@ -69,8 +69,10 @@ def main() -> None:
     parser.add_argument("--ckpt", type=Path, default=Path("runs/mini/best.pt"))
     parser.add_argument("--out", type=Path, default=REPO / "models" / "ntc-mini-v1" / "model.ntc")
     parser.add_argument("--version", default="ntc-mini-v1")
+    parser.add_argument("--tokenizer-dir", default="tokenizer",
+                        help="contracts/<dir>/tokenizer.json to embed (tokenizer | tokenizer-any)")
     args = parser.parse_args()
-    export(args.ckpt, args.out, args.version)
+    export(args.ckpt, args.out, args.version, args.tokenizer_dir)
 
 
 if __name__ == "__main__":
