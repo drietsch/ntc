@@ -39,14 +39,7 @@ impl WgpuContext {
             .ok_or_else(|| NtcError::Inference("no wgpu adapter available".into()))?;
 
         let info = adapter.get_info();
-        let limits = adapter.limits();
-        let caps = GpuCaps {
-            adapter_name: info.name.clone(),
-            backend: info.backend,
-            max_buffer_size: limits.max_buffer_size,
-            max_storage_buffer_binding_size: limits.max_storage_buffer_binding_size,
-            shader_f16: adapter.features().contains(wgpu::Features::SHADER_F16),
-        };
+        let shader_f16 = adapter.features().contains(wgpu::Features::SHADER_F16);
 
         let (device, queue) = adapter
             .request_device(
@@ -60,6 +53,19 @@ impl WgpuContext {
             )
             .await
             .map_err(|e| NtcError::Inference(format!("wgpu device request failed: {e}")))?;
+
+        // Caps must describe what the DEVICE granted, not what the adapter
+        // could offer: kernels size their bindings against this, and the
+        // adapter's ceiling (often GBs on Metal) would let them build
+        // bindings the device then rejects.
+        let limits = device.limits();
+        let caps = GpuCaps {
+            adapter_name: info.name.clone(),
+            backend: info.backend,
+            max_buffer_size: limits.max_buffer_size,
+            max_storage_buffer_binding_size: limits.max_storage_buffer_binding_size,
+            shader_f16,
+        };
 
         Ok(Self {
             device,

@@ -67,6 +67,9 @@ enum Command {
         input: PathBuf,
         #[arg(long)]
         output: PathBuf,
+        /// Run on the native WebGPU backend instead of the CPU reference.
+        #[arg(long)]
+        gpu: bool,
     },
     /// Compile an utterance on the CPU reference backend.
     Infer {
@@ -104,7 +107,8 @@ fn main() -> Result<()> {
             model,
             input,
             output,
-        } => batch_infer(&model, &input, &output),
+            gpu,
+        } => batch_infer(&model, &input, &output, gpu),
         Command::Infer {
             model,
             utterance,
@@ -275,6 +279,7 @@ fn batch_infer(
     model: &std::path::Path,
     input: &std::path::Path,
     output: &std::path::Path,
+    gpu: bool,
 ) -> Result<()> {
     use ntc_runtime::{CompilerConfig, NeuralToolCompiler};
 
@@ -295,7 +300,15 @@ fn batch_infer(
     }
 
     let bytes = std::fs::read(model).with_context(|| format!("reading {}", model.display()))?;
-    let mut compiler = NeuralToolCompiler::load_cpu(&bytes, CompilerConfig::default())
+    // The two backends share every stage except the forward pass, so this is
+    // the cheapest way to compare them on identical requests.
+    let mut cpu = (!gpu)
+        .then(|| NeuralToolCompiler::load_cpu(&bytes, CompilerConfig::default()))
+        .transpose()
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
+    let mut gpu_compiler = gpu
+        .then(|| pollster::block_on(ntc_webgpu::load_gpu(&bytes, CompilerConfig::default())))
+        .transpose()
         .map_err(|e| anyhow::anyhow!("{e}"))?;
 
     let reader = std::io::BufReader::new(std::fs::File::open(input)?);
@@ -313,9 +326,12 @@ fn batch_infer(
         let mut names = Vec::with_capacity(parsed.tools.len());
         for raw in parsed.tools {
             names.push(raw.name.clone());
-            compiler
-                .register_tool(raw)
-                .map_err(|e| anyhow::anyhow!("line {}: {e}", lineno + 1))?;
+            let res = match (&mut cpu, &mut gpu_compiler) {
+                (Some(c), _) => c.register_tool(raw),
+                (_, Some(g)) => g.register_tool(raw),
+                _ => unreachable!("one backend is always constructed"),
+            };
+            res.map_err(|e| anyhow::anyhow!("line {}: {e}", lineno + 1))?;
         }
         let req = ntc_core::ir::CompileRequest {
             utterance: parsed.utterance,
@@ -325,7 +341,12 @@ fn batch_infer(
             candidates: Some(parsed.candidates.unwrap_or(names)),
             context: parsed.context,
         };
-        match compiler.compile(&req) {
+        let compiled = match (&mut cpu, &mut gpu_compiler) {
+            (Some(c), _) => c.compile(&req),
+            (_, Some(g)) => g.compile(&req),
+            _ => unreachable!("one backend is always constructed"),
+        };
+        match compiled {
             Ok(outcome) => {
                 ok += 1;
                 writeln!(

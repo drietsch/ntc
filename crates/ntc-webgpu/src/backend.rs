@@ -42,6 +42,8 @@ pub struct WgpuBackend {
     wbufs: HashMap<String, wgpu::Buffer>,
     /// Host-side tensors: embedding tables, `fusion.no_tool.embedding`, heads.
     host: HashMap<String, Tensor>,
+    /// Whether this model carries the head-codec v3 heads.
+    weights_have_v3: bool,
 }
 
 impl WgpuBackend {
@@ -54,11 +56,21 @@ impl WgpuBackend {
     ) -> Result<Self, NtcError> {
         cfg.validate()?;
         weights.check(&cfg)?;
+        let weights_have_v3 = weights.has_v3_heads();
         let exec = GpuExecutor::new(ctx);
 
         let mut wbufs = HashMap::new();
         let mut host = HashMap::new();
-        for (name, _shape) in tensor_specs(&cfg) {
+        // Head-codec v3 tensors are optional, so they are appended to the
+        // manifest walk rather than folded into `tensor_specs`, which every
+        // model must satisfy.
+        let optional = if weights_have_v3 {
+            ntc_model::weights::v3_head_specs(&cfg)
+        } else {
+            Vec::new()
+        };
+        let manifest = tensor_specs(&cfg).into_iter().chain(optional);
+        for (name, _shape) in manifest {
             let tensor = weights.get(&name)?;
             if gpu_resident(&name) {
                 let buf = exec
@@ -79,6 +91,7 @@ impl WgpuBackend {
             exec,
             wbufs,
             host,
+            weights_have_v3,
         })
     }
 
@@ -598,6 +611,92 @@ impl WgpuBackend {
         out.insert("datetime.weekday.logits".into(), weekday);
         out.insert("datetime.daypart.logits".into(), daypart);
         out.insert("datetime.month.logits".into(), month);
+
+        // Head-codec v3, mirroring `CpuRefBackend`: these heads are small
+        // projections over states already read back, so they run on the CPU
+        // on this path too.
+        if self.weights_have_v3 {
+            out.insert(
+                "delegate_reason.logits".into(),
+                Tensor::from_vec(
+                    &[4],
+                    self.mlp_head(
+                        &cat,
+                        "heads.delegate_reason.dense",
+                        "heads.delegate_reason.out",
+                    )?,
+                ),
+            );
+            out.insert(
+                "no_call_reason.logits".into(),
+                Tensor::from_vec(
+                    &[5],
+                    self.mlp_head(
+                        &cat,
+                        "heads.no_call_reason.dense",
+                        "heads.no_call_reason.out",
+                    )?,
+                ),
+            );
+
+            let n_linked = inputs.linked_kinds.len();
+            let width = ntc_model::inputs::MAX_LINKED + 1;
+            let mut source = Tensor::from_vec(&[n_tools, a, 4], vec![f32::MIN; n_tools * a * 4]);
+            let mut unresolved =
+                Tensor::from_vec(&[n_tools, a, 5], vec![f32::MIN; n_tools * a * 5]);
+            let mut entity =
+                Tensor::from_vec(&[n_tools, a, width], vec![f32::MIN; n_tools * a * width]);
+
+            let kind_emb = self.ht("context.linked_kind.weight")?.clone();
+            let pos_emb = self.ht("context.linked_pos.weight")?.clone();
+            let mut linked_states = Tensor::zeros(&[n_linked.max(1), h]);
+            for (i, &kind) in inputs.linked_kinds.iter().enumerate() {
+                let k = kind_emb.row(kind);
+                let p = pos_emb.row(i);
+                let row = &mut linked_states.data[i * h..(i + 1) * h];
+                for j in 0..h {
+                    row[j] = k[j] + p[j];
+                }
+            }
+            let none_vec = self.ht("heads.entity.none.embedding")?.data.clone();
+
+            for (t, tool) in inputs.tools.iter().enumerate() {
+                for (k, &anchor) in tool.arg_anchors.iter().enumerate() {
+                    let arg_state = state_at(t * ls + anchor).to_vec();
+                    let base = t * a + k;
+                    source.data[base * 4..base * 4 + 4]
+                        .copy_from_slice(&self.linear_head(&arg_state, "heads.source.out")?);
+                    unresolved.data[base * 5..base * 5 + 5].copy_from_slice(
+                        &self.linear_head(&arg_state, "heads.unresolved_reason.out")?,
+                    );
+                    let mut scores = vec![0.0f32; n_linked];
+                    if n_linked > 0 {
+                        self.bilinear_scores(
+                            &arg_state,
+                            "heads.entity.proj.weight",
+                            &linked_states,
+                            &mut scores,
+                        )?;
+                    }
+                    let row = &mut entity.data[base * width..base * width + width];
+                    row[..n_linked].copy_from_slice(&scores);
+                    let proj = ntc_model::ops::linear(
+                        &Tensor::from_vec(&[1, h], arg_state.clone()),
+                        self.ht("heads.entity.proj.weight")?,
+                        None,
+                    );
+                    row[width - 1] = proj
+                        .data
+                        .iter()
+                        .zip(&none_vec)
+                        .map(|(a, b)| a * b)
+                        .sum::<f32>();
+                }
+            }
+            out.insert("source.logits".into(), source);
+            out.insert("unresolved_reason.logits".into(), unresolved);
+            out.insert("entity_ref.logits".into(), entity);
+        }
 
         Ok(HeadOutputs { tensors: out })
     }

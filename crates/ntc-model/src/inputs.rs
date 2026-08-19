@@ -62,6 +62,20 @@ pub struct ToolInput {
     pub enum_anchors: Vec<Vec<usize>>,
 }
 
+/// Linked-item kinds the entity-reference head embeds (frozen order; 0 =
+/// unknown). Mirrors `training/datasets/collate.py::LINKED_KINDS`.
+pub const LINKED_KINDS: [&str; 5] = ["asset", "document", "object", "data-object", "folder"];
+/// Entity-reference head width (excluding the trailing NONE slot).
+pub const MAX_LINKED: usize = 8;
+
+/// Embedding row for a host element kind.
+pub fn linked_kind_id(kind: &str) -> usize {
+    LINKED_KINDS
+        .iter()
+        .position(|k| *k == kind)
+        .map_or(0, |i| i + 1)
+}
+
 #[derive(Debug, Clone)]
 pub struct ModelInputs {
     /// Padded to `max_utterance_tokens`.
@@ -70,6 +84,9 @@ pub struct ModelInputs {
     /// The utterance's unpadded token count.
     pub utterance_len: usize,
     pub tools: Vec<ToolInput>,
+    /// Kind ids of the items linked into the request, truncated to
+    /// [`MAX_LINKED`]. Empty when the host supplied no context.
+    pub linked_kinds: Vec<usize>,
 }
 
 impl ModelInputs {
@@ -83,6 +100,18 @@ impl ModelInputs {
         tokenizer: &NtcTokenizer,
         utterance: &TokenSeq,
         candidates: &[&CanonicalTool],
+    ) -> Result<Self, NtcError> {
+        Self::pack_with_context(cfg, tokenizer, utterance, candidates, &[])
+    }
+
+    /// Packing with the host's context frame, so the entity-reference head
+    /// can bind arguments to the current selection.
+    pub fn pack_with_context(
+        cfg: &NtcArchConfig,
+        tokenizer: &NtcTokenizer,
+        utterance: &TokenSeq,
+        candidates: &[&CanonicalTool],
+        linked: &[ntc_core::ir::LinkedItem],
     ) -> Result<Self, NtcError> {
         if candidates.is_empty() || candidates.len() > cfg.max_tools {
             return Err(NtcError::CandidateLimit(format!(
@@ -109,6 +138,11 @@ impl ModelInputs {
             utterance_mask,
             utterance_len: n,
             tools,
+            linked_kinds: linked
+                .iter()
+                .take(MAX_LINKED)
+                .map(|l| linked_kind_id(&l.kind))
+                .collect(),
         })
     }
 

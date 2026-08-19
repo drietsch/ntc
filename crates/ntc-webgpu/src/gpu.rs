@@ -49,7 +49,9 @@ struct AttnScoreDims {
     h: u32,
     heads: u32,
     scale: f32,
-    _pad: [u32; 3],
+    head_base: u32,
+    n_heads: u32,
+    _pad: u32,
 }
 
 #[repr(C)]
@@ -67,6 +69,9 @@ struct AttnCtxDims {
     lkv: u32,
     h: u32,
     heads: u32,
+    head_base: u32,
+    n_heads: u32,
+    _pad: [u32; 2],
 }
 
 struct Kernels {
@@ -372,8 +377,10 @@ impl GpuExecutor {
         lkv: usize,
         h: usize,
         heads: usize,
+        head_base: usize,
+        n_heads: usize,
     ) -> wgpu::Buffer {
-        let out = self.alloc(heads * lq * lkv);
+        let out = self.alloc(n_heads * lq * lkv);
         let head_dim = h / heads;
         let dims = self.uniform(&AttnScoreDims {
             lq: lq as u32,
@@ -381,13 +388,15 @@ impl GpuExecutor {
             h: h as u32,
             heads: heads as u32,
             scale: 1.0 / (head_dim as f32).sqrt(),
-            _pad: [0; 3],
+            head_base: head_base as u32,
+            n_heads: n_heads as u32,
+            _pad: 0,
         });
         self.dispatch(
             enc,
             &self.kernels.attn_scores,
             &[&dims, q, k, kv_mask, &out],
-            (div_ceil(lkv, 8), div_ceil(heads * lq, 8), 1),
+            (div_ceil(lkv, 8), div_ceil(n_heads * lq, 8), 1),
         );
         out
     }
@@ -424,21 +433,25 @@ impl GpuExecutor {
         lkv: usize,
         h: usize,
         heads: usize,
-    ) -> wgpu::Buffer {
-        let out = self.alloc(lq * h);
+        head_base: usize,
+        n_heads: usize,
+        out: &wgpu::Buffer,
+    ) {
         let dims = self.uniform(&AttnCtxDims {
             lq: lq as u32,
             lkv: lkv as u32,
             h: h as u32,
             heads: heads as u32,
+            head_base: head_base as u32,
+            n_heads: n_heads as u32,
+            _pad: [0; 2],
         });
         self.dispatch(
             enc,
             &self.kernels.attn_ctx,
-            &[&dims, p, v, &out],
+            &[&dims, p, v, out],
             (div_ceil(h, 8), div_ceil(lq, 8), 1),
         );
-        out
     }
 
     /// Full multi-head attention (`q_states` attends over `kv_states`) with
@@ -462,9 +475,26 @@ impl GpuExecutor {
         let q = self.record_matmul(enc, q_states, wq.0, Some(wq.1), lq, h, h);
         let k = self.record_matmul(enc, kv_states, wk.0, Some(wk.1), lkv, h, h);
         let v = self.record_matmul(enc, kv_states, wv.0, Some(wv.1), lkv, h, h);
-        let scores = self.record_attn_scores(enc, &q, &k, kv_mask, lq, lkv, h, heads);
-        self.record_softmax(enc, &scores, heads * lq, lkv);
-        let ctx = self.record_attn_ctx(enc, &scores, &v, lq, lkv, h, heads);
+
+        // The full score tensor is heads x lq x lkv floats — 143 MiB for a
+        // 12-head, 1729-token fusion sequence, past WebGPU's 128 MiB storage
+        // binding limit. Chunk the heads so every binding fits; correctness
+        // must not depend on a device offering a larger limit (spec §26).
+        let ctx = self.alloc(lq * h);
+        let per_head = lq * lkv;
+        let max_heads = std::env::var("NTC_ATTN_CHUNK")
+            .ok()
+            .and_then(|v| v.parse::<usize>().ok())
+            .unwrap_or(self.ctx.caps.max_storage_buffer_binding_size as usize / 4 / per_head.max(1))
+            .clamp(1, heads);
+        let mut base = 0;
+        while base < heads {
+            let n = max_heads.min(heads - base);
+            let scores = self.record_attn_scores(enc, &q, &k, kv_mask, lq, lkv, h, heads, base, n);
+            self.record_softmax(enc, &scores, n * lq, lkv);
+            self.record_attn_ctx(enc, &scores, &v, lq, lkv, h, heads, base, n, &ctx);
+            base += n;
+        }
         self.record_matmul(enc, &ctx, wo.0, Some(wo.1), lq, h, h)
     }
 

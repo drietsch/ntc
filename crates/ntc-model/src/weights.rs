@@ -94,8 +94,31 @@ impl ModelWeights {
         self.tensors.is_empty()
     }
 
+    /// Is a tensor present? Used to detect optional (head-codec v3) heads.
+    pub fn has(&self, name: &str) -> bool {
+        self.tensors.contains_key(name)
+    }
+
+    /// True when this model carries the head-codec v3 heads (reasons,
+    /// argument source, entity reference). Models exported before v3 do not,
+    /// and the backends simply skip those outputs.
+    pub fn has_v3_heads(&self) -> bool {
+        self.has("heads.delegate_reason.out.weight") && self.has("heads.entity.proj.weight")
+    }
+
     /// Check presence + shape of every tensor [`tensor_specs`] declares.
     pub fn check(&self, cfg: &NtcArchConfig) -> Result<(), NtcError> {
+        if self.has_v3_heads() {
+            for (name, shape) in v3_head_specs(cfg) {
+                let t = self.get(&name)?;
+                if t.shape != shape {
+                    return Err(NtcError::Format(format!(
+                        "tensor `{name}`: shape {:?}, expected {shape:?}",
+                        t.shape
+                    )));
+                }
+            }
+        }
         for (name, shape) in tensor_specs(cfg) {
             let t = self.get(&name)?;
             if t.shape != shape {
@@ -107,6 +130,43 @@ impl ModelWeights {
         }
         Ok(())
     }
+}
+
+/// Head-codec v3 tensors: present only on models exported with the reason,
+/// source and entity-reference heads.
+pub fn v3_head_specs(cfg: &NtcArchConfig) -> Vec<(String, Vec<usize>)> {
+    let h = cfg.hidden;
+    let mut specs = vec![
+        (
+            "heads.delegate_reason.dense.weight".to_string(),
+            vec![2 * h, h],
+        ),
+        ("heads.delegate_reason.dense.bias".to_string(), vec![h]),
+        ("heads.delegate_reason.out.weight".to_string(), vec![h, 4]),
+        ("heads.delegate_reason.out.bias".to_string(), vec![4]),
+        (
+            "heads.no_call_reason.dense.weight".to_string(),
+            vec![2 * h, h],
+        ),
+        ("heads.no_call_reason.dense.bias".to_string(), vec![h]),
+        ("heads.no_call_reason.out.weight".to_string(), vec![h, 5]),
+        ("heads.no_call_reason.out.bias".to_string(), vec![5]),
+        ("heads.source.out.weight".to_string(), vec![h, 4]),
+        ("heads.source.out.bias".to_string(), vec![4]),
+        ("heads.unresolved_reason.out.weight".to_string(), vec![h, 5]),
+        ("heads.unresolved_reason.out.bias".to_string(), vec![5]),
+        ("heads.entity.proj.weight".to_string(), vec![h, h]),
+        ("heads.entity.none.embedding".to_string(), vec![h]),
+    ];
+    specs.push((
+        "context.linked_kind.weight".to_string(),
+        vec![crate::inputs::LINKED_KINDS.len() + 1, h],
+    ));
+    specs.push((
+        "context.linked_pos.weight".to_string(),
+        vec![crate::inputs::MAX_LINKED + 1, h],
+    ));
+    specs
 }
 
 /// The complete tensor manifest for an architecture config: every canonical

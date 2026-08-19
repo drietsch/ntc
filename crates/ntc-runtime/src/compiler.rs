@@ -186,7 +186,18 @@ impl<B: Backend> NeuralToolCompiler<B> {
             .map(|&id| self.registry.get(id).expect("resolved id exists"))
             .collect();
         let utterance = self.tokenizer.encode_utterance(&req.utterance)?;
-        let inputs = ModelInputs::pack(&self.arch, &self.tokenizer, &utterance, &candidates)?;
+        let linked = req
+            .context
+            .as_ref()
+            .map(|c| c.linked.as_slice())
+            .unwrap_or(&[]);
+        let inputs = ModelInputs::pack_with_context(
+            &self.arch,
+            &self.tokenizer,
+            &utterance,
+            &candidates,
+            linked,
+        )?;
         Ok((candidate_ids, utterance, inputs))
     }
 

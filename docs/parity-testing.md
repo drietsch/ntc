@@ -27,3 +27,26 @@ trend/debug metrics; **decision parity is the gate**.
 - `ntc infer --model … --utterance … --tools …` runs the CPU path end-to-end.
 - Layer-by-layer bisection: dump activations on both paths, find the first
   divergent tensor (naming matches `tensor_specs`), fix, re-run.
+
+## Known: CPU/GPU divergence on large models
+
+On `ntc-studio-v1` (44M params, fusion sequence 1729 tokens), the two backends
+agree on **94.6%** of dev decisions (422/446), not 100%. The shape of the
+disagreement is specific and worth recording:
+
+- `action.logits` agree to the printed precision (e.g. both 0.9999507665),
+- `tool.logits` diverge materially (0.956 vs 0.426 on the same input),
+- unresolved confidences differ only in the 8th decimal — ordinary
+  accumulation-order noise.
+
+So the *global* pooled states (user token 0, the NO_TOOL slot) match while the
+*per-tool* fused states do not, which points at the fusion self-attention over
+the packed sequence rather than at the encoder or the heads.
+
+Note the tiny fixtures cannot see this: their sequences fit in one attention
+head-chunk, so the chunked path added for the storage-binding limit is never
+exercised. `NTC_ATTN_CHUNK=<n>` forces a chunk size for bisecting it.
+
+Until this is resolved the browser demo defaults to the CPU backend for the
+Studio model. The GPU path is correct on every fixture-scale parity test
+(9/9) and on the smaller models.

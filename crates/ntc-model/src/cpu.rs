@@ -393,6 +393,95 @@ impl Backend for CpuRefBackend {
         out.insert("datetime.daypart.logits".into(), daypart);
         out.insert("datetime.month.logits".into(), month);
 
+        // Head-codec v3 (optional): escalation reasons, argument source, and
+        // the entity reference into the host's linked selection. Models
+        // exported before v3 lack these tensors and simply omit the outputs.
+        if self.weights.has_v3_heads() {
+            out.insert(
+                "delegate_reason.logits".into(),
+                Tensor::from_vec(
+                    &[4],
+                    self.mlp_head(
+                        &cat,
+                        "heads.delegate_reason.dense",
+                        "heads.delegate_reason.out",
+                    )?,
+                ),
+            );
+            out.insert(
+                "no_call_reason.logits".into(),
+                Tensor::from_vec(
+                    &[5],
+                    self.mlp_head(
+                        &cat,
+                        "heads.no_call_reason.dense",
+                        "heads.no_call_reason.out",
+                    )?,
+                ),
+            );
+
+            let n_linked = inputs.linked_kinds.len();
+            let width = crate::inputs::MAX_LINKED + 1; // + NONE
+            let mut source = Tensor::from_vec(&[n_tools, a, 4], vec![f32::MIN; n_tools * a * 4]);
+            let mut unresolved =
+                Tensor::from_vec(&[n_tools, a, 5], vec![f32::MIN; n_tools * a * 5]);
+            let mut entity =
+                Tensor::from_vec(&[n_tools, a, width], vec![f32::MIN; n_tools * a * width]);
+
+            // Linked items are described by kind + position, not by text.
+            let kind_emb = self.w("context.linked_kind.weight")?;
+            let pos_emb = self.w("context.linked_pos.weight")?;
+            let mut linked_states = Tensor::zeros(&[n_linked.max(1), h]);
+            for (i, &kind) in inputs.linked_kinds.iter().enumerate() {
+                let k = kind_emb.row(kind);
+                let p = pos_emb.row(i);
+                let row = &mut linked_states.data[i * h..(i + 1) * h];
+                for j in 0..h {
+                    row[j] = k[j] + p[j];
+                }
+            }
+            let none_vec = self.w("heads.entity.none.embedding")?.data.clone();
+
+            for (t, tool) in inputs.tools.iter().enumerate() {
+                for (k, &anchor) in tool.arg_anchors.iter().enumerate() {
+                    let arg_state = state_at(t * ls + anchor).to_vec();
+                    let base = t * a + k;
+                    source.data[base * 4..base * 4 + 4]
+                        .copy_from_slice(&self.linear_head(&arg_state, "heads.source.out")?);
+                    unresolved.data[base * 5..base * 5 + 5].copy_from_slice(
+                        &self.linear_head(&arg_state, "heads.unresolved_reason.out")?,
+                    );
+
+                    // Bilinear score against each linked item, plus NONE.
+                    let mut scores = vec![0.0f32; n_linked];
+                    if n_linked > 0 {
+                        self.bilinear_scores(
+                            &arg_state,
+                            "heads.entity.proj.weight",
+                            &linked_states,
+                            &mut scores,
+                        )?;
+                    }
+                    let row = &mut entity.data[base * width..base * width + width];
+                    row[..n_linked].copy_from_slice(&scores);
+                    let proj = ops::linear(
+                        &Tensor::from_vec(&[1, h], arg_state.clone()),
+                        self.w("heads.entity.proj.weight")?,
+                        None,
+                    );
+                    row[width - 1] = proj
+                        .data
+                        .iter()
+                        .zip(&none_vec)
+                        .map(|(a, b)| a * b)
+                        .sum::<f32>();
+                }
+            }
+            out.insert("source.logits".into(), source);
+            out.insert("unresolved_reason.logits".into(), unresolved);
+            out.insert("entity_ref.logits".into(), entity);
+        }
+
         Ok(HeadOutputs { tensors: out })
     }
 }
