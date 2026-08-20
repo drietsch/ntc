@@ -30,20 +30,29 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 NTC = REPO / "target" / "release" / "ntc"
-TOOLS = {t["name"]: t for t in json.loads((REPO / "examples" / "pimcore-tools.json").read_text())}
+DEFAULT_TOOLS = REPO / "examples" / "pimcore-tools.json"
+
+
+def load_registry(path: Path) -> dict[str, dict]:
+    """The schemas to serve. Must be the ones the model trained against — the
+    canonical text is part of its input, so a registry that has drifted reads
+    as an undertrained model rather than as an error."""
+    return {t["name"]: t for t in json.loads(path.read_text())}
 
 GREEN, RED, DIM, BOLD, RESET = "\033[32m", "\033[31m", "\033[2m", "\033[1m", "\033[0m"
 
 
-def load_scenarios(path: Path) -> list[dict]:
+def load_scenarios(path: Path, tools: dict[str, dict]) -> list[dict]:
     rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
-    missing = {t for r in rows for t in r["slate"] if t not in TOOLS}
+    missing = {t for r in rows for t in r["slate"] if t not in tools}
     if missing:
         sys.exit(f"unknown tools in scenarios: {sorted(missing)}")
     return rows
 
 
-def run_batch(model: Path, scenarios: list[dict], backend: str) -> dict[str, dict]:
+def run_batch(
+    model: Path, scenarios: list[dict], backend: str, tools: dict[str, dict]
+) -> dict[str, dict]:
     with tempfile.TemporaryDirectory() as tmp:
         inp, outp = Path(tmp) / "in.jsonl", Path(tmp) / "out.jsonl"
         inp.write_text(
@@ -52,7 +61,7 @@ def run_batch(model: Path, scenarios: list[dict], backend: str) -> dict[str, dic
                     {
                         "id": s["id"],
                         "utterance": s["utterance"],
-                        "tools": [TOOLS[t] for t in s["slate"]],
+                        "tools": [tools[t] for t in s["slate"]],
                         "context": s.get("context", {}),
                     },
                     ensure_ascii=False,
@@ -112,6 +121,8 @@ def main() -> None:
     parser.add_argument("--backend", choices=["gpu", "cpu"], default="gpu",
                         help="gpu = the shipping target; cpu = the parity oracle")
     parser.add_argument("--json", type=Path, default=None, help="write a machine-readable report")
+    parser.add_argument("--tools", type=Path, default=DEFAULT_TOOLS,
+                        help="registry to serve; must match what the model trained on")
     args = parser.parse_args()
 
     if not NTC.exists():
@@ -119,8 +130,9 @@ def main() -> None:
     if not args.model.exists():
         sys.exit(f"model not found: {args.model} (see .gitignore for the rebuild recipe)")
 
-    scenarios = load_scenarios(args.scenarios)
-    preds = run_batch(args.model, scenarios, args.backend)
+    tools = load_registry(args.tools)
+    scenarios = load_scenarios(args.scenarios, tools)
+    preds = run_batch(args.model, scenarios, args.backend, tools)
 
     print(f"{BOLD}Studio use-case acceptance — {args.model.name} on {args.backend.upper()}{RESET}\n")
     by_group: Counter[str] = Counter()
