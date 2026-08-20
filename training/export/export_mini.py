@@ -25,6 +25,18 @@ def export(ckpt_path: Path, out_path: Path, model_version: str, tokenizer_dir: s
     cfg = NtcArchConfig(**ckpt["cfg"])
     if "calibration" in ckpt:
         cfg = cfg.model_copy(update={"calibration": ckpt["calibration"]})
+    else:
+        # Falling back to all-1.0 temperatures silently is a trap: the runtime
+        # gates ASK downgrades and the optional-argument threshold on
+        # calibrated confidences, so an uncalibrated export scores as a much
+        # worse model than it is. `best.pt` is written every epoch and never
+        # carries calibration — only the final checkpoint does.
+        print(
+            f"WARNING: {ckpt_path.name} has no calibration; exporting with default "
+            "temperatures (1.0). Confidence-gated behaviour (ASK, optional args) "
+            "will be off. Fit them first: uv run python -m tools.calibrate_ckpt "
+            f"--ckpt {ckpt_path} --data <dataset-dir>"
+        )
     model = NtcEncoderHeadsV1(cfg)
     model.load_state_dict(ckpt["state_dict"])
     model.eval()

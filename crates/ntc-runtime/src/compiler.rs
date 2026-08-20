@@ -32,14 +32,8 @@ pub struct CompilerConfig {
 
 impl Default for CompilerConfig {
     fn default() -> Self {
-        let mut confidence = ConfidencePolicy::default();
-        // Calibrating this threshold needs a sweep over a dev set, so allow
-        // an override without a rebuild. Hosts set it through the API.
-        if let Ok(v) = std::env::var("NTC_OPTIONAL_ARG_THRESHOLD") {
-            if let Ok(v) = v.parse::<f32>() {
-                confidence.optional_arg_threshold = v;
-            }
-        }
+        // Threshold env overrides live in `ConfidencePolicy::default`.
+        let confidence = ConfidencePolicy::default();
         Self {
             locale: "en-US".into(),
             timezone: "UTC".into(),

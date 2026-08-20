@@ -24,11 +24,27 @@ pub struct ConfidencePolicy {
 impl Default for ConfidencePolicy {
     fn default() -> Self {
         Self {
-            tool_threshold: 0.35,
-            required_arg_threshold: 0.30,
-            optional_arg_threshold: 0.60,
+            tool_threshold: env_or("NTC_TOOL_THRESHOLD", 0.35),
+            required_arg_threshold: env_or("NTC_REQUIRED_ARG_THRESHOLD", 0.30),
+            optional_arg_threshold: env_or("NTC_OPTIONAL_ARG_THRESHOLD", 0.60),
         }
     }
+}
+
+/// Every threshold is overridable from the environment.
+///
+/// These numbers decide how much of a correct prediction survives to become a
+/// call, and they were picked by hand. On the Studio dev split the policy
+/// discarded 100 of 249 correctly-selected tools — downgrading them to ASK,
+/// NO_CALL or DELEGATE — while the model's own action accuracy was 0.98. A
+/// threshold with that much leverage has to be sweepable without a rebuild,
+/// or it gets mistaken for model quality. Hosts set them through the API;
+/// this is for calibration runs.
+fn env_or(key: &str, default: f32) -> f32 {
+    std::env::var(key)
+        .ok()
+        .and_then(|v| v.parse::<f32>().ok())
+        .unwrap_or(default)
 }
 
 impl ConfidencePolicy {
