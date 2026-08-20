@@ -63,3 +63,4 @@ models/ntc-studio-v1/model.ntc
 #        --out runs/studio-v4 --epochs 10 --batch 12 --lr 2e-4 --backbone-lr 1e-4 \
 #     && eval/run_all.sh "$PWD/runs/studio-v4/best.pt" ntc-studio-v4
 models/ntc-studio-v4/model.ntc
+models/ntc-studio-v3-rerun/model.ntc
