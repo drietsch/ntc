@@ -58,6 +58,12 @@ for T in 0.5 0.7 0.9 0.99; do
 done
 
 echo
+echo "=== 1b. per language (spec asks for slices, not an average)"
+NTC_OPTIONAL_ARG_THRESHOLD=0.9 ./target/release/ntc batch-infer --gpu \
+  --model "$MODEL" --input "$IN" --output "$OUT" >/dev/null
+python3 eval/esa.py --pred "$OUT" --gold "$GOLD" --by-language | tail -6
+
+echo
 echo "=== 2. can it say \"none of these tools fits\"?  (v2 baseline: 24.0% / intact 88.7%)"
 python3 eval/no_tool_probe.py --model "$MODEL" --limit 150
 

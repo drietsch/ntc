@@ -183,6 +183,10 @@ def main() -> None:
     parser.add_argument("--gold", type=Path, required=True)
     parser.add_argument("--out", type=Path, default=None)
     parser.add_argument("--show-failures", type=int, default=0)
+    parser.add_argument("--by-language", action="store_true",
+                        help="per-language slices; spec §60 asks for these rather "
+                             "than an average, because a single weak language "
+                             "disappears into one")
     args = parser.parse_args()
 
     preds = {}
@@ -211,6 +215,18 @@ def main() -> None:
     print("\nper tool (n / right tool / executable):")
     for t, c in list(report["per_tool"].items())[:12]:
         print(f"  {t:32} {c['n']:3}  {c['right_tool']:3}  {c['executable']:3}")
+
+    if args.by_language:
+        gold_rows = load(args.gold)
+        langs = sorted({g.get("lang", "?") for g in gold_rows})
+        print(f"\nper language ({'n':>4} {'executable':>11} {'right tool':>11} {'wrong call':>11}):")
+        for lang in langs:
+            rows = [g for g in gold_rows if g.get("lang", "?") == lang]
+            r = score(preds, rows)
+            print(f"  {lang:6} {r['call_worthy_requests']:4} "
+                  f"{r['executable_semantic_accuracy']:10.1%} "
+                  f"{r['funnel']['...with the right tool']:10.1%} "
+                  f"{r['safety']['wrong_call_rate']:10.1%}")
 
     for f in report["failures"][: args.show_failures]:
         print(f"\n  {f['stage']}: {f['utterance']}\n    {f['detail']}")

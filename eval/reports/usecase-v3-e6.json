@@ -1,0 +1,209 @@
+{
+  "model": "v3-e6.ntc",
+  "backend": "gpu",
+  "passed": 18,
+  "total": 26,
+  "scenarios": [
+    {
+      "id": "call-linked-tag",
+      "group": "call",
+      "passed": true,
+      "problems": [],
+      "why": "Bind a linked selection to a tool argument — the core in-Studio capability"
+    },
+    {
+      "id": "call-id-in-utterance",
+      "group": "call",
+      "passed": true,
+      "problems": [],
+      "why": "An explicit id in the utterance is extracted as a span"
+    },
+    {
+      "id": "call-search-query",
+      "group": "call",
+      "passed": true,
+      "problems": [],
+      "why": "Free-text query extracted from the utterance"
+    },
+    {
+      "id": "call-list-classes",
+      "group": "call",
+      "passed": true,
+      "problems": [],
+      "why": "Zero-argument call, German"
+    },
+    {
+      "id": "call-workflow-graph-fr",
+      "group": "call",
+      "passed": false,
+      "problems": [
+        "action NO_CALL != CALL",
+        "tool None != get_workflow_graph"
+      ],
+      "why": "Named entity extracted from a French utterance"
+    },
+    {
+      "id": "call-list-tags-es",
+      "group": "call",
+      "passed": true,
+      "problems": [],
+      "why": "Zero-argument call, Spanish"
+    },
+    {
+      "id": "ask-missing-id",
+      "group": "ask",
+      "passed": false,
+      "problems": [
+        "action CALL != ASK"
+      ],
+      "why": "Right tool, but nothing supplies the required id and nothing is selected"
+    },
+    {
+      "id": "ask-ambiguous-type",
+      "group": "ask",
+      "passed": false,
+      "problems": [
+        "action NO_CALL != ASK"
+      ],
+      "why": "Two linked items of different type: the element type cannot be inferred"
+    },
+    {
+      "id": "nocall-chitchat",
+      "group": "nocall",
+      "passed": true,
+      "problems": [],
+      "why": "Nothing to execute"
+    },
+    {
+      "id": "nocall-conceptual",
+      "group": "nocall",
+      "passed": true,
+      "problems": [],
+      "why": "A question ABOUT a tool, not a request to run it"
+    },
+    {
+      "id": "nocall-unsupported",
+      "group": "nocall",
+      "passed": true,
+      "problems": [],
+      "why": "Capability Pimcore's tool set does not offer (permissions)"
+    },
+    {
+      "id": "nocall-out-of-scope",
+      "group": "nocall",
+      "passed": true,
+      "problems": [],
+      "why": "Not a Pimcore action at all"
+    },
+    {
+      "id": "delegate-payload-update",
+      "group": "delegate",
+      "passed": true,
+      "problems": [],
+      "why": "A write needing a nested payload — POLICY.md 4.1 routes writes to the proposal track"
+    },
+    {
+      "id": "delegate-payload-metadata",
+      "group": "delegate",
+      "passed": true,
+      "problems": [],
+      "why": "Asset metadata edit needs a structured payload"
+    },
+    {
+      "id": "delegate-over-limit",
+      "group": "delegate",
+      "passed": true,
+      "problems": [],
+      "why": "Selection far exceeds the per-call cap (max 5) — needs a loop"
+    },
+    {
+      "id": "delegate-multi-step",
+      "group": "delegate",
+      "passed": true,
+      "problems": [],
+      "why": "The reference case: search, then filter on a property, then mutate the survivors"
+    },
+    {
+      "id": "delegate-multi-step-de",
+      "group": "delegate",
+      "passed": false,
+      "problems": [
+        "action CALL != DELEGATE"
+      ],
+      "why": "Same chained shape in German, different domain"
+    },
+    {
+      "id": "delegate-mixed-types",
+      "group": "delegate",
+      "passed": true,
+      "problems": [],
+      "why": "Selection spans element types a single-type tool cannot take"
+    },
+    {
+      "id": "delegate-authoring",
+      "group": "delegate",
+      "passed": true,
+      "problems": [],
+      "why": "Open-ended authoring is agent work, not a typed call"
+    },
+    {
+      "id": "delegate-analysis",
+      "group": "delegate",
+      "passed": false,
+      "problems": [
+        "action CALL != DELEGATE"
+      ],
+      "why": "Comparative reasoning across results"
+    },
+    {
+      "id": "policy-resolution-hop",
+      "group": "policy",
+      "passed": true,
+      "problems": [],
+      "why": "POLICY.md 4.4: a tag NAME must be resolved to an id first — list_tags, not assign_tag"
+    },
+    {
+      "id": "policy-utterance-over-linked",
+      "group": "policy",
+      "passed": true,
+      "problems": [],
+      "why": "POLICY.md 4.2: an explicit id in the utterance beats the linked item"
+    },
+    {
+      "id": "adversarial-namespace-trap",
+      "group": "adversarial",
+      "passed": false,
+      "problems": [
+        "action NO_CALL != CALL",
+        "tool None != create_document"
+      ],
+      "why": "`parentId` means a DIFFERENT namespace per tool — a document id here, not a tag id"
+    },
+    {
+      "id": "adversarial-mention-only",
+      "group": "adversarial",
+      "passed": false,
+      "problems": [
+        "action ASK != NO_CALL"
+      ],
+      "why": "The verb names a tool but the user is asking for an explanation"
+    },
+    {
+      "id": "robust-typo",
+      "group": "robust",
+      "passed": true,
+      "problems": [],
+      "why": "Real users typo; the pretrained tokenizer should absorb it"
+    },
+    {
+      "id": "robust-polite-prefix",
+      "group": "robust",
+      "passed": false,
+      "problems": [
+        "action DELEGATE != CALL",
+        "tool None != list_tags"
+      ],
+      "why": "Politeness padding must not change the decision"
+    }
+  ]
+}
