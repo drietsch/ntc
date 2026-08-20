@@ -95,6 +95,7 @@ class Prepared:
     source: list[list[int]]
     entity_ref: list[list[int]]
     unresolved_reason: list[list[int]]
+    filter_template: list[list[int]]
 
 
 ACTION_IDS = {"CALL": 0, "ASK": 1, "NO_CALL": 2, "DELEGATE": 3}
@@ -128,6 +129,10 @@ def prepare_example(
     tools = [pack_tool(cfg, tokenizer, c) for c in canon]
     n_tools = len(tools)
 
+    # Declared value templates, as head classes: NONE is 0, template i is i+1.
+    template_by_id = {t.id: i + 1 for i, t in enumerate(cfg.filter_templates)}
+    template_semantics = {t.semantic for t in cfg.filter_templates}
+
     gold = ex["gold"]
     action = ACTION_IDS[gold["action"]]
     delegate_reason = DELEGATE_REASON.get(gold.get("delegate_reason", ""), IGNORE)
@@ -153,6 +158,7 @@ def prepare_example(
     magnitude_mask = [[False] * a for _ in range(n_tools)]
     source = grid(IGNORE)
     unresolved_reason = grid(IGNORE)
+    filter_template = grid(IGNORE)
     entity_ref = grid(IGNORE)
     relation = grid(IGNORE)
     weekday = grid(IGNORE)
@@ -186,9 +192,28 @@ def prepare_example(
             presence[t][k] = UNRESOLVED_TO_PRESENCE.get(reason, PRESENCE["MISSING"])
             unresolved_reason[t][k] = UNRESOLVED_REASON.get(reason, 0)
 
+        # Filter-template head. Supervised on every argument of the gold tool
+        # that a declared template *could* serve, whether or not this row uses
+        # one: an argument the schema offers a template for but the request
+        # does not fill is a real NONE, and without those the head would learn
+        # that "servable" means "templated" — the same shape of mistake that
+        # made NO_TOOL meaningless on the wide slate.
+        if template_by_id:
+            for name, k in arg_index.items():
+                semantic = args[k].get("semantic_type")
+                if semantic and semantic in template_semantics:
+                    filter_template[t][k] = 0
+
         for garg in gold.get("arguments", []):
             k = arg_index[garg["parameter"]]
             presence[t][k] = PRESENCE["PRESENT"]
+            if garg.get("template"):
+                if garg["template"] not in template_by_id:
+                    raise ValueError(
+                        f"{ex['id']}: argument `{garg['parameter']}` names template "
+                        f"`{garg['template']}`, which this model does not declare"
+                    )
+                filter_template[t][k] = template_by_id[garg["template"]]
             st = garg["semantic_type"]
             value = garg["value"]
             source[t][k] = SOURCE.get(garg.get("source", "USER"), 0)
@@ -237,7 +262,7 @@ def prepare_example(
         delegate_reason=delegate_reason, no_call_reason=no_call_reason,
         n_linked=len(linked_index), linked_kinds=linked_kinds,
         source=source, entity_ref=entity_ref,
-        unresolved_reason=unresolved_reason,
+        unresolved_reason=unresolved_reason, filter_template=filter_template,
         utterance=ex["utterance"], utterance_ids=list(enc.ids),
         utterance_offsets=list(enc.offsets), tools=tools, canon=canon,
         action=action, tool=tool_label, presence=presence,
@@ -316,6 +341,7 @@ def make_batch(cfg: NtcArchConfig, items: list[Prepared]) -> dict[str, torch.Ten
         "source": torch.full((b, t, a), IGNORE, dtype=torch.long),
         "entity_ref": torch.full((b, t, a), IGNORE, dtype=torch.long),
         "unresolved_reason": torch.full((b, t, a), IGNORE, dtype=torch.long),
+        "filter_template": torch.full((b, t, a), IGNORE, dtype=torch.long),
         "presence": torch.full((b, t, a), IGNORE, dtype=torch.long),
         "span_start": torch.full((b, t, a), IGNORE, dtype=torch.long),
         "span_end": torch.full((b, t, a), IGNORE, dtype=torch.long),
@@ -357,7 +383,7 @@ def make_batch(cfg: NtcArchConfig, items: list[Prepared]) -> dict[str, torch.Ten
             for name in (
                 "presence", "span_start", "span_end", "enum", "boolean", "unit",
                 "relation", "weekday", "daypart", "month", "source", "entity_ref",
-                "unresolved_reason",
+                "unresolved_reason", "filter_template",
             ):
                 vals = getattr(it, name)[ti]
                 tgt[name][bi, ti, : len(vals)] = torch.tensor(vals)

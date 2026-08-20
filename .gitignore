@@ -56,3 +56,10 @@ models/ntc-pimcore-v1/model.ntc
 #        --out ../models/ntc-studio-v1/model.ntc --version ntc-studio-v1 \
 #        --tokenizer-dir tokenizer-any
 models/ntc-studio-v1/model.ntc
+# Studio v4 (91 MB): v3 warm-started on the corpus plus the 446 "the thing you
+# want to act on is not here" ASK rows. Rebuild:
+#   cd training && uv run python -m tools.add_source_absent --src data/studio-neg --out data/studio-ask \
+#     && uv run python train.py --arch studio --init <v3-final.pt> --data data/studio-ask \
+#        --out runs/studio-v4 --epochs 10 --batch 12 --lr 2e-4 --backbone-lr 1e-4 \
+#     && eval/run_all.sh "$PWD/runs/studio-v4/best.pt" ntc-studio-v4
+models/ntc-studio-v4/model.ntc

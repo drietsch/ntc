@@ -49,13 +49,24 @@ def values_equal(got, want) -> bool:
     return got == want
 
 
-def needs_composed_value(arg: dict) -> bool:
-    """True when no span or context can supply this argument's value.
+def needs_composed_value(arg: dict, tool: str = "", declared_defaults: set = frozenset()) -> bool:
+    """True when nothing the compiler has can supply this argument's value.
 
     The architecture has no decoder: arguments come from a span pointing into
-    the utterance, from the context frame (a linked item, the resolver), or
-    from a dedicated head for booleans and enums. A value that has to be
-    *authored* fits none of those, and no amount of training produces it.
+    the utterance, from the context frame (a linked item, the resolver), from
+    a dedicated head for booleans and enums, from a value template the host
+    declared (head codec v4 — the head picks the shape, the span fills its
+    slots), or from a default the schema itself states. A value that fits none
+    of those has to be *authored*, and no amount of training produces it.
+
+    This function was once much more pessimistic, and the number it produced —
+    an "88.8% architecture ceiling" on the Studio dev split — was mostly wrong.
+    Of the 536 blocked rows in that corpus, 218 wanted `parentId: 1`, which the
+    schema declares as its own default; 60 wanted a comma-joined list whose
+    elements are verbatim in the utterance; and the 258 genuine PQL filters
+    turned out to be five closed shapes with at most two slots. Almost none of
+    it was composition. What is left here really is: a value with no shape the
+    host declared and no source in the request.
 
     The Studio corpus has a concrete example — `pqlFilter`:
 
@@ -70,6 +81,10 @@ def needs_composed_value(arg: dict) -> bool:
         return False
     if "char_span" in arg or arg.get("element_spans"):
         return False
+    if arg.get("template"):  # a declared shape; slots come from the span
+        return False
+    if (tool, arg.get("parameter")) in declared_defaults:
+        return False
     value = arg.get("value")
     if isinstance(value, bool):  # the boolean head needs no span
         return False
@@ -78,16 +93,44 @@ def needs_composed_value(arg: dict) -> bool:
     return True
 
 
-def ceiling(gold: list[dict]) -> tuple[int, int]:
-    """(rows a span-based compiler cannot express, call-worthy rows)."""
+def declared_defaults(registry: Path | None) -> set[tuple[str, str]]:
+    """(tool, argument) pairs whose schema states the value used when omitted.
+
+    The canonical ABI carries these but never renders them, so the model is
+    never told what the default is — it only decides that the argument is
+    present and unsourced. Reading it off the schema is not invention, so
+    these rows are not blocked.
+    """
+    if registry is None or not registry.exists():
+        return set()
+    tools = json.loads(registry.read_text())
+    return {
+        (t["name"], name)
+        for t in tools
+        for name, param in (t.get("parameters") or {}).items()
+        if isinstance(param, dict) and "default" in param
+    }
+
+
+def ceiling(gold: list[dict], defaults: set[tuple[str, str]] = frozenset()) -> tuple[int, int]:
+    """(rows the compiler has no mechanism to express, call-worthy rows)."""
     call_rows = [g for g in gold if g["gold"]["action"] == "CALL"]
     blocked = sum(
-        1 for g in call_rows if any(needs_composed_value(a) for a in g["gold"]["arguments"])
+        1
+        for g in call_rows
+        if any(
+            needs_composed_value(a, g["gold"]["tool"], defaults)
+            for a in g["gold"]["arguments"]
+        )
     )
     return blocked, len(call_rows)
 
 
-def score(preds: dict[str, dict], gold: list[dict]) -> dict:
+def score(
+    preds: dict[str, dict],
+    gold: list[dict],
+    defaults: set[tuple[str, str]] = frozenset(),
+) -> dict:
     funnel = Counter()
     per_tool: dict[str, Counter] = {}
     failures: list[dict] = []
@@ -144,7 +187,7 @@ def score(preds: dict[str, dict], gold: list[dict]) -> dict:
                 funnel["only_extra_args"] += 1
 
     n = funnel["call_worthy"] or 1
-    blocked, call_n = ceiling(gold)
+    blocked, call_n = ceiling(gold, defaults)
     declined = sum(v for k, v in funnel.items() if k.startswith("answered_"))
     return {
         "call_worthy_requests": funnel["call_worthy"],
@@ -183,6 +226,11 @@ def main() -> None:
     parser.add_argument("--gold", type=Path, required=True)
     parser.add_argument("--out", type=Path, default=None)
     parser.add_argument("--show-failures", type=int, default=0)
+    parser.add_argument("--tools", type=Path,
+                        default=Path(__file__).resolve().parents[1] / "examples"
+                        / "pimcore-tools.json",
+                        help="registry to read declared defaults from; an argument the "
+                             "schema gives a default for is not unreachable")
     parser.add_argument("--by-language", action="store_true",
                         help="per-language slices; spec §60 asks for these rather "
                              "than an average, because a single weak language "
@@ -192,13 +240,15 @@ def main() -> None:
     preds = {}
     for row in load(args.pred):
         preds[row["id"]] = row.get("result") or {"error": row.get("error")}
-    report = score(preds, load(args.gold))
+    defaults = declared_defaults(args.tools)
+    report = score(preds, load(args.gold), defaults)
 
     c = report["ceiling"]
     print(f"call-worthy requests            {report['call_worthy_requests']}")
     print(f"EXECUTABLE SEMANTIC ACCURACY    {report['executable_semantic_accuracy']:.1%}")
     print(f"  ceiling for this architecture {c['ceiling']:.1%}"
-          f"   ({c['unreachable_rows']} rows need a composed value — see DELEGATE)")
+          f"   ({c['unreachable_rows']} rows want a value with no shape the host "
+          "declared — see DELEGATE)")
     sf = report["safety"]
     print(f"\n  \033[1mwrong call executed          {sf['wrong_call_rate']:.1%}\033[0m"
           f"   ({sf['wrong_call_executed']} requests got a well-formed call that does the"
@@ -222,7 +272,7 @@ def main() -> None:
         print(f"\nper language ({'n':>4} {'executable':>11} {'right tool':>11} {'wrong call':>11}):")
         for lang in langs:
             rows = [g for g in gold_rows if g.get("lang", "?") == lang]
-            r = score(preds, rows)
+            r = score(preds, rows, defaults)
             print(f"  {lang:6} {r['call_worthy_requests']:4} "
                   f"{r['executable_semantic_accuracy']:10.1%} "
                   f"{r['funnel']['...with the right tool']:10.1%} "

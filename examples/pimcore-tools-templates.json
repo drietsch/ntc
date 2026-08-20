@@ -1,0 +1,1023 @@
+[
+  {
+    "name": "apply_global_action",
+    "description": "Apply a workflow global action to one or more Pimcore elements (max 5 per call). View permission (user + workspace) is enforced per element before the action is applied. Elements are processed independently; per-element outcomes include success + confirmed action, or a stable `error` code (element_not_found, permission_denied, bad_element_entry, service_error).",
+    "parameters": {
+      "elements": {
+        "type": "array",
+        "description": "Elements to act on (1..5). Each item: { \"id\": integer, \"type\": \"asset\"|\"document\"|\"data-object\" }.",
+        "items": {
+          "type": "object"
+        },
+        "required": true
+      },
+      "workflowName": {
+        "type": "string",
+        "description": "Workflow name.",
+        "required": true
+      },
+      "globalActionName": {
+        "type": "string",
+        "description": "Global action name to apply.",
+        "required": true
+      },
+      "note": {
+        "type": "string",
+        "description": "Optional workflow note (stored as the standard workflow comment)."
+      },
+      "additionalData": {
+        "type": "object",
+        "description": "Optional additional data forwarded as workflowOptions custom fields."
+      }
+    }
+  },
+  {
+    "name": "apply_transition",
+    "description": "Apply a workflow transition to one or more Pimcore elements (max 5 per call). View permission (user + workspace) is enforced per element before the transition is applied. Elements are processed independently; per-element outcomes include success + confirmed action, or a stable `error` code (element_not_found, permission_denied, transition_not_allowed, bad_element_entry, service_error).",
+    "parameters": {
+      "elements": {
+        "type": "array",
+        "description": "Elements to transition (1..5). Each item: { \"id\": integer, \"type\": \"asset\"|\"document\"|\"data-object\" }.",
+        "items": {
+          "type": "object"
+        },
+        "required": true
+      },
+      "workflowName": {
+        "type": "string",
+        "description": "Workflow name.",
+        "required": true
+      },
+      "transitionName": {
+        "type": "string",
+        "description": "Transition name to apply.",
+        "required": true
+      },
+      "note": {
+        "type": "string",
+        "description": "Optional workflow note (stored as the standard workflow comment)."
+      },
+      "additionalData": {
+        "type": "object",
+        "description": "Optional additional data forwarded as workflowOptions custom fields."
+      }
+    }
+  },
+  {
+    "name": "assign_tag",
+    "description": "Assign an existing tag to an element (data object, asset, or document). Use list_tags to find tag IDs.",
+    "parameters": {
+      "elementType": {
+        "type": "string",
+        "description": "Element type: \"object\", \"asset\", or \"document\".",
+        "enum": [
+          "object",
+          "asset",
+          "document"
+        ],
+        "required": true
+      },
+      "elementId": {
+        "type": "integer",
+        "description": "The element ID to tag.",
+        "required": true
+      },
+      "tagId": {
+        "type": "integer",
+        "description": "The tag ID to assign.",
+        "required": true
+      }
+    }
+  },
+  {
+    "name": "create_data_object",
+    "description": "Create a new data object. Returns the new object ID. Use get_class_definition first to learn required fields. After creation, use update_data_object to set field values.",
+    "parameters": {
+      "key": {
+        "type": "string",
+        "description": "Object key (filename). Must be unique within the parent folder. Use lowercase with hyphens (e.g. \"my-new-car\").",
+        "required": true
+      },
+      "classId": {
+        "type": "string",
+        "description": "Class ID (not name). Get this from list_classes or get_class_definition.",
+        "required": true
+      },
+      "parentId": {
+        "type": "integer",
+        "description": "Parent folder ID where the object will be created. Defaults to 1 (root folder)."
+      },
+      "type": {
+        "type": "string",
+        "description": "Object type: \"object\" (default) or \"variant\".",
+        "enum": [
+          "object",
+          "variant"
+        ]
+      },
+      "published": {
+        "type": "boolean",
+        "description": "Whether to publish the object immediately. Default is false (unpublished). Publish later via update_data_object once all required fields are set."
+      }
+    }
+  },
+  {
+    "name": "create_document",
+    "description": "Create a new EMPTY document (Page, Snippet, Email, Link, Hardlink, or Folder). Returns the new document id. See the document-editing skill for the create flow — in particular, always call list_document_types first and pass `docTypeId` for Page/Snippet/Email (without it the document falls back to a stub template and editables render blank).",
+    "parameters": {
+      "key": {
+        "type": "string",
+        "description": "Document key (URL slug / filename). Lowercase with hyphens (e.g. \"my-new-page\"). Must be unique within the parent.",
+        "required": true
+      },
+      "parentId": {
+        "type": "integer",
+        "description": "Parent document id (typically a folder). Use search_documents or get_document to find a suitable parent.",
+        "required": true
+      },
+      "type": {
+        "type": "string",
+        "description": "Document type. \"page\"/\"snippet\"/\"email\" have editables; \"folder\" organizes others; \"link\"/\"hardlink\" point elsewhere.",
+        "enum": [
+          "page",
+          "snippet",
+          "email",
+          "link",
+          "hardlink",
+          "folder"
+        ],
+        "required": true
+      },
+      "title": {
+        "type": "string",
+        "description": "Page title (used as document title for SEO and navigation; only meaningful for type=page). Empty string by default."
+      },
+      "navigationName": {
+        "type": "string",
+        "description": "Navigation name (only meaningful for type=page; stored as a property)."
+      },
+      "template": {
+        "type": "string",
+        "description": "Twig template (e.g. \"content/default.html.twig\"). Used when type=page/snippet/email. Leave empty when using docTypeId (the preset supplies the template)."
+      },
+      "docTypeId": {
+        "type": "string",
+        "description": "docTypeId — id of a preset Document Type. When set, supplies controller+template from the preset. Mutually exclusive with explicit template/controller."
+      },
+      "published": {
+        "type": "boolean",
+        "description": "Whether to publish immediately. Default false — recommended to leave unpublished until populated, then publish via update_document."
+      }
+    }
+  },
+  {
+    "name": "create_tag",
+    "description": "Create a new tag. Returns the new tag ID. After creating, use assign_tag to apply it to elements.",
+    "parameters": {
+      "name": {
+        "type": "string",
+        "description": "Tag name.",
+        "required": true
+      },
+      "parentId": {
+        "type": "integer",
+        "description": "Parent tag ID. Use 0 for a root-level tag."
+      }
+    }
+  },
+  {
+    "name": "describe_tool",
+    "description": "Get the full parameter schema for a Pimcore tool. Returns parameter names, types, descriptions, and constraints. Use discover first to find tool names.",
+    "parameters": {
+      "toolName": {
+        "type": "string",
+        "description": "The tool name (e.g. \"search_data_objects\").",
+        "required": true
+      }
+    }
+  },
+  {
+    "name": "discover",
+    "description": "Discover available Pimcore tool groups and tools. Call without parameters to list groups. Pass a group name to list tools in that group. Pass a query to search across all groups.",
+    "parameters": {
+      "group": {
+        "type": "string",
+        "description": "Group name to list its tools. Omit to list all available groups."
+      },
+      "query": {
+        "type": "string",
+        "description": "Keyword to search tools by name/description across all allowed groups."
+      }
+    }
+  },
+  {
+    "name": "execute",
+    "description": "Execute a Pimcore tool by name with an arguments object.",
+    "parameters": {
+      "toolName": {
+        "type": "string",
+        "description": "The tool name to execute (e.g. \"search_data_objects\").",
+        "required": true
+      },
+      "arguments": {
+        "type": "object"
+      }
+    }
+  },
+  {
+    "name": "finalize_task",
+    "description": "End the current task with a final result. You MUST call this exactly once to complete your task.",
+    "parameters": {
+      "status": {
+        "type": "string",
+        "description": "succeeded | failed",
+        "required": true
+      },
+      "summary": {
+        "type": "string",
+        "description": "Human-readable outcome summary",
+        "required": true
+      },
+      "output": {
+        "type": "object"
+      },
+      "reason": {
+        "type": "string",
+        "description": "Reason when status=failed"
+      }
+    }
+  },
+  {
+    "name": "get_area_brick",
+    "description": "Return the full schema (editables[], branches[], usageHint, examples[]) for ONE OR MORE Pimcore areabricks in a single call. Pass a comma-separated list of brick ids to fetch every brick you plan to use up-front — each extra round-trip costs the same context replay as a fresh tool call. Discover available brick ids via get_document_schema (`editables[].availableBricks` lists the bricks allowed in each areablock). Returns: {results: [{id, …schema}, …], errors: [{id, error}, …]} — failures on one brick id do not abort the others. See `document-editing` skill for the workflow.",
+    "parameters": {
+      "brickIds": {
+        "type": "string",
+        "description": "Areabrick id, OR a comma-separated list of brick ids (e.g. \"featurette,product-teaser,text-accordion\"). Max",
+        "required": true,
+        "semantic": "LIST.CSV"
+      }
+    }
+  },
+  {
+    "name": "get_asset",
+    "description": "Get a single asset by ID with its metadata. Returns filename, type, path, file size, dimensions (images), and custom metadata. Use format=\"edit\" to get metadata in the normalized format needed by propose_asset_metadata_update, with dataFormatHint per entry showing the expected data structure. Set includeContent to true for thumbnails or text previews.",
+    "parameters": {
+      "id": {
+        "type": "integer",
+        "description": "The asset ID.",
+        "required": true
+      },
+      "format": {
+        "type": "string",
+        "description": "Output format: \"edit\" for normalized metadata with dataFormatHint (use before propose_asset_metadata_update), \"preview\" (default) for raw metadata.",
+        "enum": [
+          "preview",
+          "edit"
+        ]
+      },
+      "includeContent": {
+        "type": "boolean",
+        "description": "When true, includes asset content: a thumbnail image for images/videos, extracted text for PDF/office documents, or a text preview for CSV/JSON/XML files."
+      },
+      "previewBytes": {
+        "type": "integer",
+        "description": "Maximum bytes to include for text file preview (default 50000). Only applies to text-based assets like CSV, JSON, XML."
+      }
+    }
+  },
+  {
+    "name": "get_asset_queryable_fields",
+    "description": "Get all queryable fields for assets. Returns PQL-ready field names, index paths, and types. Use this before writing PQL filters for asset searches.",
+    "parameters": {}
+  },
+  {
+    "name": "get_class_definition",
+    "description": "Get the field schema for a data object class. Default returns just {name, type} per field — enough to pick fields for get_data_object(fields=[…]) or to construct a write payload for simple types. For localized fields the children listing is preserved as today. Pass justFieldNames=false to get titles, editableDataFormat hints, examples and metadata. For complex fields (objectbricks, fieldcollections, classificationstore, block), use get_field_schema to explore sub-fields, allowed types, groups, and keys.",
+    "parameters": {
+      "className": {
+        "type": "string",
+        "description": "Class name (e.g. \"Car\", \"Customer\"). Use list_classes to discover available class names.",
+        "required": true
+      },
+      "justFieldNames": {
+        "type": "boolean",
+        "description": "When true (default), return only {name, type} per field (localized fields keep their children listing). When false, include title, editableDataFormat hints, examples, and metadata — useful when you need labels or write-format hints."
+      }
+    }
+  },
+  {
+    "name": "get_data_object",
+    "description": "Get one or more data objects by ID. Default format is \"preview\" (compact, all languages of localized fields). Use format=\"edit\" for the structured shape needed by propose_data_object_update. Pass fields=[\"name\",\"price\"] (plain names, NOT PQL paths or locale suffixes) to narrow the response. Pass languages=[\"en\",\"de\"] to limit localized blocks to specific locales. Use search_data_objects first to find object IDs.",
+    "parameters": {
+      "ids": {
+        "type": "array",
+        "description": "Batch parameter — always `ids` (array), never `id`. Data object IDs. Example: [42, 55, 101]. A JSON-encoded string like \"[42, 55, 101]\" is also accepted.",
+        "items": {
+          "type": "integer"
+        },
+        "required": true
+      },
+      "format": {
+        "type": "string",
+        "description": "Output format: \"preview\" (default, compact summaries) or \"edit\" (structured setter-compatible data for propose_data_object_update).",
+        "enum": [
+          "preview",
+          "edit"
+        ]
+      },
+      "fields": {
+        "type": "array",
+        "description": "Optional. Plain field names to include, e.g. [\"name\",\"price\"]. A name matches a top-level field AND any same-named child of localizedFields (one name returns every locale). Use names exactly as in get_class_definition — NOT PQL paths from get_queryable_fields (e.g. \"localizedfields.en.name\") and NOT locale suffixes (e.g. \"name.en\"); those decorated forms are coerced when unambiguous, otherwise reported in unknownFields with the valid names. Default: all fields.",
+        "items": {
+          "type": "string"
+        }
+      },
+      "languages": {
+        "type": "array",
+        "description": "Optional. Restrict every localizedFields block to just these locales (e.g. [\"en\",\"de\"]). Default: all valid languages.",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  {
+    "name": "get_document",
+    "description": "Get one or more Pimcore documents. By default returns only the document spine (id, type, key, path, parentId, modificationDate, published) — opt in to `includeContent`, `includeSettings`, and `includeProperties` selectively to keep responses small. For SCHEMA (what edits are possible) use get_document_schema; this tool returns CURRENT state. Pass `targetGroupId` to read content for one personalization target group. See the document-editing skill for response shape, when to opt in, and the target-group workflow.",
+    "parameters": {
+      "ids": {
+        "type": "array",
+        "description": "Batch parameter — always `ids` (array), never `id`. Document IDs. Example: [12, 18]. Max 5 per call — document content can be large; batch conservatively. A JSON-encoded string like \"[12, 18]\" is also accepted.",
+        "items": {
+          "type": "integer"
+        },
+        "required": true
+      },
+      "includeContent": {
+        "type": "boolean",
+        "description": "Include the document content (the editable widgets and their current values, areablock entries, blocks, inline-resolved element references). Default false. Opt in when reading or editing content; skip when you only need the spine."
+      },
+      "includeSettings": {
+        "type": "boolean",
+        "description": "Include document settings (title, description, controller, template, prettyUrl). Default false. Opt in when changing those."
+      },
+      "includeProperties": {
+        "type": "boolean",
+        "description": "Include document properties. Default false. Opt in when reading or editing properties."
+      },
+      "targetGroupId": {
+        "type": "integer",
+        "description": "Optional. Personalization target-group id (from list_target_groups). When set, content is returned for that target group context (existing variants surfaced; missing ones fall back to base with `inherited: true`). Implies `includeContent: true`."
+      }
+    }
+  },
+  {
+    "name": "get_document_schema",
+    "description": "Return the editable schema of one Pimcore document: editables[], structural[] (areablocks/blocks with availableBricks palette), branches[]. See `document-editing` skill for naming conventions, write payload shapes, and per-type examples.",
+    "parameters": {
+      "id": {
+        "type": "integer",
+        "description": "Pimcore document ID.",
+        "required": true
+      }
+    }
+  },
+  {
+    "name": "get_element_tags",
+    "description": "Get all tags assigned to a specific element (data object, asset, or document). Returns tag IDs, names, and paths.",
+    "parameters": {
+      "elementType": {
+        "type": "string",
+        "description": "Element type: \"object\", \"asset\", or \"document\".",
+        "enum": [
+          "object",
+          "asset",
+          "document"
+        ],
+        "required": true
+      },
+      "elementId": {
+        "type": "integer",
+        "description": "The element ID.",
+        "required": true
+      }
+    }
+  },
+  {
+    "name": "get_element_workflow_details",
+    "description": "Get the current state, allowed transitions, and global actions for an element in each applicable workflow. Pass workflowName to filter to a single workflow. The graph SVG is omitted — use get_workflow_graph if you need it.",
+    "parameters": {
+      "elementId": {
+        "type": "integer",
+        "description": "Pimcore element ID.",
+        "required": true
+      },
+      "elementType": {
+        "type": "string",
+        "description": "Element type: \"asset\" | \"document\" | \"data-object\".",
+        "enum": [
+          "asset",
+          "document",
+          "data-object"
+        ],
+        "required": true
+      },
+      "workflowName": {
+        "type": "string",
+        "description": "Optional. Filter to a single workflow by name. Empty string = return all applicable workflows."
+      }
+    }
+  },
+  {
+    "name": "get_field_schema",
+    "description": "Get detailed schema for a specific field in a data object class. Use dot notation to drill into complex fields: \"localizedfields\" for localized sub-fields, \"attributes.Engine\" for a specific objectbrick, \"content.NewsCars\" for a specific fieldcollection type. For classification stores, use groupId to get keys for a specific group.",
+    "parameters": {
+      "className": {
+        "type": "string",
+        "description": "Class name (e.g. \"Car\", \"Event\").",
+        "required": true
+      },
+      "fieldPath": {
+        "type": "string",
+        "description": "Dot-separated field path (e.g. \"localizedfields\", \"attributes.Engine\", \"content.NewsCars\").",
+        "required": true
+      },
+      "groupId": {
+        "type": "integer",
+        "description": "For classification store fields: get keys for this group ID."
+      }
+    }
+  },
+  {
+    "name": "get_queryable_fields",
+    "description": "Get all queryable fields for a data object class. Returns each field as {pqlField, type}; pqlField is what the search tool consumes. Use this before writing PQL filters to discover available fields. These pqlField names are for pqlFilter ONLY — to read values with get_data_object, use plain field names from get_class_definition, not these dotted paths.",
+    "parameters": {
+      "className": {
+        "type": "string",
+        "description": "The data object class name (e.g. \"Car\", \"Customer\").",
+        "required": true
+      }
+    }
+  },
+  {
+    "name": "get_workflow_graph",
+    "description": "Render a workflow diagram for a specific element as SVG. Returns the raw SVG string.",
+    "parameters": {
+      "elementId": {
+        "type": "integer",
+        "description": "Pimcore element ID.",
+        "required": true
+      },
+      "elementType": {
+        "type": "string",
+        "description": "Element type: \"asset\" | \"document\" | \"data-object\".",
+        "enum": [
+          "asset",
+          "document",
+          "data-object"
+        ],
+        "required": true
+      },
+      "workflowName": {
+        "type": "string",
+        "description": "Workflow name.",
+        "required": true
+      }
+    }
+  },
+  {
+    "name": "get_workflow_places",
+    "description": "List every place (state) configured for a Pimcore workflow, including label, color, and header-visibility flag. Per-element layout id is exposed by get_element_workflow_details, not this tool (layout resolution requires element context).",
+    "parameters": {
+      "workflowName": {
+        "type": "string",
+        "description": "Workflow name (as returned by list_workflows).",
+        "required": true
+      }
+    }
+  },
+  {
+    "name": "list_agent_templates",
+    "description": "List agent-generated Twig templates visible to the current user. Non-admin users see only their own active templates; admins see all active templates. Returns { templates: [{slug, label, type, status, updatedAt}] }.",
+    "parameters": {}
+  },
+  {
+    "name": "list_assets",
+    "description": "Browse assets in a folder. Returns asset IDs, filenames, types, paths, and file sizes. Use parentId=1 (root) to start browsing.",
+    "parameters": {
+      "parentId": {
+        "type": "integer",
+        "description": "Parent folder ID to list. Default: 1 (root folder).",
+        "default": 1
+      },
+      "page": {
+        "type": "integer",
+        "description": "Page number (1-based). Default: 1."
+      },
+      "pageSize": {
+        "type": "integer",
+        "description": "Results per page. Default: 20, max: 50."
+      }
+    }
+  },
+  {
+    "name": "list_classes",
+    "description": "List all available Pimcore data object classes. Returns class names, IDs, and field summaries. Use this first to discover what data types exist before searching.",
+    "parameters": {}
+  },
+  {
+    "name": "list_document_types",
+    "description": "List the Pimcore Document Types (presets) configured for this project. Each preset bundles a controller + template so newly-created pages render real content from the start.",
+    "parameters": {}
+  },
+  {
+    "name": "list_editables",
+    "description": "Return the sorted list of Pimcore document editable type names available in this project (e.g. input, textarea, wysiwyg, image, link, areablock, block, select, …). Call this before generating a Twig template so you know which pimcore_* Twig functions are safe to use. Returns: { editableTypes: string[] }.",
+    "parameters": {}
+  },
+  {
+    "name": "list_elements_by_workflow_state",
+    "description": "List Pimcore elements filtered by workflow name and (optionally) current place. Paged; pageSize is clamped to 100.",
+    "parameters": {
+      "workflowName": {
+        "type": "string",
+        "description": "Workflow name.",
+        "required": true
+      },
+      "elementType": {
+        "type": "string",
+        "description": "Element type: \"asset\" | \"document\" | \"data-object\".",
+        "enum": [
+          "asset",
+          "document",
+          "data-object"
+        ],
+        "required": true
+      },
+      "stateName": {
+        "type": "string",
+        "description": "Optional. Filter by current place/state name. Empty = return elements in any state."
+      },
+      "page": {
+        "type": "integer",
+        "description": "Page number (>=1)."
+      },
+      "pageSize": {
+        "type": "integer",
+        "description": "Page size (1..100). Values >100 are clamped to 100."
+      }
+    }
+  },
+  {
+    "name": "list_tags",
+    "description": "List available tags. Optionally filter by parent tag to browse the tag hierarchy. Returns tag IDs, names, paths, and parent IDs.",
+    "parameters": {
+      "parentId": {
+        "type": "integer",
+        "description": "Parent tag ID to list children of. Omit or set to 0 to list root-level tags."
+      },
+      "filter": {
+        "type": "string",
+        "description": "Filter tags by name (substring match)."
+      },
+      "page": {
+        "type": "integer",
+        "description": "Page number (1-based). Default: 1."
+      },
+      "pageSize": {
+        "type": "integer",
+        "description": "Results per page. Default: 50."
+      },
+      "timeoutMs": {
+        "type": "integer",
+        "description": "Soft wall-clock budget in milliseconds. Default: 5000. If listing the subtree takes longer, the result includes a recovery hint suggesting how to narrow the request and retry."
+      }
+    }
+  },
+  {
+    "name": "list_target_groups",
+    "description": "List active Pimcore personalization target groups (used to author target-group-specific document variants). Returns `{available: bool, targetGroups: [{id, name}]}`. When the personalization-bundle is not installed, returns `{available: false, targetGroups: []}` — in that case do not pass `targetGroupId` to get_document, propose_document_update, or update_document; those calls will fail.",
+    "parameters": {}
+  },
+  {
+    "name": "list_thumbnail_configs",
+    "description": "List the project's named thumbnail configurations of the given type, with target dimensions. Pass type=\"image\" or type=\"video\". Use a returned `name` as the `thumbnail` option of pimcore_image / pimcore_video. For pimcore_video a named config is REQUIRED — an inline array fatals at edit time. Each entry: { name, mode, width, height, group?, description? }. `width`/`height` may be null, meaning that axis scales to the source asset's aspect ratio (e.g. scaleByWidth); a fixed-box mode (cover/resize) gives an exact slot size. Returns { thumbnails: [...] }.",
+    "parameters": {
+      "type": {
+        "type": "string",
+        "description": "Which kind of thumbnail configs to list: \"image\" or \"video\".",
+        "enum": [
+          "image",
+          "video"
+        ],
+        "required": true
+      }
+    }
+  },
+  {
+    "name": "list_workflows",
+    "description": "List configured Pimcore workflows. With no parameters returns every workflow name. Pass elementId + elementType to filter to workflows applicable to that element (returns name and label for each).",
+    "parameters": {
+      "elementId": {
+        "type": "integer",
+        "description": "Optional Pimcore element ID. Must be given together with elementType."
+      },
+      "elementType": {
+        "type": "string",
+        "description": "Optional element type: \"asset\" | \"document\" | \"data-object\". Must be given together with elementId.",
+        "enum": [
+          "asset",
+          "document",
+          "data-object"
+        ]
+      }
+    }
+  },
+  {
+    "name": "propose_agent_template",
+    "description": "Propose a new or updated Twig template for user approval. Validates the template and runs a sandboxed test-render; if both pass, stores the payload server-side and returns a proposalId. Nothing is written to disk until a human approves the proposal in Studio. Use action=create for new templates, action=update to replace an existing one. The review widget is shown to the user automatically once the proposal succeeds; end your turn after a successful proposal. contextDocumentId (optional, integer) — when set, the proposal widget links to this document via Open / Refresh buttons and the resolver re-checks it at approve time. reassignDocument (optional, boolean) — when true (with contextDocumentId), the resolver also reassigns the document's template field to this slug on approve. Use for clone-and-reassign refinement of a non-agent template.",
+    "parameters": {
+      "action": {
+        "type": "string",
+        "description": "Operation: \"create\" for a new template, \"update\" to replace an existing one.",
+        "enum": [
+          "create",
+          "update"
+        ],
+        "required": true
+      },
+      "type": {
+        "type": "string",
+        "description": "Template type: \"page\", \"snippet\", or \"partial\".",
+        "enum": [
+          "page",
+          "snippet",
+          "partial"
+        ],
+        "required": true
+      },
+      "slug": {
+        "type": "string",
+        "description": "Unique slug identifier for the template (lowercase letters, digits, hyphens, underscores).",
+        "required": true
+      },
+      "label": {
+        "type": "string",
+        "description": "Human-readable label shown in the Studio template dropdown.",
+        "required": true
+      },
+      "main": {
+        "type": "string",
+        "description": "Complete Twig source for the template file.",
+        "required": true
+      },
+      "description": {
+        "type": "string",
+        "description": "Optional description of the template's purpose."
+      },
+      "contextDocumentId": {
+        "type": "integer",
+        "description": "Optional document this proposal is about. The widget will offer \"Open document\" / refresh on approve. For update: doc.template MUST already equal the proposed slug. For create without reassign: same. For create WITH reassignDocument=true: doc.template MUST NOT equal the slug (clone-and-reassign path). Rejected for partial templates."
+      },
+      "reassignDocument": {
+        "type": "boolean",
+        "description": "When true (and contextDocumentId is set), on approve the resolver also setTemplate() on the doc to point at this slug. Used for clone-and-reassign refinement when the doc was on a project (non-agent) template. Defaults to false."
+      }
+    }
+  },
+  {
+    "name": "propose_agent_template_deletion",
+    "description": "Propose the deletion of an existing agent-generated Twig template. Resolves which documents are bound to the template and which other templates include it, then stores a deletion proposal for human review. Nothing is deleted until a human approves the proposal in Studio. The review widget is shown to the user automatically once the proposal succeeds; end your turn after a successful proposal.",
+    "parameters": {
+      "slug": {
+        "type": "string",
+        "description": "Unique slug identifier of the template to delete.",
+        "required": true
+      }
+    }
+  },
+  {
+    "name": "propose_asset_metadata_update",
+    "description": "Propose custom metadata changes to one or more assets for user approval. Does NOT write — generates diffs for review. Returns {results: [...]} where each success entry has a proposalId and failures carry an error with retryable flag. The review widget is shown to the user automatically once a proposal succeeds; end your turn after a successful proposal.",
+    "parameters": {
+      "proposals": {
+        "type": "array",
+        "description": "Array of proposals — pass it directly, never as a string. Each entry: {\"id\": <assetId>, \"metadata\": [{name, language, type, data}, ...]}. Use get_asset with format=\"edit\" first to see the exact names, types, and dataFormatHint per metadata entry — copy them verbatim. IMPORTANT: `data` values are LITERAL JSON. For relations write {\"id\": <int>, \"type\": \"object\"|\"asset\"|\"document\"} as a literal object, never a JSON-encoded string. Multi-relation fields (type \"manyToManyRelation\") are ADDITIVE by default: send only the member(s) you want to add and existing relations are preserved (de-duplicated by id+type). To overwrite the whole list instead, set \"replace\": true on that metadata entry. Example (placeholders in <angle brackets>): [{\"id\": 42, \"metadata\": [{\"name\": \"<metadataName>\", \"language\": \"\", \"type\": \"input\", \"data\": \"<literal string value>\"}, {\"name\": \"<relationMetadataName>\", \"language\": \"\", \"type\": \"object\", \"data\": {\"id\": 7, \"type\": \"object\"}}]}].",
+        "items": {
+          "type": "object"
+        },
+        "required": true
+      },
+      "summary": {
+        "type": "string",
+        "description": "Optional one-line caption shown above the proposal review widget (1-3 sentences). When omitted, a neutral caption is generated automatically."
+      }
+    }
+  },
+  {
+    "name": "propose_data_object_update",
+    "description": "Propose changes to one or more data objects for user approval. Does NOT write — generates diffs for review. Returns {results: [...]} where each success entry has a proposalId and failures carry an error with retryable flag. For retryable errors, fix the data and call again with only the failed entries. For non-retryable errors, report to the user. Use get_data_object with format=\"edit\" first. The review widget is shown to the user automatically once a proposal succeeds; end your turn after a successful proposal.",
+    "parameters": {
+      "proposals": {
+        "type": "array",
+        "description": "Array of proposals. Each entry: {\"id\": <objectId>, \"data\": {<field changes>}}. Only include fields you want to change. Discover the exact shape per class via get_class_definition (top-level fields and their editableDataFormat) and get_field_schema (objectbricks, classificationstore groups, fieldcollection children). IMPORTANT: values inside `data` are LITERAL JSON. Arrays and objects are written directly — never wrap them in an extra string. Example covering the three highest-confusion shapes (placeholders in <angle brackets> — substitute real names from get_class_definition / get_field_schema): [{\"id\": 42, \"data\": {\"localizedfields\": {\"<localizedField>\": {\"en\": \"…\", \"de\": \"…\"}}, \"<relationField>\": [{\"id\": 7}], \"<fcField>\": [{\"type\": \"<FCClass>\", \"data\": {\"localizedfields\": {\"<fcSubField>\": {\"en\": \"…\"}}}}]}}]. Note: localizedfields nests as {\"<fieldName>\": {\"<locale>\": <value>}}, NOT {\"<locale>\": {\"<fieldName>\": <value>}}. Pass the array directly — a JSON-encoded string is rejected. Each entry MAY also include `removeProposedFields: [\"<dotpath>\", ...]` — fields to DROP from the proposal entirely (applied after merge with prior pending/refined proposals). Dot-paths work for nested keys (e.g. \"localizedfields.title.en\"). CRITICAL on refinement: \"do not change X\" / \"leave X as-is\" requires X in `removeProposedFields` — omitting from `data` keeps the prior proposal's value, not the persisted value.",
+        "items": {
+          "type": "object"
+        }
+      },
+      "id": {
+        "type": "integer",
+        "description": "Single-object shortcut: data object id. Use only when proposing changes for ONE object — the tool auto-wraps {id, data?, removeProposedFields?} into a one-element proposals array. Ignored when `proposals` is provided."
+      },
+      "data": {
+        "type": "object",
+        "description": "Single-object shortcut: field-changes object (same shape as an entry's `data`). Pair with `id`. Ignored when `proposals` is provided."
+      },
+      "removeProposedFields": {
+        "type": "array",
+        "description": "Single-object shortcut: list of dot-paths to DROP from the proposal entirely (e.g. [\"localizedfields.title.en\", \"locationAddress\"]). Pair with `id`. Removes the field from the proposal — it will NOT be touched on the object. Different from sending `\"\"`/`null`/`[]` as a value, which proposes to CLEAR the value. Ignored when `proposals` is provided.",
+        "items": {
+          "type": "string"
+        }
+      },
+      "summary": {
+        "type": "string",
+        "description": "Optional one-line caption shown above the proposal review widget (1-3 sentences). When omitted, a neutral caption is generated automatically."
+      }
+    }
+  },
+  {
+    "name": "propose_document_update",
+    "description": "Propose changes to one or more Pimcore documents for user approval. Does NOT write — stores the validated payload server-side and returns a proposalId per document; the user reviews each proposal in a chat-side modal and approves or rejects. The review widget is shown to the user automatically once a proposal succeeds; end your turn after a successful proposal. Use for non-trivial / visible / multi-section changes; use update_document for small explicitly-authorized edits. See the document-editing skill for editable naming, areablock/block composition, and target-group (personalization) rules — all required reading before calling.",
+    "parameters": {
+      "proposals": {
+        "type": "array",
+        "description": "Array of proposals. Each entry: {\"id\": <documentId>, \"data\": {<update_document data>}, \"targetGroupId\": <int, optional>}. The \"data\" shape is identical to update_document's data argument: {\"editables\": {...}, \"settings\": {...}, \"properties\": {...}, \"appendEditables\": <bool>}. When \"targetGroupId\" is set, only \"editables\" is allowed in \"data\". Max 20 entries per call. Pass the array directly — a JSON-encoded string is rejected. wysiwyg/HTML values with embedded quotes are the #1 cause of parse errors when the array is re-stringified.",
+        "items": {
+          "type": "object"
+        }
+      },
+      "id": {
+        "type": "integer",
+        "description": "Single-document shortcut: document id. Use only when proposing changes for ONE document — the tool auto-wraps {id, data?, editables?, settings?, properties?} into a one-element proposals array. Ignored when `proposals` is provided."
+      },
+      "data": {
+        "type": "object",
+        "description": "Single-document shortcut: full data envelope ({editables?, settings?, properties?, appendEditables?})."
+      },
+      "editables": {
+        "type": "object",
+        "description": "Single-document shortcut: editables map (alternative to `data.editables`)."
+      },
+      "settings": {
+        "type": "object",
+        "description": "Single-document shortcut: settings map (alternative to `data.settings`)."
+      },
+      "properties": {
+        "type": "object",
+        "description": "Single-document shortcut: properties map (alternative to `data.properties`)."
+      },
+      "targetGroupId": {
+        "type": "integer",
+        "description": "Single-document shortcut: personalization target-group id (from list_target_groups). When set, editables are written as group-specific variants; `appendEditables` is forced to true; `settings` and `properties` must be empty. Applies ONLY to the single-document shortcut (paired with `id`). Ignored when `proposals` is provided — use per-entry `targetGroupId` in that case."
+      },
+      "summary": {
+        "type": "string",
+        "description": "Optional one-line caption shown above the proposal review widget (1-3 sentences). When omitted, a neutral caption is generated automatically."
+      }
+    }
+  },
+  {
+    "name": "propose_tag_assignment",
+    "description": "Propose tag changes for one or more elements for user approval. Does NOT write — generates diffs for review. Returns {results: [...]} where each success entry has a proposalId and failures carry an error with retryable flag. For retryable errors, fix the data and call again with only the failed entries. For non-retryable errors, report to the user. The review widget is shown to the user automatically once a proposal succeeds; end your turn after a successful proposal. tagIds is the complete desired set — include existing tags to keep, omit tags to remove.",
+    "parameters": {
+      "proposals": {
+        "type": "array",
+        "description": "Array of tag proposals — pass it directly, never as a string. Each entry: {\"elementType\": \"object\"|\"asset\"|\"document\", \"elementId\": <id>, \"tagIds\": [<tagId>, ...]}. IMPORTANT: `tagIds` is the COMPLETE desired set of tags for the element, NOT a delta. Include existing tags you want to keep, omit tags you want to remove. Use get_element_tags first to read the current set. Tag IDs are LITERAL integers in a literal array — never wrap them in a JSON-encoded string. Example: [{\"elementType\": \"object\", \"elementId\": 42, \"tagIds\": [1, 5, 12]}].",
+        "items": {
+          "type": "object"
+        },
+        "required": true
+      },
+      "summary": {
+        "type": "string",
+        "description": "Optional one-line caption shown above the proposal review widget (1-3 sentences). When omitted, a neutral caption is generated automatically."
+      }
+    }
+  },
+  {
+    "name": "search_assets",
+    "description": "Search assets: identifier/filename token search + PQL filter, parent folder scope, pagination. There is no separate list_assets tool — to list a known folder's assets, pass parentId. Returns id, filename, type, path. Before using pqlFilter, call skill(\"pql-search\") once per turn.",
+    "parameters": {
+      "query": {
+        "type": "string",
+        "description": "Identifier/filename token search. Matches identifier and filename tokens, NOT human-readable metadata. To list a known folder's assets pass parentId; to match a filename pattern or metadata field use pqlFilter."
+      },
+      "pqlFilter": {
+        "type": "string",
+        "description": "PQL filter for assets. Common fields: id, type, filename, fullPath. LIKE wildcards are `*` and `?` — NOT SQL `%` / `_`. Examples: type = \"image\"; filename LIKE \"*.pdf\"; fullPath LIKE \"/<FolderName>/*\"",
+        "semantic": "FILTER.PQL"
+      },
+      "parentId": {
+        "type": "integer",
+        "description": "Parent folder ID to scope the search. Omit for global search."
+      },
+      "page": {
+        "type": "integer",
+        "description": "Page number (1-based). Default: 1."
+      },
+      "pageSize": {
+        "type": "integer",
+        "description": "Results per page. Default: 20, max: 50."
+      }
+    }
+  },
+  {
+    "name": "search_data_objects",
+    "description": "Search data objects: fulltext + PQL filter, class filter, pagination. By default returns only ids per hit (use them with get_data_object). Pass extended=true to also get key, className, path, published, modificationDate. Before using pqlFilter, call skill(\"pql-search\") once per turn.",
+    "parameters": {
+      "query": {
+        "type": "string",
+        "description": "Fulltext search term (searches across all indexed fields). Leave empty to list all objects of a class."
+      },
+      "className": {
+        "type": "string",
+        "description": "Filter by class name (selects the class, e.g. \"<ClassName>\"). NOTE: className selects the class, not a field value — to filter by a field value (including objectType) use pqlFilter instead. Strongly recommended for focused results."
+      },
+      "pqlFilter": {
+        "type": "string",
+        "description": "PQL filter — use this to filter by any field value (including objectType); NOT raw SQL. Call get_queryable_fields first for field names/types. LIKE wildcards are `*` and `?` — NOT SQL `%` / `_`. Example: fieldName = \"value\" AND year > 2000",
+        "semantic": "FILTER.PQL"
+      },
+      "parentId": {
+        "type": "integer",
+        "description": "Parent folder ID to scope the search. Omit for global search."
+      },
+      "page": {
+        "type": "integer",
+        "description": "Page number (1-based). Default: 1."
+      },
+      "pageSize": {
+        "type": "integer",
+        "description": "Results per page. Default: 20, max: 50."
+      },
+      "extended": {
+        "type": "boolean",
+        "description": "When true, each hit includes key, className, path, published, modificationDate in addition to id. Default false (ids only) — fetch details via get_data_object."
+      }
+    }
+  },
+  {
+    "name": "search_documents",
+    "description": "Search Pimcore documents: fulltext + PQL filter, parent folder scope, pagination. Returns id, key, type, path, published. Filter by document type (page/snippet/email/link/hardlink/folder) via PQL: type = \"page\". Before using pqlFilter, call skill(\"pql-search\") once per turn.",
+    "parameters": {
+      "query": {
+        "type": "string",
+        "description": "Fulltext search term. Searches document key/title/path."
+      },
+      "pqlFilter": {
+        "type": "string",
+        "description": "PQL filter for documents. Common fields: id, type, key, fullPath, published. LIKE wildcards are `*` and `?` — NOT SQL `%` / `_`. Examples: type = \"page\"; key LIKE \"*home*\"; published = true",
+        "semantic": "FILTER.PQL"
+      },
+      "parentId": {
+        "type": "integer",
+        "description": "Parent folder ID to scope the search. Omit for global search."
+      },
+      "excludeFolders": {
+        "type": "boolean",
+        "description": "Exclude folder documents from results. Default: false."
+      },
+      "page": {
+        "type": "integer",
+        "description": "Page number (1-based). Default: 1."
+      },
+      "pageSize": {
+        "type": "integer",
+        "description": "Results per page. Default: 20, max: 50."
+      }
+    }
+  },
+  {
+    "name": "stage_asset",
+    "description": "Stage a Pimcore asset to the local filesystem for analysis. Returns a local file path that can be used with read_file and grep to inspect the file content. Use this for large files (CSV, XML, JSON) that need detailed analysis beyond the preview from get_asset.",
+    "parameters": {
+      "id": {
+        "type": "integer",
+        "description": "The Pimcore asset ID to stage.",
+        "required": true
+      }
+    }
+  },
+  {
+    "name": "stage_file_set",
+    "description": "Copy a developer-curated set of project files to this chat session's workspace so you can read them with view/grep/glob. Returns the local paths of the staged files. Call again at any time to refresh (full re-copy).",
+    "parameters": {
+      "name": {
+        "type": "string",
+        "description": "The file-set name to stage (e.g. \"cms_layouts\").",
+        "required": true
+      }
+    }
+  },
+  {
+    "name": "unassign_tag",
+    "description": "Remove a tag from an element (data object, asset, or document). Use get_element_tags to see current tags.",
+    "parameters": {
+      "elementType": {
+        "type": "string",
+        "description": "Element type: \"object\", \"asset\", or \"document\".",
+        "enum": [
+          "object",
+          "asset",
+          "document"
+        ],
+        "required": true
+      },
+      "elementId": {
+        "type": "integer",
+        "description": "The element ID.",
+        "required": true
+      },
+      "tagId": {
+        "type": "integer",
+        "description": "The tag ID to remove.",
+        "required": true
+      }
+    }
+  },
+  {
+    "name": "update_asset",
+    "description": "Update an asset's key or custom metadata fields. Does not replace binary content. Pass field updates as an object of field/value pairs.",
+    "parameters": {
+      "id": {
+        "type": "integer",
+        "description": "The asset ID to update.",
+        "required": true
+      },
+      "data": {
+        "type": "object",
+        "description": "Fields to update, as an object of field/value pairs — pass it directly, never as a string. Supported: \"key\" (rename), custom metadata fields. Example: {\"key\": \"new-filename.jpg\"}",
+        "required": true
+      }
+    }
+  },
+  {
+    "name": "update_data_object",
+    "description": "Update field values on an existing data object. Pass a JSON object mapping field names to new values. Use get_class_definition to learn field names and types.",
+    "parameters": {
+      "id": {
+        "type": "integer",
+        "description": "The data object ID to update.",
+        "required": true
+      },
+      "data": {
+        "type": "string",
+        "description": "JSON object of field values to set. Example: {\"name\": \"Red Car\", \"color\": \"red\", \"price\": 25000}. Only include fields you want to change.",
+        "required": true
+      }
+    }
+  },
+  {
+    "name": "update_document",
+    "description": "Update editables, settings, and/or properties on an existing document. Editable values can be passed in bare form (just the data — type inferred from the document or template schema) or wrapped form ({\"type\": \"...\", \"data\": ...}). Partial updates preserve other editables (appendEditables defaults to true). Pre-flights validation; on validation failure no save happens. After successful save, post-renders the document and returns any frontend errors in `renderErrors[]` — if non-empty, the document was saved BUT renders broken; pick different element ids/values and call update_document again to fix.For schema and current state, call get_document_schema and get_document first.",
+    "parameters": {
+      "id": {
+        "type": "integer",
+        "description": "Document ID to update.",
+        "required": true
+      },
+      "data": {
+        "type": "object",
+        "description": "Object with optional keys: editables, settings, properties, appendEditables. Example: {\"editables\": {\"headline\": \"New title\", \"cImage_3\": {\"id\": 341}}, \"settings\": {\"published\": true}, \"properties\": {\"navigation_color\": {\"type\": \"text\", \"data\": \"blue\"}}}. Pass the object directly — a JSON-encoded string is rejected. wysiwyg/HTML values with embedded quotes are the #1 cause of parse errors when the object is re-stringified.",
+        "required": true
+      },
+      "targetGroupId": {
+        "type": "integer",
+        "description": "Optional. Personalization target-group id (from list_target_groups). When set, editables are written as group-specific variants; `appendEditables` is forced to true; `settings` and `properties` must be empty in the data payload."
+      }
+    }
+  },
+  {
+    "name": "upload_asset",
+    "description": "Upload a new asset from base64-encoded content. Creates the asset in the specified parent folder.",
+    "parameters": {
+      "parentId": {
+        "type": "integer",
+        "description": "Parent folder ID for the new asset.",
+        "required": true
+      },
+      "fileName": {
+        "type": "string",
+        "description": "Filename including extension (e.g. \"photo.jpg\", \"doc.pdf\").",
+        "required": true
+      },
+      "base64Content": {
+        "type": "string",
+        "description": "Base64-encoded file content.",
+        "required": true
+      }
+    }
+  }
+]

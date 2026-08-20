@@ -19,7 +19,7 @@ import torch.nn.functional as F
 from tokenizers import Tokenizer
 
 from datasets.collate import load_and_prepare, make_batch
-from ntc_model.config import Calibration, NtcArchConfig
+from ntc_model.config import Calibration, FilterTemplate, NtcArchConfig
 from ntc_model.model import NtcEncoderHeadsV1
 
 REPO = Path(__file__).resolve().parents[1]
@@ -31,6 +31,7 @@ LOSS_WEIGHTS = {
     "source": 0.75,
     "entity_ref": 0.75,
     "unresolved_reason": 0.4,
+    "filter_template": 0.75,
     "tool": 1.0,
     "presence": 0.5,
     "span": 1.0,
@@ -40,6 +41,33 @@ LOSS_WEIGHTS = {
     "magnitude": 0.5,
     "datetime": 0.5,
 }
+
+
+#: The PQL shapes Pimcore Studio's search tools take (head codec v4).
+#:
+#: These are host data, not architecture: the head's class order is fixed by
+#: this list, so it travels in `.ntc` metadata with the weights and a host
+#: extends it by retraining, not by a contract bump. Every one of them is a
+#: value no utterance contains literally — "which BrandAsset have a
+#: photographer below 10?" asks for `photographer < 10` — which is why they
+#: used to be scored as an architecture ceiling. They are not: the shape is
+#: closed and everything variable inside it is in the request.
+STUDIO_FILTER_TEMPLATES = [
+    FilterTemplate(id="FIELD_IS_NULL", semantic="FILTER.PQL", pattern="{field} IS NULL"),
+    FilterTemplate(id="FIELD_LESS_THAN", semantic="FILTER.PQL", pattern="{field} < {number}"),
+    FilterTemplate(id="SCORE_ABOVE", semantic="FILTER.PQL", pattern="matchScore > {number}"),
+    FilterTemplate(
+        id="FILE_EXTENSION",
+        semantic="FILTER.PQL",
+        pattern='filename LIKE "*.{token}"',
+        values=["pdf", "svg", "xlsx", "csv"],
+    ),
+    FilterTemplate(
+        id="UNPUBLISHED_PAGES",
+        semantic="FILTER.PQL",
+        pattern='type = "page" AND published = false',
+    ),
+]
 
 
 def backbone_config(vocab: int) -> NtcArchConfig:
@@ -124,6 +152,7 @@ def studio_config(vocab: int) -> NtcArchConfig:
         max_schema_tokens=576,
         layer_norm_eps=1e-12,
         action_classes=4,
+        filter_templates=STUDIO_FILTER_TEMPLATES,
     )
 
 
@@ -253,6 +282,12 @@ def compute_loss(
         + ce(out["datetime.daypart.logits"], tgt["daypart"])
         + ce(out["datetime.month.logits"], tgt["month"]),
     }
+    # Present only when the model declares value templates.
+    if "filter_template.logits" in out:
+        parts["filter_template"] = ce(
+            out["filter_template.logits"], tgt["filter_template"]
+        )
+
     mag_mask = tgt["magnitude_mask"]
     if mag_mask.any():
         pred = out["numeric.magnitude"].squeeze(-1)[mag_mask].float()
@@ -303,6 +338,11 @@ def evaluate(model, cfg, items, device, batch_size=32) -> dict[str, float]:
             ("presence", out["presence.logits"], tgt["presence"]),
             ("enum", out["enum.logits"], tgt["enum"]),
             ("relation", out["datetime.relation.logits"], tgt["relation"]),
+            *(
+                [("template", out["filter_template.logits"], tgt["filter_template"])]
+                if "filter_template.logits" in out
+                else []
+            ),
         ):
             mask = target != -100
             agg[f"{name}_correct"] += int((logits.argmax(-1)[mask] == target[mask]).sum())
