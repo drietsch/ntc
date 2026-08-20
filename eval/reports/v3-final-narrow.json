@@ -1,0 +1,848 @@
+{
+  "call_worthy_requests": 278,
+  "executable_semantic_accuracy": 0.7734,
+  "safety": {
+    "wrong_call_executed": 45,
+    "declined_instead": 18,
+    "wrong_call_rate": 0.1619
+  },
+  "ceiling": {
+    "unreachable_rows": 31,
+    "ceiling": 0.8885
+  },
+  "funnel": {
+    "emitted a call": 0.935,
+    "...with the right tool": 0.928,
+    "...and every argument correct": 0.773
+  },
+  "answered_instead": {
+    "delegate": 9,
+    "no_call": 8,
+    "ask": 1
+  },
+  "per_tool": {
+    "search_data_objects": {
+      "n": 21,
+      "right_tool": 20,
+      "executable": 4
+    },
+    "get_asset": {
+      "n": 21,
+      "right_tool": 20,
+      "executable": 20
+    },
+    "list_target_groups": {
+      "n": 17,
+      "right_tool": 16,
+      "executable": 16
+    },
+    "search_documents": {
+      "n": 15,
+      "right_tool": 15,
+      "executable": 10
+    },
+    "get_class_definition": {
+      "n": 14,
+      "right_tool": 13,
+      "executable": 9
+    },
+    "search_assets": {
+      "n": 13,
+      "right_tool": 13,
+      "executable": 8
+    },
+    "list_tags": {
+      "n": 12,
+      "right_tool": 12,
+      "executable": 11
+    },
+    "create_tag": {
+      "n": 11,
+      "right_tool": 11,
+      "executable": 10
+    },
+    "list_document_types": {
+      "n": 9,
+      "right_tool": 9,
+      "executable": 9
+    },
+    "discover": {
+      "n": 9,
+      "right_tool": 9,
+      "executable": 9
+    },
+    "list_thumbnail_configs": {
+      "n": 8,
+      "right_tool": 8,
+      "executable": 8
+    },
+    "list_classes": {
+      "n": 8,
+      "right_tool": 7,
+      "executable": 7
+    },
+    "get_queryable_fields": {
+      "n": 8,
+      "right_tool": 8,
+      "executable": 8
+    },
+    "get_document": {
+      "n": 7,
+      "right_tool": 6,
+      "executable": 6
+    },
+    "stage_file_set": {
+      "n": 7,
+      "right_tool": 4,
+      "executable": 4
+    },
+    "assign_tag": {
+      "n": 7,
+      "right_tool": 6,
+      "executable": 6
+    },
+    "create_document": {
+      "n": 7,
+      "right_tool": 7,
+      "executable": 7
+    },
+    "apply_global_action": {
+      "n": 6,
+      "right_tool": 0,
+      "executable": 0
+    },
+    "get_asset_queryable_fields": {
+      "n": 6,
+      "right_tool": 6,
+      "executable": 6
+    },
+    "get_field_schema": {
+      "n": 6,
+      "right_tool": 6,
+      "executable": 6
+    },
+    "list_workflows": {
+      "n": 5,
+      "right_tool": 5,
+      "executable": 5
+    },
+    "get_workflow_places": {
+      "n": 5,
+      "right_tool": 5,
+      "executable": 5
+    },
+    "list_editables": {
+      "n": 5,
+      "right_tool": 5,
+      "executable": 5
+    },
+    "get_element_tags": {
+      "n": 5,
+      "right_tool": 5,
+      "executable": 5
+    },
+    "unassign_tag": {
+      "n": 5,
+      "right_tool": 5,
+      "executable": 5
+    },
+    "get_element_workflow_details": {
+      "n": 5,
+      "right_tool": 5,
+      "executable": 5
+    },
+    "describe_tool": {
+      "n": 5,
+      "right_tool": 5,
+      "executable": 5
+    },
+    "get_area_brick": {
+      "n": 4,
+      "right_tool": 4,
+      "executable": 0
+    },
+    "list_assets": {
+      "n": 4,
+      "right_tool": 4,
+      "executable": 0
+    },
+    "propose_agent_template_deletion": {
+      "n": 4,
+      "right_tool": 4,
+      "executable": 4
+    },
+    "stage_asset": {
+      "n": 4,
+      "right_tool": 3,
+      "executable": 3
+    },
+    "get_data_object": {
+      "n": 3,
+      "right_tool": 3,
+      "executable": 0
+    },
+    "apply_transition": {
+      "n": 3,
+      "right_tool": 0,
+      "executable": 0
+    },
+    "get_workflow_graph": {
+      "n": 3,
+      "right_tool": 3,
+      "executable": 3
+    },
+    "get_document_schema": {
+      "n": 2,
+      "right_tool": 2,
+      "executable": 2
+    },
+    "list_elements_by_workflow_state": {
+      "n": 2,
+      "right_tool": 2,
+      "executable": 2
+    },
+    "list_agent_templates": {
+      "n": 2,
+      "right_tool": 2,
+      "executable": 2
+    }
+  },
+  "failures": [
+    {
+      "id": "e6ba416a8a75802e",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "una cosa: lista todos los archivos csv"
+    },
+    {
+      "id": "039ba5549e4d555a",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "¿qué Medio no tienen finDerechos rellenado?"
+    },
+    {
+      "id": "1d951acf7b5a10cb",
+      "stage": "no_call_emitted",
+      "detail": "DELEGATE",
+      "utterance": "führ die globale Aktion zuruecksetzen für die hier im Workflow artikel"
+    },
+    {
+      "id": "b56e1aeb76758a45",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "ids"
+        ]
+      },
+      "utterance": "abre los registros 12449, 47757 y 16027"
+    },
+    {
+      "id": "9effbaad31f0c323",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "brickIds"
+        ]
+      },
+      "utterance": "sorry, one more thing: what goes into the product-teaser and spec-tabl"
+    },
+    {
+      "id": "be3ffa7276aebbe1",
+      "stage": "arguments",
+      "detail": {
+        "missing": [
+          "className"
+        ],
+        "invented": [],
+        "wrong": []
+      },
+      "utterance": "give me the Story objects"
+    },
+    {
+      "id": "a06a2660efe18b01",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "sorry, one more thing: which Teaser have a teaserText below 199?"
+    },
+    {
+      "id": "aed2b231d62512ac",
+      "stage": "arguments",
+      "detail": {
+        "missing": [
+          "parentId"
+        ],
+        "invented": [],
+        "wrong": []
+      },
+      "utterance": "empecemos por la raíz del árbol de recursos, por favor"
+    },
+    {
+      "id": "546262289c9bd059",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "quelles pages ne sont pas encore publiées ?"
+    },
+    {
+      "id": "cf04bde95860d040",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "dis, montre-moi toutes les pages en brouillon"
+    },
+    {
+      "id": "07d82d88dc13ccca",
+      "stage": "no_call_emitted",
+      "detail": "NO_CALL",
+      "utterance": "gib mir die Artikelvariante-Objekte"
+    },
+    {
+      "id": "1808ad0156488c5c",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "brickIds"
+        ]
+      },
+      "utterance": "que contiennent les bricks image-gallery et featurette ?"
+    },
+    {
+      "id": "b6ff2cd046b5369d",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "lista todos los archivos pdf, por favor"
+    },
+    {
+      "id": "d62abe0c8ffe0cb5",
+      "stage": "arguments",
+      "detail": {
+        "missing": [
+          "parentId"
+        ],
+        "invented": [],
+        "wrong": []
+      },
+      "utterance": "montre-moi les médias de ce dossier, merci"
+    },
+    {
+      "id": "ce4852c04db1cb91",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "className"
+        ]
+      },
+      "utterance": "pardon, encore un truc : quels champs a cette classe ?"
+    },
+    {
+      "id": "0b825e73ef51b67e",
+      "stage": "no_call_emitted",
+      "detail": "NO_CALL",
+      "utterance": "hey, zeig mir die Objektklassen"
+    },
+    {
+      "id": "2191323b769fd1d8",
+      "stage": "no_call_emitted",
+      "detail": "DELEGATE",
+      "utterance": "passe-les en rejeter dans validation_article, merci"
+    },
+    {
+      "id": "546262289c9bd059",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "quelles pages ne sont pas encore publiées ?"
+    },
+    {
+      "id": "fa16f7fbeb4a8bfd",
+      "stage": "no_call_emitted",
+      "detail": "DELEGATE",
+      "utterance": "ok so, run the reset global action on these in content_release"
+    },
+    {
+      "id": "af73ded1dca0341c",
+      "stage": "wrong_tool",
+      "detail": "unassign_tag != assign_tag",
+      "utterance": "assign tag 177 to object 75669 please"
+    },
+    {
+      "id": "ace7a69887073eff",
+      "stage": "arguments",
+      "detail": {
+        "missing": [
+          "parentId"
+        ],
+        "invented": [],
+        "wrong": []
+      },
+      "utterance": "parcours le dossier racine des médias"
+    },
+    {
+      "id": "b7c4c5c9b62dad41",
+      "stage": "no_call_emitted",
+      "detail": "NO_CALL",
+      "utterance": "prépare les fichiers twig_partials pour pouvoir lire les templates"
+    },
+    {
+      "id": "4fb1ab254c957d91",
+      "stage": "no_call_emitted",
+      "detail": "DELEGATE",
+      "utterance": "run the reset global action on these in asset_clearance"
+    },
+    {
+      "id": "ba4543f4ffabab88",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "brickIds"
+        ]
+      },
+      "utterance": "sorry, one more thing: show me the schema for the video-embed and feat"
+    },
+    {
+      "id": "4951f9dba40576bc",
+      "stage": "wrong_tool",
+      "detail": "list_editables != list_target_groups",
+      "utterance": "hey, welche personalisierungs-zielgruppen gibt es?"
+    },
+    {
+      "id": "3b5ca3c77b0a8f6a",
+      "stage": "no_call_emitted",
+      "detail": "NO_CALL",
+      "utterance": "öffne 59431 wenn du kannst"
+    },
+    {
+      "id": "bdbb882de85fd595",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "welche pdf-dateien haben wir im system?"
+    },
+    {
+      "id": "cc819614db7a0a1f",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "a ver, lista los Maestro cuyo sistemaOrigen es menor que 199"
+    },
+    {
+      "id": "cd345dc40ea1013c",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "busca posibles duplicados en Proveedor por encima de una puntuación de"
+    },
+    {
+      "id": "ce7e64b823cdbcdb",
+      "stage": "arguments",
+      "detail": {
+        "missing": [
+          "className"
+        ],
+        "invented": [],
+        "wrong": []
+      },
+      "utterance": "liste alle Kategorie-Datensätze auf"
+    },
+    {
+      "id": "988f84d200790cc9",
+      "stage": "arguments",
+      "detail": {
+        "missing": [
+          "parentId"
+        ],
+        "invented": [],
+        "wrong": []
+      },
+      "utterance": "empecemos por la raíz del árbol de recursos, gracias"
+    },
+    {
+      "id": "dfa7be532fbb46c6",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "pardon, encore un truc : quels actualite ont un descriptionseo inférie"
+    },
+    {
+      "id": "86196b4325a1124e",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "className"
+        ]
+      },
+      "utterance": "perdona, otra cosa: ¿qué atributos puedo rellenar aquí?"
+    },
+    {
+      "id": "c6029bdbe66fb79d",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "ids"
+        ]
+      },
+      "utterance": "ouvre-les tous s'il te plaît"
+    },
+    {
+      "id": "9d4f37a2131d0e83",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "finde die Partnerstamm-Datensätze, bei denen matchScore leer ist"
+    },
+    {
+      "id": "0d4324baf6859375",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "ids"
+        ]
+      },
+      "utterance": "ok so, pull up records 2217, 48020 and 65637"
+    },
+    {
+      "id": "34bddf549b44c2bb",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "hey, welche Seiten sind noch nicht veröffentlicht?"
+    },
+    {
+      "id": "1baeff21b728affc",
+      "stage": "arguments",
+      "detail": {
+        "missing": [
+          "filter"
+        ],
+        "invented": [],
+        "wrong": []
+      },
+      "utterance": "put the Do Not Translate tag on this one if you can"
+    },
+    {
+      "id": "08fabcdfdca2e07f",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "name"
+        ]
+      },
+      "utterance": "petite question : crée un tag nommé à relire"
+    },
+    {
+      "id": "4076c65daa6b7c92",
+      "stage": "no_call_emitted",
+      "detail": "NO_CALL",
+      "utterance": "petite question : qu'y a-t-il actuellement sur cette page ?"
+    },
+    {
+      "id": "e6c2c6905461ded1",
+      "stage": "no_call_emitted",
+      "detail": "DELEGATE",
+      "utterance": "passe-les en vers_juridique dans circuit_editorial si tu peux"
+    },
+    {
+      "id": "8d7965aba9b045d7",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "welche fotoshooting haben einen gesperrtemaerkte unter 99?"
+    },
+    {
+      "id": "6295a9c784d10aa4",
+      "stage": "no_call_emitted",
+      "detail": "DELEGATE",
+      "utterance": "ejecuta la acción global zuruecksetzen sobre estos en validacion_derec"
+    },
+    {
+      "id": "a33a2c6fc1ddf2e8",
+      "stage": "no_call_emitted",
+      "detail": "NO_CALL",
+      "utterance": "petite question : prépare les fichiers twig_partials pour pouvoir lire"
+    },
+    {
+      "id": "25a6007a3553650a",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "¿qué enlace tienen un titular por debajo de 10?"
+    },
+    {
+      "id": "94c5da3fb084f138",
+      "stage": "no_call_emitted",
+      "detail": "DELEGATE",
+      "utterance": "passe-les en valider dans validation_article"
+    },
+    {
+      "id": "be67c0ba591fe811",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "a ver, encuentra los Medio cuyo campo fechaPublicacion está vacío"
+    },
+    {
+      "id": "b7c4c5c9b62dad41",
+      "stage": "no_call_emitted",
+      "detail": "NO_CALL",
+      "utterance": "prépare les fichiers twig_partials pour pouvoir lire les templates"
+    },
+    {
+      "id": "b67fba7f6f375cb4",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "className"
+        ]
+      },
+      "utterance": "zeig mir das Schema hinter dem Objekt bitte kurz"
+    },
+    {
+      "id": "445b28f61f02a6a0",
+      "stage": "no_call_emitted",
+      "detail": "DELEGATE",
+      "utterance": "lance l'action globale escalate sur ceux-ci dans circuit_editorial s'i"
+    },
+    {
+      "id": "3671203bcd4f3d08",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "vale, lista los audiencia cuyo riesgofuga es menor que 10"
+    },
+    {
+      "id": "edd8eed72f813212",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "brickIds"
+        ]
+      },
+      "utterance": "montre-moi le schéma des areabricks text-accordion et video-embed s'il"
+    },
+    {
+      "id": "e6ba416a8a75802e",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "una cosa: lista todos los archivos csv"
+    },
+    {
+      "id": "f84d5f4e1011838d",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "bei welchen Partnerstamm fehlt letztePflege?"
+    },
+    {
+      "id": "593ff749fac2ece4",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "quick one: find the Bundle records where listPrice is empty"
+    },
+    {
+      "id": "4ed11833166da1da",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "className"
+        ]
+      },
+      "utterance": "muéstrame el esquema detrás de este objeto, por favor"
+    },
+    {
+      "id": "546262289c9bd059",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "quelles pages ne sont pas encore publiées ?"
+    },
+    {
+      "id": "fb61de2956e4d22a",
+      "stage": "no_call_emitted",
+      "detail": "DELEGATE",
+      "utterance": "führ die globale Aktion zuruecksetzen für die hier im Workflow bildfre"
+    },
+    {
+      "id": "af771b5f3e2d8e2b",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "which BrandAsset have a photographer below 10?"
+    },
+    {
+      "id": "580bdfbd6669fb81",
+      "stage": "arguments",
+      "detail": {
+        "missing": [],
+        "invented": [],
+        "wrong": [
+          "pqlFilter"
+        ]
+      },
+      "utterance": "ok so, list Interaction where optInDate is under 199"
+    },
+    {
+      "id": "ace7a69887073eff",
+      "stage": "arguments",
+      "detail": {
+        "missing": [
+          "parentId"
+        ],
+        "invented": [],
+        "wrong": []
+      },
+      "utterance": "parcours le dossier racine des médias"
+    },
+    {
+      "id": "0226aaf576598ed5",
+      "stage": "no_call_emitted",
+      "detail": "ASK",
+      "utterance": "sorry, one more thing: pull this file down so you can read it end to e"
+    },
+    {
+      "id": "bdd7f5c353efe694",
+      "stage": "no_call_emitted",
+      "detail": "NO_CALL",
+      "utterance": "perdona, otra cosa: ¿qué atributos puedo rellenar aquí?"
+    }
+  ]
+}

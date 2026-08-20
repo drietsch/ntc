@@ -1,0 +1,48 @@
+=== waiting for studio-v3 to finish
+=== studio-v3 finished at epoch 13
+calibration in final checkpoint: {'action': 1.5, 'tool': 1.0, 'presence': 1.0, 'value': 1.0}
+fitted on 446 dev rows: action=1.5 tool=1.0 presence=1.0 value=1.0
+wrote /tmp/v3-final-cal.pt
+wrote /tmp/v3-final.ntc (90.76 MB)
+
+########## studio-v3 FINAL (epoch 13)
+batch-infer: 446 ok, 0 failed
+call-worthy requests            278
+EXECUTABLE SEMANTIC ACCURACY    77.3%
+  ceiling for this architecture 88.8%   (31 rows need a composed value — see DELEGATE)
+
+  [1mwrong call executed          16.2%[0m   (45 requests got a well-formed call that does the wrong thing)
+  declined instead             18   [2m(recoverable: the host can escalate)[0m
+
+funnel (share of call-worthy requests):
+  emitted a call                   93.5%
+  ...with the right tool           92.8%
+  ...and every argument correct    77.3%
+
+answered with something else:
+  delegate                         9
+  no_call                          8
+  ask                              1
+
+per tool (n / right tool / executable):
+  search_data_objects               21   20    4
+  get_asset                         21   20   20
+  list_target_groups                17   16   16
+  search_documents                  15   15   10
+  get_class_definition              14   13    9
+  search_assets                     13   13    8
+  list_tags                         12   12   11
+  create_tag                        11   11   10
+  list_document_types                9    9    9
+  discover                           9    9    9
+  list_thumbnail_configs             8    8    8
+  list_classes                       8    7    7
+
+per language (   n  executable  right tool  wrong call):
+  de       60      78.3%      90.0%      13.3%
+  en       76      82.9%      94.7%      13.2%
+  es       75      78.7%      97.3%      18.7%
+  fr       67      68.7%      88.1%      19.4%
+
+########## launching studio-v4 (warm start from v3 + 446 ASK rows)
+v4 launched, pid 22133
