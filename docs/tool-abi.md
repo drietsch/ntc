@@ -81,6 +81,34 @@ line in the token stream (the ABI version lives in `.ntc` metadata and the
 Limits (V1): ≤16 args/tool (model config), ≤12 enum values/arg, non-string
 enum values rejected.
 
+## Facts carried but not rendered
+
+Two fields travel on the ABI record without appearing in the token stream, so
+declaring them changes nothing the model sees and costs no retrain:
+
+- `risk` (`READ`/`WRITE`/`DESTRUCTIVE`) — for the Phase-5 policy layer.
+- `default` — the value the provider applies when the argument is omitted.
+  When the source head says the value was constructed rather than taken from
+  the request, the deterministic backend supplies this instead of hunting for
+  a span. `list_assets.parentId` is the motivating case: 218 corpus rows want
+  `1`, the schema's own description says "Default: 1 (root folder)", and the
+  model does not need to be taught a constant it can be handed.
+
+Rendering either would change the schema token stream and invalidate every
+trained checkpoint, which is the point of keeping them out. Golden fixture
+`fixtures/schema-abi/012-default-and-csv-list.*` pins that.
+
+## Semantic annotations that dispatch
+
+`SEMANTIC` is rendered, so adding one *is* a retrain. Three are load-bearing at
+decode time rather than merely advisory:
+
+| annotation | effect |
+|---|---|
+| `…DURATION…` | an INTEGER/FLOAT argument decodes as a duration (spec §40/§44) |
+| `LIST.CSV` | a TEXT argument whose provider wants a comma-separated list: the span covers the list region and the deterministic splitter rejoins it in the provider's separator. `get_area_brick.brickIds` — "the video-embed and spec-table bricks" — is the case; typing it `array` would make the backend emit a JSON array the provider rejects. |
+| `FILTER.*` | the argument may take one of the model's declared value templates (head codec v4). See [head-codec.md](head-codec.md). |
+
 ## Tool ABI record
 
 See `contracts/tool-abi/v1/tool-abi.schema.json` (generated from

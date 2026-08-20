@@ -49,6 +49,11 @@ pub struct RawParameter {
     pub semantic_type: Option<String>,
     #[serde(rename = "x-semantic", default)]
     pub x_semantic: Option<String>,
+    /// JSON-Schema `default`. Carried through the ABI record but deliberately
+    /// **not rendered** into the canonical neural text — see
+    /// [`crate::schema::CanonicalArg::default_value`].
+    #[serde(default)]
+    pub default: Option<Value>,
 }
 
 /// A parameter after style detection, ready for canonical compilation.
@@ -64,6 +69,8 @@ pub struct NormalizedParam {
     pub items: Option<Value>,
     /// Declared properties of an `object` parameter.
     pub properties: Option<Value>,
+    /// Declared `default` for this parameter, if any.
+    pub default: Option<Value>,
 }
 
 impl RawToolSchema {
@@ -145,6 +152,7 @@ fn parse_flat_param(tool: &str, name: &str, v: &Value) -> Result<NormalizedParam
         semantic: raw.semantic.or(raw.semantic_type).or(raw.x_semantic),
         items: raw.items,
         properties: raw.properties,
+        default: raw.default,
     })
 }
 

@@ -1,0 +1,14 @@
+TOOL 0
+DESC browse assets in a folder
+ARG 0 parentId
+INFO parent folder id to list
+TYPE INTEGER
+REQUIRED 0
+ARG 1 brickIds
+INFO areabrick id, or a comma-separated list of brick ids
+TYPE TEXT
+REQUIRED 1
+SEMANTIC LIST.CSV
+ARG 2 pageSize
+TYPE INTEGER
+REQUIRED 0

@@ -48,6 +48,9 @@
         "required"
       ],
       "properties": {
+        "default": {
+          "description": "The value the provider applies when this argument is omitted, as declared by the schema (`\"default\": 1`).\n\nCarried through the ABI record but **never rendered** into the canonical neural text — exactly like [`CanonicalTool::risk`]. The model is not told the default; it only decides *whether* the argument is present and that its value is [`crate::ir::ProvenanceSource::Model`] (constructed, no span). The deterministic backend then supplies the declared value. Rendering it would change the schema token stream and invalidate every trained checkpoint for no gain."
+        },
         "description": {
           "type": "string"
         },

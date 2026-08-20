@@ -124,6 +124,18 @@ pub struct CanonicalArg {
     /// IR `ENUM { index }` both point into this list.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub enum_values: Vec<String>,
+    /// The value the provider applies when this argument is omitted, as
+    /// declared by the schema (`"default": 1`).
+    ///
+    /// Carried through the ABI record but **never rendered** into the
+    /// canonical neural text — exactly like [`CanonicalTool::risk`]. The model
+    /// is not told the default; it only decides *whether* the argument is
+    /// present and that its value is [`crate::ir::ProvenanceSource::Model`]
+    /// (constructed, no span). The deterministic backend then supplies the
+    /// declared value. Rendering it would change the schema token stream and
+    /// invalidate every trained checkpoint for no gain.
+    #[serde(default, rename = "default", skip_serializing_if = "Option::is_none")]
+    pub default_value: Option<serde_json::Value>,
 }
 
 /// The normalized Tool ABI record (spec §40).
@@ -403,6 +415,7 @@ fn canonical_arg(name: String, p: &raw::NormalizedParam) -> Result<CanonicalArg,
             .map(|s| SemanticTypeId(s.trim().to_uppercase())),
         description: p.description.clone().unwrap_or_default(),
         enum_values: p.enum_values.clone(),
+        default_value: p.default.clone(),
     })
 }
 
@@ -473,6 +486,7 @@ fn flatten_object(
             semantic: None,
             items: None,
             properties: None,
+            default: schema.get("default").cloned(),
         };
         out.push(canonical_arg(format!("{name}.{prop_name}"), &sub)?);
     }
@@ -585,6 +599,35 @@ mod tests {
         let text = tool.to_neural_text(0);
         assert!(text.contains("ENUM 0 low\nENUM 1 normal\nENUM 2 high"));
         assert!(text.contains("INFO who receives it"));
+    }
+
+    #[test]
+    fn declared_default_is_carried_but_never_rendered() {
+        // The provider's `default` reaches the deterministic backend (so an
+        // argument the model marks PRESENT/Model can be filled without
+        // inventing anything) while the schema token stream stays byte-identical
+        // — no rendered line, so no retrain. Same contract as `risk`.
+        let raw: RawToolSchema = serde_json::from_str(
+            r#"{"name":"assets.browse","parameters":{"parentId":{"type":"integer","default":1},"page":{"type":"integer"}}}"#,
+        )
+        .unwrap();
+        let tool = compile_schema(&raw).unwrap();
+        assert_eq!(
+            tool.arg("parentId").unwrap().default_value,
+            Some(serde_json::json!(1))
+        );
+        assert_eq!(tool.arg("page").unwrap().default_value, None);
+
+        let with_default = tool.to_neural_text(0);
+        let without: RawToolSchema = serde_json::from_str(
+            r#"{"name":"assets.browse","parameters":{"parentId":{"type":"integer"},"page":{"type":"integer"}}}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            with_default,
+            compile_schema(&without).unwrap().to_neural_text(0),
+            "declaring a default must not change the schema token stream"
+        );
     }
 
     #[test]

@@ -1,0 +1,1 @@
+{"name":"assets.browse","description":"Browse assets in a folder","parameters":{"parentId":{"type":"integer","description":"Parent folder ID to list","default":1},"brickIds":{"type":"string","description":"Areabrick id, or a comma-separated list of brick ids","semantic":"LIST.CSV","required":true},"pageSize":{"type":"integer","default":20}}}
