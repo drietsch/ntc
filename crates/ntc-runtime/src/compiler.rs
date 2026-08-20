@@ -954,6 +954,42 @@ mod tests {
     /// A host that registers more tools than fit in one pass used to get
     /// `CandidateLimit` and had to narrow the set itself — which just moved
     /// the routing problem into the host. It now shortlists and decides.
+    /// An INTEGER argument whose value appears nowhere in the utterance must
+    /// not be filled in.
+    ///
+    /// The decoder used to fall back to the asinh magnitude head when no span
+    /// parsed, which turned "show me the asset" into `get_asset(id = 44848)` —
+    /// a fabricated entity id, executed against a live MCP server and reported
+    /// as success. The dev split cannot catch this: it contains no row where a
+    /// required id has no source, so every fallback value there happens to be
+    /// right. Only a hand-written case exposed it, which is exactly why this
+    /// is pinned here rather than left to the corpus.
+    #[test]
+    fn integer_argument_is_never_invented_from_nothing() {
+        let mut c = compiler();
+        let req = CompileRequest {
+            utterance: "send an email to the dentist".into(), // no digits, no number words
+            locale: None,
+            timezone: None,
+            now: Some("2026-08-18T11:00:00+02:00".into()),
+            candidates: Some(vec!["calendar.create".into()]),
+            context: None,
+        };
+        let outcome = c.compile(&req).unwrap();
+        if let CompileOutcome::Call { call, ir } = &outcome {
+            for (name, value) in call.arguments.as_object().expect("object arguments") {
+                assert!(
+                    !value.is_number(),
+                    "`{name}` = {value} was produced from an utterance containing no \
+                     number; every numeric value must come from a span or the context \
+                     frame (ir: {ir:?})"
+                );
+            }
+        }
+        // ASK / NO_CALL / DELEGATE are all acceptable here — the point is only
+        // that no number is conjured.
+    }
+
     #[test]
     fn wide_tool_set_shortlists_instead_of_erroring() {
         let mut c = compiler();

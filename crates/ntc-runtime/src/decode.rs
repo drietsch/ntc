@@ -393,32 +393,39 @@ impl<'a> Decoder<'a> {
                     ))
                 }
             }
-            ParamType::Integer => {
-                let parsed = span_text.as_deref().and_then(number::parse_number);
-                match parsed {
-                    Some(v) => Some((
+            // A number the utterance does not contain must not be invented.
+            //
+            // These arms used to fall back to the asinh magnitude head when no
+            // span parsed. That head is *auxiliary* by design (spec §44): the
+            // exact value comes from a span and the deterministic parser. Using
+            // it as a source produced calls like
+            //
+            //     "show me the asset"  ->  get_asset(id = 44848)
+            //
+            // from an utterance with no digits at all — a fabricated entity id,
+            // executed against a live MCP server, reported as success. The
+            // regression cannot approximate an identifier; there is nothing to
+            // approximate. The `provenance: None` it carried was the code
+            // stating outright that the value had no source.
+            //
+            // Returning `None` here routes the argument to `unresolved`, so a
+            // required one becomes ASK and an optional one is simply omitted.
+            // Asking which asset is always better than fetching an arbitrary
+            // one.
+            ParamType::Integer => span_text
+                .as_deref()
+                .and_then(number::parse_number)
+                .map(|v| {
+                    (
                         SemanticValue::Integer(v.round() as i64),
                         span_conf,
                         provenance,
-                    )),
-                    None => Some((
-                        SemanticValue::Integer(self.magnitude(tool_idx, arg_idx)?.round() as i64),
-                        span_conf * 0.5,
-                        None,
-                    )),
-                }
-            }
-            ParamType::Float => {
-                let parsed = span_text.as_deref().and_then(number::parse_number);
-                match parsed {
-                    Some(v) => Some((SemanticValue::Float(v), span_conf, provenance)),
-                    None => Some((
-                        SemanticValue::Float(self.magnitude(tool_idx, arg_idx)?),
-                        span_conf * 0.5,
-                        None,
-                    )),
-                }
-            }
+                    )
+                }),
+            ParamType::Float => span_text
+                .as_deref()
+                .and_then(number::parse_number)
+                .map(|v| (SemanticValue::Float(v), span_conf, provenance)),
             ParamType::Duration => {
                 let (unit_idx, unit_conf) =
                     self.scalar_class("numeric.unit.logits", tool_idx, arg_idx, 6)?;
