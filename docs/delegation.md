@@ -48,6 +48,25 @@ covers the rest: data-dependent control flow, unbounded fan-out, judgement.
 When the planner lands, the boundary moves — some of today's `DELEGATE`
 becomes tomorrow's `CALL_SEQUENCE` — without changing this contract.
 
+## The boundary moved once already (v4)
+
+`eval/esa.py` used to count any argument with no span behind it as beyond a
+single typed call — 13.8% of Studio's calls, escalated to an LLM by design.
+Reading those rows rather than the total, they were a constant the schema
+declares, a list whose elements are in the utterance, and 258 PQL filters in
+five closed shapes.
+
+So they were never `DELEGATE`'s kind of problem. `DELEGATE` is for requests
+whose *shape* is unknown until earlier steps run — data-dependent control flow,
+unbounded fan-out, judgement. "list every PDF" has a completely known shape; it
+was only unreachable because nothing could fill in a blank. Head codec v4
+fills blanks (see [head-codec.md](head-codec.md)), and the Studio dev ceiling
+went from 88.8% to 100%.
+
+The lesson generalises: "the compiler cannot express this" and "this needs a
+language model" are different claims, and the first was standing in for the
+second. Before adding a case to this page, check which one it is.
+
 ## Head-codec / compatibility notes
 
 The action head is append-only: v2 added `DELEGATE` at index 3 and records the
