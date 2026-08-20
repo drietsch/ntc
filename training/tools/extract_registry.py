@@ -60,7 +60,11 @@ def corpus_schemas(data_dir: Path) -> dict[str, dict]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--data", type=Path, default=REPO / "training" / "data" / "studio")
+    # specs/training is the committed source; training/data/studio is derived
+    # from it and gitignored, so a drift check has to read the former to run
+    # in CI at all. Their schemas are identical by construction (verified: all
+    # 47 tools, byte-equal descriptions).
+    parser.add_argument("--data", type=Path, default=REPO / "specs" / "training")
     parser.add_argument("--registry", type=Path,
                         default=REPO / "examples" / "pimcore-tools.json")
     parser.add_argument("--check", action="store_true",
