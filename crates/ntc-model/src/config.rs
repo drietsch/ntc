@@ -39,6 +39,41 @@ pub struct NtcArchConfig {
     /// Per-head calibration temperatures (head codec §confidence).
     #[serde(default)]
     pub calibration: Calibration,
+    /// Host-declared value templates the filter-template head indexes into
+    /// (head codec v4). Empty means the model has no such head.
+    ///
+    /// The head's class order is `NONE` at index 0 followed by this list in
+    /// order, so the table is part of what the model was trained against and
+    /// travels with the weights rather than with the registry.
+    #[serde(default)]
+    pub filter_templates: Vec<FilterTemplate>,
+}
+
+/// One host-declared way to construct an argument value the utterance does
+/// not spell out literally (spec §19; head codec v4 `filter_template`).
+///
+/// The compiler has no decoder, so it cannot write an arbitrary query string.
+/// What it can do is *choose* among the shapes a host declares and fill their
+/// slots from the span it already marks — the same factored trick the datetime
+/// head uses (pick `NEXT` + `FRIDAY`, don't spell out a date).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FilterTemplate {
+    /// Stable id, for diagnostics and for the training-side codec.
+    pub id: String,
+    /// The `SEMANTIC` annotation this template serves. Only arguments carrying
+    /// it may select this template; every other template is masked out.
+    pub semantic: String,
+    /// Literal text with `{field}`, `{number}` and `{token}` placeholders,
+    /// each filled deterministically from the marked span. A pattern with no
+    /// placeholder is a constant and needs no span at all.
+    pub pattern: String,
+    /// Closed set of fillers for this pattern's `{token}` slot, if it has one.
+    /// The span is matched against these rather than copied, so plurals,
+    /// compounds and case never have to be undone ("PDFs" -> `pdf`). A span
+    /// naming none of them leaves the argument unresolved.
+    #[serde(default)]
+    pub values: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -102,6 +137,17 @@ impl NtcArchConfig {
 
     pub fn head_dim(&self) -> usize {
         self.hidden / self.heads
+    }
+
+    /// Width of the filter-template head: `NONE` plus one class per declared
+    /// template. Zero when the model declares none, in which case the head's
+    /// tensors are absent and the output is not emitted.
+    pub fn filter_template_classes(&self) -> usize {
+        if self.filter_templates.is_empty() {
+            0
+        } else {
+            self.filter_templates.len() + 1
+        }
     }
 
     /// Packed fusion sequence length: T tool segments + the NO_TOOL slot.

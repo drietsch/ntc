@@ -4,4 +4,5 @@
 pub mod datetime;
 pub mod list;
 pub mod number;
+pub mod template;
 pub mod units;

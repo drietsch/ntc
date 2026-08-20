@@ -32,6 +32,7 @@ pub fn tiny_config() -> NtcArchConfig {
         layer_norm_eps: 1e-5,
         action_classes: 3,
         calibration: Calibration::default(),
+        filter_templates: vec![],
     }
 }
 

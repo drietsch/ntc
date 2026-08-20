@@ -106,8 +106,33 @@ impl ModelWeights {
         self.has("heads.delegate_reason.out.weight") && self.has("heads.entity.proj.weight")
     }
 
+    /// True when this model carries the head-codec v4 filter-template head.
+    /// Its width comes from the declared template table, so a model that
+    /// declares no templates has no head and no tensors.
+    pub fn has_filter_template_head(&self) -> bool {
+        self.has("heads.filter_template.out.weight")
+    }
+
     /// Check presence + shape of every tensor [`tensor_specs`] declares.
     pub fn check(&self, cfg: &NtcArchConfig) -> Result<(), NtcError> {
+        if self.has_filter_template_head() != (cfg.filter_template_classes() > 0) {
+            return Err(NtcError::Format(format!(
+                "model declares {} filter templates but {} a filter-template head",
+                cfg.filter_templates.len(),
+                if self.has_filter_template_head() { "carries" } else { "lacks" },
+            )));
+        }
+        if self.has_filter_template_head() {
+            for (name, shape) in v4_head_specs(cfg) {
+                let t = self.get(&name)?;
+                if t.shape != shape {
+                    return Err(NtcError::Format(format!(
+                        "tensor `{name}`: shape {:?}, expected {shape:?}",
+                        t.shape
+                    )));
+                }
+            }
+        }
         if self.has_v3_heads() {
             for (name, shape) in v3_head_specs(cfg) {
                 let t = self.get(&name)?;
@@ -167,6 +192,22 @@ pub fn v3_head_specs(cfg: &NtcArchConfig) -> Vec<(String, Vec<usize>)> {
         vec![crate::inputs::MAX_LINKED + 1, h],
     ));
     specs
+}
+
+/// Head-codec v4 tensors: the filter-template head, present only on models
+/// that declare a template table.
+pub fn v4_head_specs(cfg: &NtcArchConfig) -> Vec<(String, Vec<usize>)> {
+    let k = cfg.filter_template_classes();
+    if k == 0 {
+        return vec![];
+    }
+    vec![
+        (
+            "heads.filter_template.out.weight".to_string(),
+            vec![cfg.hidden, k],
+        ),
+        ("heads.filter_template.out.bias".to_string(), vec![k]),
+    ]
 }
 
 /// The complete tensor manifest for an architecture config: every canonical

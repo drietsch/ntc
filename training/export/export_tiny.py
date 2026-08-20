@@ -21,7 +21,7 @@ from pathlib import Path
 import torch
 
 from export.ntc_writer import NtcWriter, read_ntc_file
-from ntc_model.config import ARCHITECTURE, tiny_config
+from ntc_model.config import ARCHITECTURE, NtcArchConfig, tiny_config
 from ntc_model.model import NtcEncoderHeadsV1, export_tensors, tensor_specs
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -41,9 +41,18 @@ def extract_test_tokenizer(rust_ntc_path: Path = RUST_TINY_NTC) -> bytes:
     return parsed["tokenizer_bytes"]
 
 
-def export_tiny(out_path: Path = DEFAULT_OUT, seed: int = 42) -> Path:
-    """Build, random-init (seeded), and export the tiny model. Returns the path."""
-    cfg = tiny_config()
+def export_tiny(
+    out_path: Path = DEFAULT_OUT,
+    seed: int = 42,
+    cfg: NtcArchConfig | None = None,
+) -> Path:
+    """Build, random-init (seeded), and export the tiny model. Returns the path.
+
+    `cfg` overrides the default tiny architecture — used by the parity test to
+    build a fixture that declares value templates, so the filter-template head
+    exists on both sides and can be compared.
+    """
+    cfg = cfg or tiny_config()
     torch.manual_seed(seed)
     model = NtcEncoderHeadsV1(cfg)
 

@@ -1,6 +1,6 @@
 {
-  "head_spec_version": 3,
-  "comment": "Neural output ABI for ntc_encoder_heads_v1. Class orderings are FROZEN and append-only: new classes may only be appended (v2 appended DELEGATE to the action head, width recorded in .ntc model.action_classes; v3 added delegate_reason, no_call_reason, source, entity_ref and unresolved_hint heads — absent heads simply are not emitted, so v2 models still load). Otherwise: changing any list requires a head_spec_version bump. Output tensor names are what Backend::run returns and what the PyTorch reference dumps for parity fixtures. Shapes use T=max_tools(+1 for NO_TOOL where noted), A=max_args, E=max_enum_values, Lu=max_utterance_tokens.",
+  "head_spec_version": 4,
+  "comment": "Neural output ABI for ntc_encoder_heads_v1. Class orderings are FROZEN and append-only: new classes may only be appended (v2 appended DELEGATE to the action head, width recorded in .ntc model.action_classes; v3 added delegate_reason, no_call_reason, source, entity_ref and unresolved_hint heads; v4 added filter_template, whose width comes from the model's declared template table — absent heads simply are not emitted, so v2 and v3 models still load). Otherwise: changing any list requires a head_spec_version bump. Output tensor names are what Backend::run returns and what the PyTorch reference dumps for parity fixtures. Shapes use T=max_tools(+1 for NO_TOOL where noted), A=max_args, E=max_enum_values, Lu=max_utterance_tokens.",
   "inputs": {
     "max_utterance_tokens": 96,
     "max_tools": 16,
@@ -243,6 +243,18 @@
       ],
       "classes": "host-defined hint vocabulary from .ntc metadata (e.g. TWO_LINKED_ITEMS_OF_DIFFERENT_TYPE); index 0 = NONE",
       "decode": "read for arguments whose presence is MISSING/AMBIGUOUS, so the host can phrase the question"
+    },
+    "filter_template": {
+      "output": "filter_template.logits",
+      "shape": [
+        "T",
+        "A",
+        "K"
+      ],
+      "classes": "index 0 = NONE; index i+1 = model.filter_templates[i], in declared order",
+      "decode": "read per PRESENT argument that carries a SEMANTIC annotation. Logits are masked to NONE plus the templates whose `semantic` equals the argument's, exactly as the enum head is masked to that argument's own enum values; argmax over the survivors. NONE means no template applies and the ordinary source/span path decides. A winning template is rendered by deterministic code from the SAME span the span head marks: {field} takes the first identifier-shaped word in the span, {number} the last number in it, {token} the declared value the span names. A slot the span cannot fill yields NO value — the argument stays unresolved and the call becomes ASK — never a guess.",
+      "rationale": "Some arguments need a value the request never spells out: a PQL filter, a query expression. Without a decoder the compiler cannot write one, and copying the span produces a confidently wrong filter. The shapes such values take are a small closed set the host knows, and what varies inside them is in the utterance — so the head picks the shape and the existing span fills the slots. Same factored split as the datetime head, which picks NEXT + FRIDAY and lets deterministic code produce the date.",
+      "vocabulary": "host data, not contract: the template table travels in .ntc metadata model.filter_templates because the head's class order is fixed by what the model trained against. A host adds or reorders templates by retraining, not by a head_spec_version bump."
     }
   },
   "pooling": {

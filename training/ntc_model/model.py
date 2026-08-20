@@ -197,6 +197,10 @@ class NtcEncoderHeadsV1(nn.Module):
         self.linked_pos_emb = nn.Embedding(MAX_LINKED + 1, h)
         self.entity_proj = nn.Linear(h, h, bias=False)
         self.entity_none = nn.Parameter(torch.empty(h).normal_(std=0.02))
+        # Head codec v4: which of the host's declared value templates this
+        # argument takes. Absent when the model declares no templates.
+        k = cfg.filter_template_classes
+        self.filter_template_out = nn.Linear(h, k) if k else None
 
     # -- encoders ----------------------------------------------------------
 
@@ -343,6 +347,8 @@ class NtcEncoderHeadsV1(nn.Module):
         # Per-argument: where the value comes from, and why it is unfillable.
         out["source.logits"] = mask_arg(self.source_out(arg_states))
         out["unresolved_reason.logits"] = mask_arg(self.unresolved_reason_out(arg_states))
+        if self.filter_template_out is not None:
+            out["filter_template.logits"] = mask_arg(self.filter_template_out(arg_states))
 
         # Entity reference: bilinear match of each argument against the
         # linked items, plus a learned NONE slot at the end.
@@ -441,6 +447,10 @@ def tensor_specs(cfg: NtcArchConfig) -> list[tuple[str, list[int]]]:
     specs.append(("heads.no_call_reason.out.bias", [5]))
     specs.append(("heads.entity.proj.weight", [h, h]))
     specs.append(("heads.entity.none.embedding", [h]))
+    if cfg.filter_template_classes:
+        k = cfg.filter_template_classes
+        specs.append(("heads.filter_template.out.weight", [h, k]))
+        specs.append(("heads.filter_template.out.bias", [k]))
     specs.append(("context.linked_kind.weight", [len(LINKED_KINDS) + 1, h]))
     specs.append(("context.linked_pos.weight", [MAX_LINKED + 1, h]))
     for name, classes in (
@@ -531,6 +541,8 @@ def iter_tensor_params(
     yield from linear("heads.unresolved_reason.out", model.unresolved_reason_out)
     yield from linear("heads.entity.proj", model.entity_proj)
     yield "heads.entity.none.embedding", model.entity_none, False
+    if model.filter_template_out is not None:
+        yield from linear("heads.filter_template.out", model.filter_template_out)
     yield "context.linked_kind.weight", model.linked_kind_emb.weight, False
     yield "context.linked_pos.weight", model.linked_pos_emb.weight, False
     yield from linear("heads.boolean.out", model.boolean_out)

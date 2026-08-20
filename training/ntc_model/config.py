@@ -25,6 +25,24 @@ class Calibration(BaseModel):
     value: float = 1.0
 
 
+class FilterTemplate(BaseModel):
+    """One host-declared way to construct a value the utterance never spells out.
+
+    Mirrors `ntc_model::config::FilterTemplate`. The head's class order is
+    `NONE` followed by this list in declared order, so the table is part of
+    what the model trained against and travels in `.ntc` metadata with the
+    weights — a host adds or reorders templates by retraining, not by a
+    head-codec bump.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    semantic: str
+    pattern: str
+    values: list[str] = Field(default_factory=list)
+
+
 class NtcArchConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -44,6 +62,7 @@ class NtcArchConfig(BaseModel):
     layer_norm_eps: float = 1e-5
     action_classes: int = Field(default=3, ge=3, le=4)
     calibration: Calibration = Field(default_factory=Calibration)
+    filter_templates: list[FilterTemplate] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _validate(self) -> NtcArchConfig:
@@ -59,6 +78,15 @@ class NtcArchConfig(BaseModel):
     @property
     def head_dim(self) -> int:
         return self.hidden // self.heads
+
+    @property
+    def filter_template_classes(self) -> int:
+        """Width of the filter-template head: NONE plus one class per template.
+
+        Zero when no templates are declared, in which case the head does not
+        exist and its tensors are absent from the export.
+        """
+        return len(self.filter_templates) + 1 if self.filter_templates else 0
 
     def packed_len(self, n_tools: int | None = None) -> int:
         """Packed fusion sequence length: T tool segments + the NO_TOOL slot."""

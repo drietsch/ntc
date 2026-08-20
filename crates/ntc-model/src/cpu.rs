@@ -482,6 +482,25 @@ impl Backend for CpuRefBackend {
             out.insert("entity_ref.logits".into(), entity);
         }
 
+        // Head-codec v4 (optional): which of the host's declared value
+        // templates this argument takes. Width is 1 (NONE) + the declared
+        // table, so a model with no templates carries no head at all.
+        let k = self.cfg.filter_template_classes();
+        if k > 0 && self.weights.has_filter_template_head() {
+            let mut templates =
+                Tensor::from_vec(&[n_tools, a, k], vec![f32::MIN; n_tools * a * k]);
+            for (t, tool) in inputs.tools.iter().enumerate() {
+                for (idx, &anchor) in tool.arg_anchors.iter().enumerate() {
+                    let arg_state = state_at(t * ls + anchor).to_vec();
+                    let base = t * a + idx;
+                    templates.data[base * k..base * k + k].copy_from_slice(
+                        &self.linear_head(&arg_state, "heads.filter_template.out")?,
+                    );
+                }
+            }
+            out.insert("filter_template.logits".into(), templates);
+        }
+
         Ok(HeadOutputs { tensors: out })
     }
 }

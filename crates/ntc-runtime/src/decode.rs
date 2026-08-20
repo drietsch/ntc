@@ -8,7 +8,8 @@ use ntc_core::ir::{
     DurationValue, Provenance, ProvenanceSource, SemanticValue, TokenSpan, UnresolvedField,
     Weekday,
 };
-use ntc_core::schema::{CanonicalTool, ParamType};
+use ntc_core::schema::{CanonicalArg, CanonicalTool, ParamType};
+use ntc_model::config::FilterTemplate;
 use ntc_core::tokenizer::TokenSeq;
 use ntc_core::{NtcError, IR_VERSION};
 use ntc_model::{HeadOutputs, ModelInputs};
@@ -54,6 +55,9 @@ pub struct Decoder<'a> {
     pub candidates: &'a [&'a CanonicalTool],
     /// The request's context frame, if the host supplied one.
     pub context: Option<&'a ntc_core::ir::RequestContext>,
+    /// Value templates the model was trained against (head codec v4). Empty
+    /// for models without a filter-template head.
+    pub filter_templates: &'a [FilterTemplate],
     pub action_temperature: f32,
     pub tool_temperature: f32,
     pub presence_temperature: f32,
@@ -115,6 +119,51 @@ impl<'a> Decoder<'a> {
             2 => ProvenanceSource::Resolver,
             _ => ProvenanceSource::Model,
         }
+    }
+
+    /// Which value template this argument takes, if any (head codec v4).
+    ///
+    /// Only templates declaring the argument's own `SEMANTIC` annotation
+    /// compete; every other class is masked out, exactly as the enum head is
+    /// masked to the argument's own enum values. `NONE` (index 0) always
+    /// competes and means "no template applies" — the ordinary span/source
+    /// path then decides, so an argument that *can* take a template is not
+    /// forced into one.
+    ///
+    /// Returns `None` when the model has no such head, when the argument
+    /// carries no matching template, or when `NONE` wins.
+    fn filter_template(
+        &self,
+        tool_idx: usize,
+        arg_idx: usize,
+        arg: &CanonicalArg,
+    ) -> Result<Option<(&'a FilterTemplate, f32)>, NtcError> {
+        if self.filter_templates.is_empty() {
+            return Ok(None);
+        }
+        let Some(semantic) = arg.semantic_type.as_ref() else {
+            return Ok(None);
+        };
+        let Some(t) = self.optional("filter_template.logits") else {
+            return Ok(None);
+        };
+        let classes = self.filter_templates.len() + 1;
+        let a = t.shape[1];
+        let base = (tool_idx * a + arg_idx) * classes;
+        let row = &t.data[base..base + classes];
+
+        let mut masked = vec![f32::MIN; classes];
+        masked[0] = row[0]; // NONE always competes
+        for (i, template) in self.filter_templates.iter().enumerate() {
+            if template.semantic == semantic.0 {
+                masked[i + 1] = row[i + 1];
+            }
+        }
+        if masked[1..].iter().all(|&v| v == f32::MIN) {
+            return Ok(None); // no template serves this argument
+        }
+        let (idx, confidence) = argmax_softmax(&masked, self.value_temperature);
+        Ok((idx > 0).then(|| (&self.filter_templates[idx - 1], confidence)))
     }
 
     /// Which linked items an argument binds. Multi-select: every item whose
@@ -309,6 +358,28 @@ impl<'a> Decoder<'a> {
     ) -> Result<Option<(SemanticValue, f32, Option<Provenance>)>, NtcError> {
         let arg = &tool.args[arg_idx];
 
+        // Head codec v4: a value the request does not spell out, chosen from
+        // the shapes the host declared. Consulted before anything else,
+        // because when a template wins the span is a *slot filler*, not the
+        // value — reading it as the value is exactly the failure this head
+        // exists to remove. A template whose slots the span cannot fill
+        // returns no value at all, which surfaces as ASK rather than as a
+        // confidently wrong filter.
+        if let Some(chosen) = self.filter_template(tool_idx, arg_idx, arg)? {
+            let (template, confidence) = chosen;
+            let span_text = if template.pattern.contains('{') {
+                self.span(tool_idx, arg_idx)?.2
+            } else {
+                None
+            };
+            return Ok(crate::normalize::template::render(
+                &template.pattern,
+                span_text.as_deref(),
+                &template.values,
+            )
+            .map(|s| (SemanticValue::String(s), confidence, None)));
+        }
+
         // Head codec v3: decide where the value comes from before looking for
         // it. A value bound from the Studio selection has no span at all.
         match self.value_source(tool_idx, arg_idx) {
@@ -340,6 +411,21 @@ impl<'a> Decoder<'a> {
                     }
                 }
             }
+            ProvenanceSource::Model => {
+                // The model says this value has no source in the request. If
+                // the schema declares what the provider uses when the argument
+                // is omitted, that is the value — supplying it is reading the
+                // schema, not inventing a number. Looking for a span here
+                // would be looking for something the model just said is not
+                // there.
+                if let Some(value) = arg
+                    .default_value
+                    .as_ref()
+                    .and_then(|d| value_from_default(arg, d))
+                {
+                    return Ok(Some((value, 0.9, None)));
+                }
+            }
             _ => {}
         }
 
@@ -359,7 +445,22 @@ impl<'a> Decoder<'a> {
             other => other,
         };
 
+        // A provider that takes a list as one comma-separated string (spec §19
+        // tier 1 in TEXT clothing). TYPE stays TEXT — the provider still wants
+        // a string — but the span covers a list region ("video-embed and
+        // spec-table"), so it is split by the same deterministic rules as
+        // `TYPE LIST` and re-joined in the provider's own separator.
+        let csv_list = arg
+            .semantic_type
+            .as_ref()
+            .is_some_and(|sem| sem.0 == "LIST.CSV");
+
         let out = match effective_type {
+            ParamType::Text if csv_list => span_text.and_then(|t| {
+                let items = crate::normalize::list::split_items(&t);
+                (!items.is_empty())
+                    .then(|| (SemanticValue::String(items.join(",")), span_conf, provenance))
+            }),
             ParamType::Text => span_text.map(|t| (SemanticValue::String(t), span_conf, provenance)),
             ParamType::Person => {
                 span_text.map(|t| (SemanticValue::PersonRef { text: t }, span_conf, provenance))
@@ -673,5 +774,34 @@ fn parse_rfc3339_like(text: &str) -> Option<String> {
         Some(t.to_string())
     } else {
         None
+    }
+}
+
+/// Convert a schema-declared `default` into a semantic value of the
+/// argument's canonical type.
+///
+/// Deliberately strict: a default that does not match the declared type is
+/// dropped rather than coerced, so a sloppy registry cannot smuggle a value
+/// past the type system. Enum defaults resolve to their index in
+/// `enum_values`; a default naming a symbol the enum does not list is dropped.
+fn value_from_default(arg: &CanonicalArg, default: &serde_json::Value) -> Option<SemanticValue> {
+    match arg.param_type {
+        ParamType::Integer => default.as_i64().map(SemanticValue::Integer),
+        ParamType::Float => default.as_f64().map(SemanticValue::Float),
+        ParamType::Boolean => default.as_bool().map(SemanticValue::Boolean),
+        ParamType::Text | ParamType::Person | ParamType::Location => {
+            default.as_str().map(|s| SemanticValue::String(s.to_string()))
+        }
+        ParamType::Enum => {
+            let symbol = default.as_str()?;
+            let index = arg.enum_values.iter().position(|v| v == symbol)?;
+            Some(SemanticValue::Enum {
+                index: index as u32,
+                symbol: symbol.to_string(),
+            })
+        }
+        // Dates, durations and composites carry their own decode paths; a
+        // literal default for them is not expressible in V1.
+        _ => None,
     }
 }

@@ -86,6 +86,7 @@ mod tests {
             semantic_type: semantic.map(|s| SemanticTypeId(s.into())),
             description: String::new(),
             enum_values: vec![],
+            default_value: None,
         }
     }
 
