@@ -5,12 +5,16 @@
 # that regressed is obvious before the expensive wide-slate sweep runs.
 #
 #   1. narrow-slate ESA    the headline, comparable to every number so far
-#   2. acceptance suite    26 hand-written scenarios, the "does it feel right" check
-#   3. wide-slate ESA      all 49 tools offered — the honest production setting
+#   2. NO_TOOL probe       can it decline when no offered tool fits? — the
+#                          capability wide-slate routing depends on, and one
+#                          forward pass per row instead of eighteen
+#   3. acceptance suite    26 hand-written scenarios, the "does it feel right" check
+#   4. wide-slate ESA      all 49 tools offered — the honest production setting
 #
-# The optional-argument threshold is swept rather than assumed: it moved v1
-# from 28.4% to 42.4%, so a fixed value would credit or blame the model for a
-# decode setting.
+# The optional-argument threshold is swept rather than assumed: it was worth 14
+# points on v1 (28.4% -> 42.4%), whose presence head was broken, and 1.4 points
+# on v2, whose head works. A fixed value credits or blames the model for a
+# decode setting, and which of those it is changes per checkpoint.
 #
 # Usage: eval/run_all.sh runs/studio-v2/best.pt ntc-studio-v2
 set -euo pipefail
@@ -54,15 +58,19 @@ for T in 0.5 0.7 0.9 0.99; do
 done
 
 echo
-echo "=== 2. acceptance scenarios"
+echo "=== 2. can it say \"none of these tools fits\"?  (v2 baseline: 24.0% / intact 88.7%)"
+python3 eval/no_tool_probe.py --model "$MODEL" --limit 150
+
+echo
+echo "=== 3. acceptance scenarios"
 python3 eval/usecase/run.py --model "$MODEL" || true   # exit 1 unless a clean sweep
 
 echo
-echo "=== 3. wide slate — all 49 tools, shortlist-then-decide"
+echo "=== 4. wide slate — all 49 tools, shortlist-then-decide"
 python3 eval/wide_slate.py --model "$MODEL" --out "$REPO/eval/reports/$NAME-wide.json"
 
 echo
-echo "=== 4. does a focused re-read help the arguments?"
+echo "=== 5. does a focused re-read help the arguments? (measured -0.9% twice)"
 python3 eval/refocus_probe.py --model "$MODEL"
 
 rm -f "$IN" "$OUT"
