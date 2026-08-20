@@ -49,6 +49,44 @@ def values_equal(got, want) -> bool:
     return got == want
 
 
+def needs_composed_value(arg: dict) -> bool:
+    """True when no span or context can supply this argument's value.
+
+    The architecture has no decoder: arguments come from a span pointing into
+    the utterance, from the context frame (a linked item, the resolver), or
+    from a dedicated head for booleans and enums. A value that has to be
+    *authored* fits none of those, and no amount of training produces it.
+
+    The Studio corpus has a concrete example — `pqlFilter`:
+
+        "lista todos los archivos csv"  ->  filename LIKE "*.csv"
+
+    That string does not occur in the utterance; it is a query-language
+    expression composed from it. Rows like this are not compiler failures,
+    they are the case DELEGATE exists for, and scoring them as missed calls
+    understates the system against its own design.
+    """
+    if arg.get("source") in ("LINKED_ITEM", "RESOLVER", "CONTEXT"):
+        return False
+    if "char_span" in arg or arg.get("element_spans"):
+        return False
+    value = arg.get("value")
+    if isinstance(value, bool):  # the boolean head needs no span
+        return False
+    if isinstance(value, dict) and "symbol" in value:  # enum pointer head
+        return False
+    return True
+
+
+def ceiling(gold: list[dict]) -> tuple[int, int]:
+    """(rows a span-based compiler cannot express, call-worthy rows)."""
+    call_rows = [g for g in gold if g["gold"]["action"] == "CALL"]
+    blocked = sum(
+        1 for g in call_rows if any(needs_composed_value(a) for a in g["gold"]["arguments"])
+    )
+    return blocked, len(call_rows)
+
+
 def score(preds: dict[str, dict], gold: list[dict]) -> dict:
     funnel = Counter()
     per_tool: dict[str, Counter] = {}
@@ -99,9 +137,14 @@ def score(preds: dict[str, dict], gold: list[dict]) -> dict:
                 funnel["only_extra_args"] += 1
 
     n = funnel["call_worthy"] or 1
+    blocked, call_n = ceiling(gold)
     return {
         "call_worthy_requests": funnel["call_worthy"],
         "executable_semantic_accuracy": round(funnel["executable"] / n, 4),
+        "ceiling": {
+            "unreachable_rows": blocked,
+            "ceiling": round((call_n - blocked) / max(1, call_n), 4),
+        },
         "funnel": {
             "emitted a call": round(funnel["emitted_a_call"] / n, 3),
             "...with the right tool": round(funnel["right_tool"] / n, 3),
@@ -131,8 +174,11 @@ def main() -> None:
         preds[row["id"]] = row.get("result") or {"error": row.get("error")}
     report = score(preds, load(args.gold))
 
+    c = report["ceiling"]
     print(f"call-worthy requests            {report['call_worthy_requests']}")
     print(f"EXECUTABLE SEMANTIC ACCURACY    {report['executable_semantic_accuracy']:.1%}")
+    print(f"  ceiling for this architecture {c['ceiling']:.1%}"
+          f"   ({c['unreachable_rows']} rows need a composed value — see DELEGATE)")
     print("\nfunnel (share of call-worthy requests):")
     for k, v in report["funnel"].items():
         print(f"  {k:32} {v:.1%}")
