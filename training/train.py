@@ -315,10 +315,14 @@ def evaluate(model, cfg, items, device, batch_size=32) -> dict[str, float]:
         agg["span_total"] += int(smask.sum())
 
     model.train()
+    # A head with no supervised examples in this corpus is *absent*, not 0.0.
+    # The Studio corpus has no datetime arguments at all, so reporting
+    # relation_acc 0.0 every epoch reads as a dead head rather than an unused
+    # one, and invites debugging a head that was never trained here.
     return {
-        k.replace("_correct", "_acc"): agg[k] / max(1, agg[k.replace("_correct", "_total")])
+        k.replace("_correct", "_acc"): agg[k] / agg[k.replace("_correct", "_total")]
         for k in agg
-        if k.endswith("_correct")
+        if k.endswith("_correct") and agg[k.replace("_correct", "_total")] > 0
     }
 
 

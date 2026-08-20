@@ -4,12 +4,12 @@
   "model_version": "tiny-v1-seed42",
   "quantization": "f32",
   "ir_version": 1,
-  "abi_version": 1,
-  "head_spec_version": 1,
+  "abi_version": 2,
+  "head_spec_version": 3,
   "tokenizer_sha256": "f1a93aa628ec438d5efde5bc354c381bb568e5bba866625cd4cb61c250e1738b",
   "tokenizer_bytes": 1606,
-  "tensor_count": 112,
-  "total_tensor_bytes": 217304,
+  "tensor_count": 128,
+  "total_tensor_bytes": 242464,
   "tensors": [
     {
       "name": "embeddings.word.weight",
@@ -1066,6 +1066,159 @@
       ],
       "offset": 226560,
       "byte_length": 52
+    },
+    {
+      "name": "heads.delegate_reason.dense.weight",
+      "dtype": "F32",
+      "shape": [
+        64,
+        32
+      ],
+      "offset": 226816,
+      "byte_length": 8192
+    },
+    {
+      "name": "heads.delegate_reason.dense.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 235008,
+      "byte_length": 128
+    },
+    {
+      "name": "heads.delegate_reason.out.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        4
+      ],
+      "offset": 235264,
+      "byte_length": 512
+    },
+    {
+      "name": "heads.delegate_reason.out.bias",
+      "dtype": "F32",
+      "shape": [
+        4
+      ],
+      "offset": 235776,
+      "byte_length": 16
+    },
+    {
+      "name": "heads.no_call_reason.dense.weight",
+      "dtype": "F32",
+      "shape": [
+        64,
+        32
+      ],
+      "offset": 236032,
+      "byte_length": 8192
+    },
+    {
+      "name": "heads.no_call_reason.dense.bias",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 244224,
+      "byte_length": 128
+    },
+    {
+      "name": "heads.no_call_reason.out.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        5
+      ],
+      "offset": 244480,
+      "byte_length": 640
+    },
+    {
+      "name": "heads.no_call_reason.out.bias",
+      "dtype": "F32",
+      "shape": [
+        5
+      ],
+      "offset": 245248,
+      "byte_length": 20
+    },
+    {
+      "name": "heads.source.out.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        4
+      ],
+      "offset": 245504,
+      "byte_length": 512
+    },
+    {
+      "name": "heads.source.out.bias",
+      "dtype": "F32",
+      "shape": [
+        4
+      ],
+      "offset": 246016,
+      "byte_length": 16
+    },
+    {
+      "name": "heads.unresolved_reason.out.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        5
+      ],
+      "offset": 246272,
+      "byte_length": 640
+    },
+    {
+      "name": "heads.unresolved_reason.out.bias",
+      "dtype": "F32",
+      "shape": [
+        5
+      ],
+      "offset": 247040,
+      "byte_length": 20
+    },
+    {
+      "name": "heads.entity.proj.weight",
+      "dtype": "F32",
+      "shape": [
+        32,
+        32
+      ],
+      "offset": 247296,
+      "byte_length": 4096
+    },
+    {
+      "name": "heads.entity.none.embedding",
+      "dtype": "F32",
+      "shape": [
+        32
+      ],
+      "offset": 251392,
+      "byte_length": 128
+    },
+    {
+      "name": "context.linked_kind.weight",
+      "dtype": "F32",
+      "shape": [
+        6,
+        32
+      ],
+      "offset": 251648,
+      "byte_length": 768
+    },
+    {
+      "name": "context.linked_pos.weight",
+      "dtype": "F32",
+      "shape": [
+        9,
+        32
+      ],
+      "offset": 252416,
+      "byte_length": 1152
     }
   ]
 }

@@ -229,25 +229,27 @@ fn verify(file: &std::path::Path, dump_manifest: bool) -> Result<()> {
 fn fixture_gen(out: &std::path::Path, seed: u64) -> Result<()> {
     use ntc_format::writer::NtcWriter;
     use ntc_format::{DType, NtcMetadata};
-    use ntc_model::test_support::{random_weights, test_tokenizer_json, tiny_config};
-    use ntc_model::weights::tensor_specs;
+    use ntc_model::test_support::{random_weights_with_v3, test_tokenizer_json, tiny_config};
+    use ntc_model::weights::{tensor_specs, v3_head_specs};
 
     let cfg = tiny_config();
-    let weights = random_weights(&cfg, seed);
+    let weights = random_weights_with_v3(&cfg, seed);
 
     let metadata = NtcMetadata {
         architecture: ntc_model::ARCHITECTURE.into(),
         model_version: format!("tiny-v1-seed{seed}"),
         ir_version: ntc_core::IR_VERSION,
         abi_version: ntc_core::ABI_VERSION,
-        head_spec_version: 1,
+        head_spec_version: 3,
         tokenizer_sha256: String::new(), // writer fills this
         quantization: "f32".into(),
         model: serde_json::to_value(&cfg)?,
         semantic_types: vec![],
     };
     let mut w = NtcWriter::new(metadata, test_tokenizer_json().into_bytes());
-    for (name, shape) in tensor_specs(&cfg) {
+    let mut specs = tensor_specs(&cfg);
+    specs.extend(v3_head_specs(&cfg));
+    for (name, shape) in specs {
         let t = weights.get(&name).map_err(|e| anyhow::anyhow!("{e}"))?;
         let bytes: Vec<u8> = t.data.iter().flat_map(|f| f.to_le_bytes()).collect();
         let shape_u64: Vec<u64> = shape.iter().map(|&d| d as u64).collect();

@@ -103,7 +103,9 @@ def test_export_matches_canonical_tensor_specs():
     model = NtcEncoderHeadsV1(cfg)
     tensors = export_tensors(model, cfg)  # raises on any name/shape drift
     specs = tensor_specs(cfg)
-    assert len(specs) == len(tensors) == 112  # pinned by the Rust tiny manifest
+    # 128 = the v3 head set; was 112 before delegate_reason/no_call_reason/
+    # source/unresolved_reason/entity and the linked-context embeddings.
+    assert len(specs) == len(tensors) == 128
     for arr in tensors.values():
         assert arr.dtype == np.float32
 

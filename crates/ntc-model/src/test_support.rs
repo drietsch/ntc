@@ -143,10 +143,30 @@ pub fn test_tokenizer_json() -> String {
 /// Seeded uniform weights in ±0.5/√hidden (keeps activations tame through
 /// the post-LN stack). Deterministic per (cfg, seed).
 pub fn random_weights(cfg: &NtcArchConfig, seed: u64) -> ModelWeights {
+    random_weights_for(cfg, seed, false)
+}
+
+/// The same weights plus the optional v3 head tensors.
+///
+/// Kept separate from [`random_weights`] deliberately: the v3 specs are
+/// appended *after* the v2 ones and draw from the same RNG stream, so every
+/// v2 tensor is bit-identical between the two. Unit tests that pin golden
+/// logits keep using the v2 set; the exported fixture uses this one, so it
+/// carries the full head set the shipping model actually has and can be
+/// cross-checked name-for-name against the Python exporter.
+pub fn random_weights_with_v3(cfg: &NtcArchConfig, seed: u64) -> ModelWeights {
+    random_weights_for(cfg, seed, true)
+}
+
+fn random_weights_for(cfg: &NtcArchConfig, seed: u64, with_v3: bool) -> ModelWeights {
     let mut rng = ChaCha8Rng::seed_from_u64(seed);
     let scale = 0.5 / (cfg.hidden as f32).sqrt();
     let mut map = std::collections::HashMap::new();
-    for (name, shape) in tensor_specs(cfg) {
+    let mut specs = tensor_specs(cfg);
+    if with_v3 {
+        specs.extend(crate::weights::v3_head_specs(cfg));
+    }
+    for (name, shape) in specs {
         let n: usize = shape.iter().product();
         let data: Vec<f32> = if name.ends_with("norm.weight") {
             vec![1.0; n]

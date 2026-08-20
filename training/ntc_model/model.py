@@ -20,6 +20,8 @@ from the Rust reference (which zeroes them) cannot leak into head outputs.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 import numpy as np
 import torch
 from torch import Tensor, nn
@@ -44,6 +46,12 @@ HEAD_OUTPUT_NAMES = (
     "datetime.weekday.logits",
     "datetime.daypart.logits",
     "datetime.month.logits",
+    # Head codec v3.
+    "delegate_reason.logits",
+    "no_call_reason.logits",
+    "source.logits",
+    "unresolved_reason.logits",
+    "entity_ref.logits",
 )
 
 
@@ -451,86 +459,98 @@ def tensor_specs(cfg: NtcArchConfig) -> list[tuple[str, list[int]]]:
     return specs
 
 
-def export_tensors(model: NtcEncoderHeadsV1, cfg: NtcArchConfig) -> dict[str, np.ndarray]:
-    """Canonical Rust tensor names -> float32 arrays.
+def iter_tensor_params(
+    model: NtcEncoderHeadsV1,
+) -> Iterator[tuple[str, torch.nn.Parameter | Tensor, bool]]:
+    """Yield `(canonical_name, parameter, needs_transpose)` for every tensor.
 
-    `nn.Linear` stores weights `[out, in]`; the runtime contract is `[in, out]`
-    (kernels compute `y = x·W + b`), so linear weights are transposed here.
-    Embedding tables and LayerNorm params export as-is.
+    The **single** walk of the model's parameters, used by `export_tensors` to
+    write and by `ntc_model.io.import_tensors` to read. It has to stay single:
+    when export and import kept separate walks, adding the v3 heads to one and
+    not the other produced a model that could be written and never read back,
+    and the round-trip test only caught it because it counts tensors.
+
+    `nn.Linear` stores weights `[out, in]` while the runtime contract is
+    `[in, out]` (kernels compute `y = x·W + b`), so linear weights carry
+    `needs_transpose`; embeddings and LayerNorm params transfer as-is.
     """
-    out: dict[str, np.ndarray] = {}
 
-    def npy(t: Tensor) -> np.ndarray:
-        return t.detach().cpu().numpy().astype(np.float32)
-
-    def linear(name: str, mod: nn.Linear) -> None:
-        out[f"{name}.weight"] = np.ascontiguousarray(npy(mod.weight).T)
+    def linear(name: str, mod: nn.Linear):
+        yield f"{name}.weight", mod.weight, True
         if mod.bias is not None:
-            out[f"{name}.bias"] = npy(mod.bias)
+            yield f"{name}.bias", mod.bias, False
 
-    def norm(name: str, mod: nn.LayerNorm) -> None:
-        out[f"{name}.weight"] = npy(mod.weight)
-        out[f"{name}.bias"] = npy(mod.bias)
+    def norm(name: str, mod: nn.LayerNorm):
+        yield f"{name}.weight", mod.weight, False
+        yield f"{name}.bias", mod.bias, False
 
-    def layer(prefix: str, mod: TransformerLayer) -> None:
+    def layer(prefix: str, mod: TransformerLayer):
         for p in ("q", "k", "v", "o"):
-            linear(f"{prefix}.attn.{p}", getattr(mod.attn, p))
-        norm(f"{prefix}.attn.norm", mod.attn_norm)
-        linear(f"{prefix}.ffn.up", mod.ffn_up)
-        linear(f"{prefix}.ffn.down", mod.ffn_down)
-        norm(f"{prefix}.ffn.norm", mod.ffn_norm)
+            yield from linear(f"{prefix}.attn.{p}", getattr(mod.attn, p))
+        yield from norm(f"{prefix}.attn.norm", mod.attn_norm)
+        yield from linear(f"{prefix}.ffn.up", mod.ffn_up)
+        yield from linear(f"{prefix}.ffn.down", mod.ffn_down)
+        yield from norm(f"{prefix}.ffn.norm", mod.ffn_norm)
 
-    out["embeddings.word.weight"] = npy(model.word_emb.weight)
-    out["embeddings.position.weight"] = npy(model.pos_emb.weight)
-    norm("embeddings.norm", model.emb_norm)
+    yield "embeddings.word.weight", model.word_emb.weight, False
+    yield "embeddings.position.weight", model.pos_emb.weight, False
+    yield from norm("embeddings.norm", model.emb_norm)
     for i, mod in enumerate(model.encoder_layers):
-        layer(f"encoder.layer.{i}", mod)
+        yield from layer(f"encoder.layer.{i}", mod)
 
-    out["schema.embeddings.segment_kind.weight"] = npy(model.segment_kind_emb.weight)
-    out["schema.embeddings.tool_index.weight"] = npy(model.tool_index_emb.weight)
-    norm("schema.embeddings.norm", model.schema_norm)
+    yield "schema.embeddings.segment_kind.weight", model.segment_kind_emb.weight, False
+    yield "schema.embeddings.tool_index.weight", model.tool_index_emb.weight, False
+    yield from norm("schema.embeddings.norm", model.schema_norm)
     for i, mod in enumerate(model.schema_layers):
-        layer(f"schema.layer.{i}", mod)
+        yield from layer(f"schema.layer.{i}", mod)
 
-    out["fusion.no_tool.embedding"] = npy(model.no_tool)
+    yield "fusion.no_tool.embedding", model.no_tool, False
     for i, block in enumerate(model.fusion_blocks):
         for part, attn, nrm in (
             ("self", block.self_attn, block.self_norm),
             ("cross", block.cross_attn, block.cross_norm),
         ):
             for p in ("q", "k", "v", "o"):
-                linear(f"fusion.block.{i}.{part}.{p}", getattr(attn, p))
-            norm(f"fusion.block.{i}.{part}.norm", nrm)
-        linear(f"fusion.block.{i}.ffn.up", block.ffn_up)
-        linear(f"fusion.block.{i}.ffn.down", block.ffn_down)
-        norm(f"fusion.block.{i}.ffn.norm", block.ffn_norm)
+                yield from linear(f"fusion.block.{i}.{part}.{p}", getattr(attn, p))
+            yield from norm(f"fusion.block.{i}.{part}.norm", nrm)
+        yield from linear(f"fusion.block.{i}.ffn.up", block.ffn_up)
+        yield from linear(f"fusion.block.{i}.ffn.down", block.ffn_down)
+        yield from norm(f"fusion.block.{i}.ffn.norm", block.ffn_norm)
 
-    linear("heads.action.dense", model.action_head.dense)
-    linear("heads.action.out", model.action_head.out)
-    linear("heads.tool.dense", model.tool_head.dense)
-    linear("heads.tool.out", model.tool_head.out)
-    linear("heads.presence.dense", model.presence_head.dense)
-    linear("heads.presence.out", model.presence_head.out)
-    linear("heads.delegate_reason.dense", model.delegate_reason_head.dense)
-    linear("heads.delegate_reason.out", model.delegate_reason_head.out)
-    linear("heads.no_call_reason.dense", model.no_call_reason_head.dense)
-    linear("heads.no_call_reason.out", model.no_call_reason_head.out)
-    linear("heads.source.out", model.source_out)
-    linear("heads.unresolved_reason.out", model.unresolved_reason_out)
-    linear("heads.entity.proj", model.entity_proj)
-    out["heads.entity.none.embedding"] = npy(model.entity_none)
-    out["context.linked_kind.weight"] = npy(model.linked_kind_emb.weight)
-    out["context.linked_pos.weight"] = npy(model.linked_pos_emb.weight)
-    linear("heads.boolean.out", model.boolean_out)
-    linear("heads.span.start", model.span_start)
-    linear("heads.span.end", model.span_end)
-    linear("heads.enum", model.enum_proj)
-    linear("heads.numeric.unit", model.numeric_unit)
-    linear("heads.numeric.magnitude", model.numeric_magnitude)
-    linear("heads.datetime.relation", model.datetime_relation)
-    linear("heads.datetime.weekday", model.datetime_weekday)
-    linear("heads.datetime.daypart", model.datetime_daypart)
-    linear("heads.datetime.month", model.datetime_month)
+    yield from linear("heads.action.dense", model.action_head.dense)
+    yield from linear("heads.action.out", model.action_head.out)
+    yield from linear("heads.tool.dense", model.tool_head.dense)
+    yield from linear("heads.tool.out", model.tool_head.out)
+    yield from linear("heads.presence.dense", model.presence_head.dense)
+    yield from linear("heads.presence.out", model.presence_head.out)
+    yield from linear("heads.delegate_reason.dense", model.delegate_reason_head.dense)
+    yield from linear("heads.delegate_reason.out", model.delegate_reason_head.out)
+    yield from linear("heads.no_call_reason.dense", model.no_call_reason_head.dense)
+    yield from linear("heads.no_call_reason.out", model.no_call_reason_head.out)
+    yield from linear("heads.source.out", model.source_out)
+    yield from linear("heads.unresolved_reason.out", model.unresolved_reason_out)
+    yield from linear("heads.entity.proj", model.entity_proj)
+    yield "heads.entity.none.embedding", model.entity_none, False
+    yield "context.linked_kind.weight", model.linked_kind_emb.weight, False
+    yield "context.linked_pos.weight", model.linked_pos_emb.weight, False
+    yield from linear("heads.boolean.out", model.boolean_out)
+    yield from linear("heads.span.start", model.span_start)
+    yield from linear("heads.span.end", model.span_end)
+    yield from linear("heads.enum", model.enum_proj)
+    yield from linear("heads.numeric.unit", model.numeric_unit)
+    yield from linear("heads.numeric.magnitude", model.numeric_magnitude)
+    yield from linear("heads.datetime.relation", model.datetime_relation)
+    yield from linear("heads.datetime.weekday", model.datetime_weekday)
+    yield from linear("heads.datetime.daypart", model.datetime_daypart)
+    yield from linear("heads.datetime.month", model.datetime_month)
+
+
+def export_tensors(model: NtcEncoderHeadsV1, cfg: NtcArchConfig) -> dict[str, np.ndarray]:
+    """Canonical Rust tensor names -> float32 arrays."""
+    out: dict[str, np.ndarray] = {}
+    for name, param, transpose in iter_tensor_params(model):
+        arr = param.detach().cpu().numpy().astype(np.float32)
+        out[name] = np.ascontiguousarray(arr.T) if transpose else arr
 
     specs = tensor_specs(cfg)
     expected = {name: shape for name, shape in specs}

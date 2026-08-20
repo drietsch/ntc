@@ -13,6 +13,13 @@ from export.export_tiny import (
     extract_test_tokenizer,
 )
 from export.ntc_writer import read_ntc_file
+from ntc_model.config import tiny_config
+from ntc_model.model import tensor_specs
+
+#: Derived from the head contract, not hardcoded. A literal here drifted from
+#: the model when the v3 heads landed and stayed wrong; test_model.py keeps one
+#: deliberate pin so the count still cannot change silently.
+EXPECTED_TENSORS = len(tensor_specs(tiny_config()))
 
 NTC_BIN = REPO_ROOT / "target" / "debug" / "ntc"
 
@@ -35,7 +42,7 @@ def test_export_writes_parseable_file(tmp_path):
     parsed = read_ntc_file(out)
     assert parsed["sha256_ok"]
     assert parsed["metadata"]["architecture"] == "ntc_encoder_heads_v1"
-    assert len(parsed["records"]) == 112
+    assert len(parsed["records"]) == EXPECTED_TENSORS
     # Tokenizer bytes are byte-identical to the Rust fixture's.
     assert parsed["tokenizer_bytes"] == extract_test_tokenizer()
 
@@ -52,7 +59,7 @@ def test_rust_verify_accepts_python_export():
     assert proc.returncode == 0, f"ntc verify failed:\n{proc.stdout}\n{proc.stderr}"
     manifest = json.loads(proc.stdout)
     assert manifest["architecture"] == "ntc_encoder_heads_v1"
-    assert manifest["tensor_count"] == 112
+    assert manifest["tensor_count"] == EXPECTED_TENSORS
     assert manifest["model_version"] == "tiny-v1-py-seed42"
     assert manifest["quantization"] == "f32"
 
