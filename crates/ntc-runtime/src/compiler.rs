@@ -306,15 +306,67 @@ impl<B: Backend> NeuralToolCompiler<B> {
     /// over the survivors. A slate that already fits is compiled directly, so
     /// the single-pass path is unchanged.
     pub fn compile(&mut self, req: &CompileRequest) -> Result<CompileOutcome, NtcError> {
+        Ok(self.compile_with_shortlist(req)?.0)
+    }
+
+    /// Compile, and also return how a wide tool set was narrowed.
+    ///
+    /// A wrong answer over a wide slate has two very different causes: the
+    /// right tool never survived the shortlist, or it survived and lost the
+    /// deciding pass. They need opposite fixes — a better stage-1 scorer
+    /// versus a better model — and the outcome alone cannot tell them apart.
+    /// `None` means the slate already fitted and no narrowing happened.
+    pub fn compile_with_shortlist(
+        &mut self,
+        req: &CompileRequest,
+    ) -> Result<(CompileOutcome, Option<Shortlist>), NtcError> {
         let ids = self
             .registry
             .resolve_candidates(req.candidates.as_deref())?;
-        let ids = if ids.len() > self.slate_limit() {
-            self.shortlist(req, &ids)?.kept
+        let (ids, shortlist) = if ids.len() > self.slate_limit() {
+            let s = self.shortlist(req, &ids)?;
+            (s.kept.clone(), Some(s))
         } else {
-            ids
+            (ids, None)
         };
-        self.decide(req, &ids)
+        Ok((self.decide(req, &ids)?, shortlist))
+    }
+
+    /// Score every tool in `pool`, slate by slate, best first.
+    ///
+    /// A tool's score is its logit's margin over **that slate's own NO_TOOL**.
+    /// NO_TOOL is the only option present in every slate, which makes it the
+    /// one usable common reference; raw logits are not comparable across
+    /// slates, and per-slate softmax is worse than nothing here, because a
+    /// slate of three strong candidates splits its mass while a slate of three
+    /// decoys does not — so the decoy slate would win.
+    fn score_pool(
+        &mut self,
+        req: &CompileRequest,
+        pool: &[ToolId],
+        rounds: &mut usize,
+    ) -> Result<Vec<(ToolId, f32)>, NtcError> {
+        let width = self.slate_limit();
+        let mut scored: Vec<(ToolId, f32)> = Vec::with_capacity(pool.len());
+        for chunk in pool.chunks(width) {
+            let (_, inputs) = self.prepare_slate(req, chunk)?;
+            let outputs = self.backend.run(&inputs)?;
+            *rounds += 1;
+            let logits = &outputs.get("tool.logits")?.data;
+            // `[candidate_0 .. candidate_{n-1}, NO_TOOL]`, sized to the slate
+            // actually packed rather than padded to the model width, so
+            // NO_TOOL sits at this chunk's length. A short final chunk is
+            // scored against a shorter slate, which is fine: the margin is
+            // taken against that same slate's own NO_TOOL.
+            let no_tool = logits[chunk.len()];
+            for (i, id) in chunk.iter().enumerate() {
+                scored.push((id.clone(), logits[i] - no_tool));
+            }
+        }
+        // Ties break by the order the caller gave, so the same request always
+        // narrows to the same slate.
+        scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+        Ok(scored)
     }
 
     /// One forward pass over an already-narrow slate, decoded to an outcome.
@@ -345,35 +397,34 @@ impl<B: Backend> NeuralToolCompiler<B> {
     /// how near-identical siblings (`get_asset` / `list_assets` /
     /// `search_assets`) get discriminated. Seeing them together is exactly the
     /// case the model was trained on.
+    /// Rank the whole tool set in one pass and keep the best slate.
+    ///
+    /// Narrowing in *rounds* — re-scoring survivors to shrink 49 -> 16 -> 5 -> 3
+    /// — was tried and is measurably worse: recall 40.5% -> 37.8%, right tool
+    /// 29.7% -> 21.6%, at 25 forward passes instead of 17. The reason is the
+    /// same weakness this scorer already has. The margin is taken against
+    /// NO_TOOL, and the corpus never taught NO_TOOL to mean "a real request
+    /// none of these tools serves" (see `tools/add_gold_absent.py`), so
+    /// re-applying it compounds the error and gives the gold tool another
+    /// chance to be dropped. Among survivors it is worse still: every slate is
+    /// then full of strong candidates, so the margins compress toward noise.
+    ///
+    /// One ranking of the full set is the better use of an unreliable score.
+    /// Measured against all 49 Pimcore tools, the gold tool lands in the top 12
+    /// for 94.6% of requests and the top 9 for 86.5%, but the top 3 for only
+    /// 40.5% — the ranking is broadly right and imprecise at the very top. The
+    /// deciding pass then picks correctly 80% of the time from what survives,
+    /// so stage 1 is the ceiling here, and the fix is a scorer that knows what
+    /// NO_TOOL means rather than more rounds of the one that does not.
     pub fn shortlist(
         &mut self,
         req: &CompileRequest,
         ids: &[ToolId],
     ) -> Result<Shortlist, NtcError> {
         let width = self.slate_limit();
-        let mut scored: Vec<(ToolId, f32)> = Vec::with_capacity(ids.len());
         let mut rounds = 0;
+        let scored = self.score_pool(req, ids, &mut rounds)?;
 
-        for chunk in ids.chunks(width) {
-            let (_, inputs) = self.prepare_slate(req, chunk)?;
-            let outputs = self.backend.run(&inputs)?;
-            rounds += 1;
-
-            let logits = &outputs.get("tool.logits")?.data;
-            // `[candidate_0 .. candidate_{n-1}, NO_TOOL]`, sized to the slate
-            // actually packed — not padded to the model width — so NO_TOOL
-            // sits at this chunk's length. A short final chunk is therefore
-            // scored against a shorter slate, which is fine: the margin is
-            // taken against that same slate's own NO_TOOL.
-            let no_tool = logits[chunk.len()];
-            for (i, id) in chunk.iter().enumerate() {
-                scored.push((id.clone(), logits[i] - no_tool));
-            }
-        }
-
-        // Ties are broken by the registry order the caller gave, so the same
-        // request always shortlists the same tools.
-        scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
         let kept: Vec<ToolId> = scored
             .iter()
             .take(width)

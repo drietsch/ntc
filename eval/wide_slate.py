@@ -41,6 +41,15 @@ def load(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
 
+#: Raw batch-infer rows from the most recent wide run, kept so the shortlist
+#: block can be read back without paying for a second inference pass.
+_LAST_WIDE_ROWS: list[dict] = []
+
+
+def load_pred_rows(args, gold, all_tools) -> list[dict]:
+    return _LAST_WIDE_ROWS
+
+
 def run(model: Path, rows: list[dict], tools: list[dict], backend: str) -> dict[str, dict]:
     with tempfile.TemporaryDirectory() as tmp:
         inp, outp = Path(tmp) / "in.jsonl", Path(tmp) / "out.jsonl"
@@ -60,8 +69,10 @@ def run(model: Path, rows: list[dict], tools: list[dict], backend: str) -> dict[
         if proc.returncode != 0:
             sys.exit(f"batch-infer failed:\n{proc.stderr[-2000:]}")
         preds = {}
+        _LAST_WIDE_ROWS.clear()
         for line in outp.read_text().splitlines():
             row = json.loads(line)
+            _LAST_WIDE_ROWS.append(row)
             preds[row["id"]] = row.get("result") or {"error": row.get("error")}
         return preds
 
@@ -138,11 +149,34 @@ def main() -> None:
     delta = wide["executable_semantic_accuracy"] - narrow["executable_semantic_accuracy"]
     print(f"\n  \033[1mcost of not being handed the answer   {delta:+.1%}\033[0m")
 
-    # Where the wide run loses: shortlist miss vs. decision miss.
+    # Attribute the loss: did the gold tool survive the shortlist at all?
+    # A tool that never reached the deciding pass is a stage-1 (ranking)
+    # failure and needs a better scorer; one that reached it and lost is a
+    # stage-2 (model) failure. The end-to-end number cannot separate them.
+    kept_by_id = {}
+    for row in load_pred_rows(args, gold, all_tools):
+        if "shortlist" in row:
+            kept_by_id[row["id"]] = row["shortlist"]["kept"]
+
+    call_rows = [g for g in gold if g["gold"]["action"] == "CALL"]
+    scored = [g for g in call_rows if g["id"] in kept_by_id]
+    if scored:
+        survived = [g for g in scored if g["gold"]["tool"] in kept_by_id[g["id"]]]
+        print(f"\n  \033[1mshortlist recall\033[0m  {len(survived)}/{len(scored)}  "
+              f"{len(survived) / len(scored):.1%}"
+              "   \033[2m(gold tool reached the deciding pass)\033[0m")
+        # Of those that survived, how many then won?
+        wide_right = {f["id"] for f in wide["failures"] if f["stage"] == "wrong_tool"}
+        won = [g for g in survived if g["id"] not in wide_right]
+        print(f"  of those, chosen by the deciding pass  {len(won)}/{len(survived)}  "
+              f"{len(won) / max(1, len(survived)):.1%}")
+        print("\n  A gold tool that never survives the shortlist cannot be recovered"
+              "\n  downstream: that is a ranking problem, not a model problem.")
+
     lost = [f for f in wide["failures"] if f["stage"] == "wrong_tool"]
     narrow_ok = {f["id"] for f in narrow["failures"]}
     newly_wrong = [f for f in lost if f["id"] not in narrow_ok]
-    print(f"  wrong tool on the wide slate           {len(lost)}")
+    print(f"\n  wrong tool on the wide slate           {len(lost)}")
     print(f"    ...of which were right when narrowed {len(newly_wrong)}"
           f"  \033[2m(pure cost of the 49-way choice)\033[0m")
 

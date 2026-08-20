@@ -344,18 +344,45 @@ fn batch_infer(
             context: parsed.context,
         };
         let compiled = match (&mut cpu, &mut gpu_compiler) {
-            (Some(c), _) => c.compile(&req),
-            (_, Some(g)) => g.compile(&req),
+            (Some(c), _) => c.compile_with_shortlist(&req),
+            (_, Some(g)) => g.compile_with_shortlist(&req),
             _ => unreachable!("one backend is always constructed"),
         };
         match compiled {
-            Ok(outcome) => {
+            Ok((outcome, shortlist)) => {
                 ok += 1;
-                writeln!(
-                    writer,
-                    "{}",
-                    serde_json::json!({"id": parsed.id, "result": outcome})
-                )?;
+                let mut row = serde_json::json!({"id": parsed.id, "result": outcome});
+                // Present only when a wide tool set was narrowed. Without it a
+                // wrong answer cannot be attributed: the right tool may never
+                // have survived the shortlist, or may have lost the deciding
+                // pass, and those need opposite fixes.
+                if let Some(s) = shortlist {
+                    row["shortlist"] = serde_json::json!({
+                        "considered": s.considered,
+                        "rounds": s.rounds,
+                        "kept": s.kept.iter().map(|id| {
+                            match (&cpu, &gpu_compiler) {
+                                (Some(c), _) => c.registry().get(*id).map(|t| t.id.clone()),
+                                (_, Some(g)) => g.registry().get(*id).map(|t| t.id.clone()),
+                                _ => None,
+                            }
+                        }).collect::<Vec<_>>(),
+                        // The ranking beyond the cut, so recall@k can be read
+                        // off a single run. If the gold tool sits at rank 4 the
+                        // fix is a wider shortlist; if it is at rank 30 the
+                        // scorer itself is wrong, and those cost very different
+                        // amounts to act on.
+                        "ranking": s.scores.iter().take(12).map(|(id, margin)| {
+                            let name = match (&cpu, &gpu_compiler) {
+                                (Some(c), _) => c.registry().get(*id).map(|t| t.id.clone()),
+                                (_, Some(g)) => g.registry().get(*id).map(|t| t.id.clone()),
+                                _ => None,
+                            };
+                            serde_json::json!({"tool": name, "margin": margin})
+                        }).collect::<Vec<_>>(),
+                    });
+                }
+                writeln!(writer, "{row}")?;
             }
             Err(e) => {
                 failed += 1;
