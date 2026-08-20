@@ -25,6 +25,21 @@ The utterance is untouched, so the model cannot spot these from surface form —
 "tag this one" reads identically whether or not anything is selected. Only the
 context frame differs, which is the discrimination worth learning.
 
+Known gap in what these rows can currently teach
+------------------------------------------------
+`datasets/collate.py` labels a gold tool's unmentioned arguments
+NOT_APPLICABLE only when the action is CALL. On an ASK row they stay IGNORE, so
+these rows supervise "ask for the one you cannot fill" but give no gradient for
+"and do not invent the rest" — verified on a generated row: `className` gets
+MISSING, `justFieldNames` gets -100.
+
+Extending that assignment to ASK looks right — on an incomplete request an
+unmentioned optional argument is still not applicable, and the genuinely
+uncertain ones are already handled by the `unresolved` branch above it. It is
+left alone on purpose: it changes the presence distribution for every ASK row
+in the corpus, and doing it in the same run as these 446 rows would confound
+the experiment they exist for. Worth trying once v4 has been measured.
+
 Run (from training/):
     uv run python -m tools.add_source_absent --src data/studio-neg --out data/studio-ask
 """
