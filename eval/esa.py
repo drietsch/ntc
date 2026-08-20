@@ -113,6 +113,7 @@ def score(preds: dict[str, dict], gold: list[dict]) -> dict:
             failures.append({"id": g["id"], "stage": "wrong_tool",
                              "detail": f"{got_tool} != {want_tool}",
                              "utterance": g["utterance"][:70]})
+            funnel["wrong_tool_called"] += 1  # also executed, also silent
             continue
         funnel["right_tool"] += 1
         stats["right_tool"] += 1
@@ -128,6 +129,12 @@ def score(preds: dict[str, dict], gold: list[dict]) -> dict:
             funnel["executable"] += 1
             stats["executable"] += 1
         else:
+            # A call that is wrong but well-formed is the worst outcome this
+            # system can produce. `search_data_objects(pqlFilter="finDerechos")`
+            # does not raise — it runs, returns the wrong rows, and reports
+            # success. Declining is recoverable; executing the wrong thing is
+            # not, so the two must never be pooled into one failure count.
+            funnel["wrong_call_executed"] += 1
             failures.append({
                 "id": g["id"], "stage": "arguments",
                 "detail": {"missing": missing, "invented": invented, "wrong": wrong},
@@ -138,9 +145,18 @@ def score(preds: dict[str, dict], gold: list[dict]) -> dict:
 
     n = funnel["call_worthy"] or 1
     blocked, call_n = ceiling(gold)
+    declined = sum(v for k, v in funnel.items() if k.startswith("answered_"))
     return {
         "call_worthy_requests": funnel["call_worthy"],
         "executable_semantic_accuracy": round(funnel["executable"] / n, 4),
+        "safety": {
+            # Of the requests it got wrong, how many did it get wrong *loudly*?
+            "wrong_call_executed": funnel["wrong_call_executed"] + funnel["wrong_tool_called"],
+            "declined_instead": declined,
+            "wrong_call_rate": round(
+                (funnel["wrong_call_executed"] + funnel["wrong_tool_called"]) / n, 4
+            ),
+        },
         "ceiling": {
             "unreachable_rows": blocked,
             "ceiling": round((call_n - blocked) / max(1, call_n), 4),
@@ -179,6 +195,12 @@ def main() -> None:
     print(f"EXECUTABLE SEMANTIC ACCURACY    {report['executable_semantic_accuracy']:.1%}")
     print(f"  ceiling for this architecture {c['ceiling']:.1%}"
           f"   ({c['unreachable_rows']} rows need a composed value — see DELEGATE)")
+    sf = report["safety"]
+    print(f"\n  \033[1mwrong call executed          {sf['wrong_call_rate']:.1%}\033[0m"
+          f"   ({sf['wrong_call_executed']} requests got a well-formed call that does the"
+          " wrong thing)")
+    print(f"  declined instead             {sf['declined_instead']}"
+          "   \033[2m(recoverable: the host can escalate)\033[0m")
     print("\nfunnel (share of call-worthy requests):")
     for k, v in report["funnel"].items():
         print(f"  {k:32} {v:.1%}")
