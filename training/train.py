@@ -311,6 +311,10 @@ def evaluate(model, cfg, items, device, batch_size=32) -> dict[str, float]:
         "source_correct": 0, "source_total": 0,
         "entity_correct": 0, "entity_total": 0,
         "dreason_correct": 0, "dreason_total": 0,
+        # Absent unless the model declares value templates; the comprehension
+        # below drops any head whose total stayed 0, so an unused counter costs
+        # nothing and a missing one is a KeyError mid-run.
+        "template_correct": 0, "template_total": 0,
     }
     for i in range(0, len(items), batch_size):
         batch = make_batch(cfg, items[i : i + batch_size])
