@@ -118,10 +118,62 @@ so the weighting (or a focal-loss variant) should stay in the objective.
 | `data/delegate/` | **yes** | hand-authored DELEGATE templates |
 | `data/mini`, `data/any` | no | deterministic, regenerate with `datasets.generator` / `tools.merge_data` |
 | `data/xlam` | no | 35 MB, regenerate with `tools.convert_xlam` from the CC-BY source |
+| `data/studio*` | no | the Pimcore Studio corpus every studio-v* model trains on — deterministic, rebuild with the chain below |
 
 Rebuild the assembled Pimcore set from the tracked shards:
 
 ```sh
 uv run python -m datasets.delegate_gen
 uv run python -m tools.build_pimcore_dataset
+```
+
+### Rebuilding the Studio corpus
+
+Everything under `data/studio*` is a four-stage chain over the tracked source
+(`specs/training/`, plus `examples/pimcore-tools.json` for the registry), and
+each stage's default `--src`/`--out` already names the previous stage's
+directory. `data/studio-tpl-neg` is what studio-v5 trained on — 7,452 train,
+446 dev, 446 test:
+
+```sh
+uv run python -m tools.convert_studio --max-candidates 3          # -> data/studio
+uv run python -m tools.augment_studio                             # -> data/studio-aug
+uv run python -m tools.add_gold_absent                            # -> data/studio-neg
+uv run python -m tools.add_value_templates \
+  --src data/studio-neg --out data/studio-tpl-neg
+```
+
+`tools.add_source_absent` is the fifth stage that is deliberately *not* in the
+chain: its 446 ASK rows are studio-v4's `data/studio-ask` (templated:
+`data/studio-tpl`, 7,898 rows). They bought a real ASK capability and cost 11
+points of narrow ESA by over-asking, so new experiments run without them until
+that is re-weighted.
+
+The slate width is the parameter worth varying, because `--max-candidates` is
+what the model's `max_tools` — and therefore the runtime's shortlist cut,
+`arch.max_tools` capped at `MAX_SLATE` — has to match. studio-v6's 5-wide
+corpus:
+
+```sh
+uv run python -m tools.convert_studio --max-candidates 5 --out data/studio5
+uv run python -m tools.augment_studio    --src data/studio5     --out data/studio5-aug
+uv run python -m tools.add_gold_absent   --src data/studio5-aug --out data/studio5-neg
+uv run python -m tools.add_value_templates \
+  --src data/studio5-neg --out data/studio5-tpl-neg
+cp data/studio-tpl-neg/dev.jsonl data/studio-tpl-neg/test.jsonl data/studio5-tpl-neg/
+```
+
+That last copy is deliberate: the dev split doubles as the eval gold
+(`eval/run_all.sh <ckpt> <name> examples/pimcore-tools-templates.json
+training/data/studio-tpl-neg/dev.jsonl`), so holding it at the recorded 2–3
+tool slate is what keeps every narrow figure comparable across versions while
+the *training* slates widen. It also leaves `data/studio5-tpl-neg/stats.json`
+describing the 5-wide dev/test the stage generated rather than the files now
+beside it — the train counts in it are still the real ones.
+
+Then train against the wider slate, which the arch does not hardcode:
+
+```sh
+uv run python train.py --arch studio --max-tools 5 \
+  --data data/studio5-tpl-neg --init /tmp/v3-final.pt --epochs 10 --out runs/studio-v6
 ```
