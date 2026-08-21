@@ -84,7 +84,7 @@ python3 eval/no_tool_probe.py --model "$MODEL" --limit 150 --tools "$TOOLS" --go
 
 echo
 echo "=== 3. acceptance scenarios"
-python3 eval/usecase/run.py --model "$MODEL" || true   # exit 1 unless a clean sweep
+python3 eval/usecase/run.py --model "$MODEL" --tools "$TOOLS" || true   # exit 1 unless a clean sweep
 
 echo
 echo "=== 4. wide slate — all 49 tools, shortlist-then-decide"
@@ -93,6 +93,6 @@ python3 eval/wide_slate.py --model "$MODEL" --tools "$TOOLS" --gold "$GOLD" \
 
 echo
 echo "=== 5. does a focused re-read help the arguments? (measured -0.9% twice)"
-python3 eval/refocus_probe.py --model "$MODEL"
+python3 eval/refocus_probe.py --model "$MODEL" --tools "$TOOLS" --gold "$GOLD"
 
 rm -f "$IN" "$OUT"
