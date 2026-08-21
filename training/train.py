@@ -219,6 +219,27 @@ def extend_positions(init_sd: dict, target: int) -> None:
     print(f"extended position embeddings {have} -> {target} for long tool schemas")
 
 
+def widen_tool_index(init_sd: dict, target_tools: int) -> None:
+    """Drop the slot-tag table when the target slate is wider than the checkpoint's.
+
+    `tool_index_emb` is [max_tools + 1, H] — one tag per slate position — so
+    widening the slate changes its shape and `load_state_dict` would reject the
+    warm start outright. Nothing worth carrying lives in the individual rows:
+    slate order is randomized at data-prep time (gold lands in every slot), and
+    in studio-v5 the trained rows sit within 5% of their N(0, 1) init with
+    pairwise |cos| < 0.06 — they are near-orthogonal tags, not learned content.
+    So let the wider table start random, which also leaves it out of
+    `pretrained_names` and trains it at the head learning rate, where the two
+    new slots need it.
+    """
+    key = "tool_index_emb.weight"
+    w = init_sd.get(key)
+    if w is None or w.shape[0] == target_tools + 1:
+        return
+    del init_sd[key]
+    print(f"slate {w.shape[0] - 1} -> {target_tools}: {key} starts random")
+
+
 def ce(
     logits: torch.Tensor, target: torch.Tensor, weight: torch.Tensor | None = None
 ) -> torch.Tensor:
@@ -419,6 +440,9 @@ def main() -> None:
                         help="partial state_dict (runs/backbone/init.pt) to warm-start from")
     parser.add_argument("--backbone-lr", type=float, default=2e-5,
                         help="learning rate for pretrained modules when --init is given")
+    parser.add_argument("--max-tools", type=int, default=None,
+                        help="override the arch's slate width; also the runtime's "
+                             "shortlist cut. Costs quadratically in fusion.")
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
@@ -435,7 +459,15 @@ def main() -> None:
         "studio": studio_config,
     }[args.arch]
     cfg = make_cfg(tokenizer.get_vocab_size())
-    print(f"device={device} arch={args.arch} vocab={cfg.vocab}")
+    if args.max_tools:
+        # The slate width is a *compute* choice, not a modelling one (see
+        # `studio_config`), and it doubles as the runtime's shortlist cut:
+        # `slate_limit` is `arch.max_tools`. Overriding it here is what lets a
+        # wider cut be measured without a second arch definition — but the
+        # corpus must supply slates that wide, or the extra slots train on
+        # padding alone.
+        cfg = cfg.model_copy(update={"max_tools": args.max_tools})
+    print(f"device={device} arch={args.arch} vocab={cfg.vocab} max_tools={cfg.max_tools}")
 
     train_items = load_and_prepare(cfg, tokenizer, args.data / "train.jsonl", skip_oversize=True)
     dev_items = load_and_prepare(cfg, tokenizer, args.data / "dev.jsonl", skip_oversize=True)
@@ -458,6 +490,7 @@ def main() -> None:
     if args.init:
         init_sd = torch.load(args.init, map_location="cpu", weights_only=True)["state_dict"]
         extend_positions(init_sd, cfg.max_positions)
+        widen_tool_index(init_sd, cfg.max_tools)
         missing, unexpected = model.load_state_dict(init_sd, strict=False)
         assert not unexpected, f"unexpected init tensors: {unexpected[:5]}"
         pretrained_names = set(init_sd)
