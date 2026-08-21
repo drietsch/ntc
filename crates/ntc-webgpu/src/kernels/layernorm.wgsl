@@ -3,6 +3,9 @@
 //
 // One invocation per row (portable; row lengths are model hidden/FFN sizes).
 
+// wgpu caps a dispatch dimension at 65535 workgroups, so grids too wide for
+// one dimension are folded into y (see `grid_1d`). Rebuild the flat index.
+
 struct Dims {
     m: u32,
     h: u32,
@@ -17,8 +20,9 @@ struct Dims {
 @group(0) @binding(4) var<storage, read_write> y: array<f32>;
 
 @compute @workgroup_size(64, 1, 1)
-fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
-    let row = gid.x;
+fn main(@builtin(global_invocation_id) gid: vec3<u32>,
+        @builtin(num_workgroups) ngroups: vec3<u32>) {
+    let row = gid.x + gid.y * ngroups.x * 64u;
     if (row >= dims.m) {
         return;
     }

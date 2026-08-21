@@ -321,7 +321,7 @@ impl GpuExecutor {
             enc,
             &self.kernels.layernorm,
             &[&dims, x, gamma, beta, &out],
-            (div_ceil(m, 64), 1, 1),
+            grid_1d(div_ceil(m, 64)),
         );
         out
     }
@@ -341,7 +341,7 @@ impl GpuExecutor {
             enc,
             &self.kernels.gelu,
             &[&dims, x],
-            (div_ceil(n, 64), 1, 1),
+            grid_1d(div_ceil(n, 64)),
         );
     }
 
@@ -361,7 +361,7 @@ impl GpuExecutor {
             enc,
             &self.kernels.add,
             &[&dims, x, y],
-            (div_ceil(n, 64), 1, 1),
+            grid_1d(div_ceil(n, 64)),
         );
     }
 
@@ -418,7 +418,7 @@ impl GpuExecutor {
             enc,
             &self.kernels.softmax,
             &[&dims, x],
-            (div_ceil(m, 64), 1, 1),
+            grid_1d(div_ceil(m, 64)),
         );
     }
 
@@ -709,4 +709,41 @@ impl GpuExecutor {
 
 fn div_ceil(n: usize, d: usize) -> u32 {
     (n.div_ceil(d)) as u32
+}
+
+/// wgpu caps each dispatch dimension at 65535 workgroups, so a flat 1-D grid
+/// of 64-wide groups stops at 4.19M elements — which the FFN intermediate of a
+/// 5-tool slate (2881 tokens x 1536) already exceeds, and a 16-tool slate
+/// exceeds by 3.4x. Fold the overflow into y; the 1-D kernels rebuild the flat
+/// index as `gid.x + gid.y * num_workgroups.x * 64`. A grid that fits stays
+/// `(groups, 1, 1)`, so nothing changes below the limit.
+fn grid_1d(groups: u32) -> (u32, u32, u32) {
+    const MAX: u32 = 65535;
+    if groups <= MAX {
+        return (groups, 1, 1);
+    }
+    let y = groups.div_ceil(MAX);
+    (groups.div_ceil(y), y, 1)
+}
+
+#[cfg(test)]
+mod grid_tests {
+    use super::grid_1d;
+
+    /// The folded grid must still cover every requested group and stay inside
+    /// the per-dimension cap — checked without a GPU, so CI covers the
+    /// arithmetic even where the kernels cannot run.
+    #[test]
+    fn grid_1d_covers_and_fits() {
+        for groups in [1u32, 64, 65_535, 65_536, 69_144, 221_184, 4_000_000] {
+            let (x, y, z) = grid_1d(groups);
+            assert_eq!(z, 1);
+            assert!(x <= 65_535 && y <= 65_535, "{groups}: {x}x{y} exceeds the cap");
+            assert!(
+                u64::from(x) * u64::from(y) >= u64::from(groups),
+                "{groups}: {x}x{y} does not cover it"
+            );
+        }
+        assert_eq!(grid_1d(65_535), (65_535, 1, 1), "a grid that fits is unchanged");
+    }
 }

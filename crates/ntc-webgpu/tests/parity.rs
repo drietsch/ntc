@@ -128,6 +128,27 @@ fn gelu_parity() {
     assert_close("gelu", &got.data, &want.data);
 }
 
+/// The 1-D kernels index off `global_invocation_id.x`, which caps a flat grid
+/// at 65535 workgroups x 64 lanes = 4,194,240 elements. The FFN intermediate
+/// of a 5-tool slate is 2881 x 1536 = 4,425,216, so `batch-infer --gpu` died
+/// with "dispatch group size ([69144, 1, 1]) must be less or equal to 65535"
+/// the first time a model trained at `max_tools = 5` was scored on the wide
+/// slate. Every other GPU test here runs on the tiny fixture, which cannot
+/// reach the limit — so this one sizes past it deliberately.
+#[test]
+fn gelu_parity_past_dispatch_limit() {
+    let Some(mut ex) = executor() else { return };
+    let n = 65_535 * 64 + 320; // one workgroup past what a flat grid can address
+    let mut rng = ChaCha8Rng::seed_from_u64(23);
+    let x = rand_tensor(&mut rng, &[n / 64, 64], 3.0);
+    assert!(x.data.len() > 65_535 * 64);
+
+    let mut want = x.clone();
+    ops::gelu(&mut want);
+    let got = ex.gelu_host(&x).unwrap();
+    assert_close("gelu past dispatch limit", &got.data, &want.data);
+}
+
 #[test]
 fn residual_add_parity() {
     let Some(mut ex) = executor() else { return };

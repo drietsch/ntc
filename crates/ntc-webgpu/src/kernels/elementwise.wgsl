@@ -3,6 +3,9 @@
 // The erf approximation is Abramowitz-Stegun 7.1.26 with the SAME constants
 // as `ntc_model::ops` (the normative CPU reference).
 
+// wgpu caps a dispatch dimension at 65535 workgroups, so grids too wide for
+// one dimension are folded into y (see `grid_1d`). Rebuild the flat index.
+
 struct Dims {
     n: u32,
     _p0: u32,
@@ -28,8 +31,9 @@ fn erf_as(v: f32) -> f32 {
 
 // GELU(v) = 0.5 * v * (1 + erf(v / sqrt(2)))
 @compute @workgroup_size(64, 1, 1)
-fn gelu_main(@builtin(global_invocation_id) gid: vec3<u32>) {
-    let i = gid.x;
+fn gelu_main(@builtin(global_invocation_id) gid: vec3<u32>,
+             @builtin(num_workgroups) ngroups: vec3<u32>) {
+    let i = gid.x + gid.y * ngroups.x * 64u;
     if (i >= dims.n) {
         return;
     }
@@ -39,8 +43,9 @@ fn gelu_main(@builtin(global_invocation_id) gid: vec3<u32>) {
 
 // data[i] += other[i]
 @compute @workgroup_size(64, 1, 1)
-fn add_main(@builtin(global_invocation_id) gid: vec3<u32>) {
-    let i = gid.x;
+fn add_main(@builtin(global_invocation_id) gid: vec3<u32>,
+            @builtin(num_workgroups) ngroups: vec3<u32>) {
+    let i = gid.x + gid.y * ngroups.x * 64u;
     if (i >= dims.n) {
         return;
     }

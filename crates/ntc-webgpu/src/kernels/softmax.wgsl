@@ -3,6 +3,9 @@
 // `ntc_model::ops::softmax_rows` (max-subtract, exp, divide; a row whose
 // exp-sum is 0 is left as the exp values, i.e. all zeros).
 
+// wgpu caps a dispatch dimension at 65535 workgroups, so grids too wide for
+// one dimension are folded into y (see `grid_1d`). Rebuild the flat index.
+
 struct Dims {
     m: u32,
     n: u32,
@@ -14,8 +17,9 @@ struct Dims {
 @group(0) @binding(1) var<storage, read_write> data: array<f32>;
 
 @compute @workgroup_size(64, 1, 1)
-fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
-    let row = gid.x;
+fn main(@builtin(global_invocation_id) gid: vec3<u32>,
+        @builtin(num_workgroups) ngroups: vec3<u32>) {
+    let row = gid.x + gid.y * ngroups.x * 64u;
     if (row >= dims.m) {
         return;
     }
