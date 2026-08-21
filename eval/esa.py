@@ -28,6 +28,26 @@ from collections import Counter
 from pathlib import Path
 
 
+def row_key(row: dict, index: int) -> str:
+    """A collision-proof identity for one gold row.
+
+    Row ids are content-derived and 31 of them cover 2-6 dev rows apiece: same
+    utterance, *different* candidate slate. Keying predictions by id alone lets
+    one slate's answer overwrite the others and then be scored against all of
+    them — 69 of 278 call-worthy rows, worth 1.4 points. The line number is
+    what actually distinguishes them, so it is part of the key.
+    """
+    return f'{row["id"]}#{index}'
+
+
+def load_keyed(path: Path) -> list[dict]:
+    """Gold rows carrying `_key`. Use this wherever predictions are joined."""
+    rows = load(path)
+    for i, r in enumerate(rows):
+        r["_key"] = row_key(r, i)
+    return rows
+
+
 def load(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
@@ -137,7 +157,8 @@ def score(
 
     callable_rows = [g for g in gold if g["gold"]["action"] == "CALL"]
     for g in callable_rows:
-        p = preds.get(g["id"]) or {}
+        key = g.get("_key", g["id"])
+        p = preds.get(key) or {}
         want_tool = g["gold"]["tool"]
         stats = per_tool.setdefault(want_tool, Counter())
         stats["total"] += 1
@@ -146,14 +167,14 @@ def score(
         outcome = p.get("outcome")
         if outcome != "CALL":
             funnel[f"answered_{(outcome or 'ERROR').lower()}"] += 1
-            failures.append({"id": g["id"], "stage": "no_call_emitted",
+            failures.append({"id": g["id"], "key": key, "stage": "no_call_emitted",
                              "detail": outcome, "utterance": g["utterance"][:70]})
             continue
         funnel["emitted_a_call"] += 1
 
         got_tool = (p.get("call") or {}).get("name")
         if got_tool != want_tool:
-            failures.append({"id": g["id"], "stage": "wrong_tool",
+            failures.append({"id": g["id"], "key": key, "stage": "wrong_tool",
                              "detail": f"{got_tool} != {want_tool}",
                              "utterance": g["utterance"][:70]})
             funnel["wrong_tool_called"] += 1  # also executed, also silent
@@ -179,7 +200,7 @@ def score(
             # not, so the two must never be pooled into one failure count.
             funnel["wrong_call_executed"] += 1
             failures.append({
-                "id": g["id"], "stage": "arguments",
+                "id": g["id"], "key": key, "stage": "arguments",
                 "detail": {"missing": missing, "invented": invented, "wrong": wrong},
                 "utterance": g["utterance"][:70],
             })
@@ -241,7 +262,7 @@ def main() -> None:
     for row in load(args.pred):
         preds[row["id"]] = row.get("result") or {"error": row.get("error")}
     defaults = declared_defaults(args.tools)
-    report = score(preds, load(args.gold), defaults)
+    report = score(preds, load_keyed(args.gold), defaults)
 
     c = report["ceiling"]
     print(f"call-worthy requests            {report['call_worthy_requests']}")
@@ -267,7 +288,7 @@ def main() -> None:
         print(f"  {t:32} {c['n']:3}  {c['right_tool']:3}  {c['executable']:3}")
 
     if args.by_language:
-        gold_rows = load(args.gold)
+        gold_rows = load_keyed(args.gold)
         langs = sorted({g.get("lang", "?") for g in gold_rows})
         print(f"\nper language ({'n':>4} {'executable':>11} {'right tool':>11} {'wrong call':>11}):")
         for lang in langs:

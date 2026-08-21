@@ -23,8 +23,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+from esa import load_keyed  # noqa: E402
 
 
 def load(path: Path) -> list[dict]:
@@ -81,7 +85,7 @@ def evaluate(preds: dict[str, dict], gold: list[dict]) -> dict:
     errors = 0
 
     for g in gold:
-        p = preds.get(g["id"])
+        p = preds.get(g.get("_key", g["id"]))
         if p is None or "error" in p:
             errors += 1
             continue
@@ -155,7 +159,7 @@ def build_batch_input(gold: list[dict], path: Path) -> None:
             f.write(
                 json.dumps(
                     {
-                        "id": g["id"],
+                        "id": g.get("_key", g["id"]),
                         "utterance": g["utterance"],
                         "tools": g["candidates"],
                         "context": {
@@ -183,12 +187,12 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.make_input:
-        gold = load(args.gold)
+        gold = load_keyed(args.gold)
         build_batch_input(gold, args.make_input)
         print(f"wrote {args.make_input} ({len(gold)} rows)")
         return
 
-    gold = load(args.gold)
+    gold = load_keyed(args.gold)
     preds = {}
     for row in load(args.pred):
         preds[row["id"]] = row.get("result", {"error": row.get("error")})

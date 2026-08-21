@@ -82,13 +82,16 @@ def main() -> None:
         rows = rows[: args.limit]
 
     intact, stripped, expect = [], [], {}
-    for r in rows:
+    for i, r in enumerate(rows):
+        # Keyed by line: 31 ids cover several rows apiece with different
+        # slates, and this probe's whole subject is the slate.
+        key = f'{r["id"]}#{i}'
         names = [c["name"] if isinstance(c, dict) else c for c in r["candidates"]]
         gold = r["gold"]["tool"]
         if gold not in names or gold not in pool:
             continue
         slate = [pool[n] for n in names if n in pool]
-        intact.append({"id": r["id"], "utterance": r["utterance"],
+        intact.append({"id": key, "utterance": r["utterance"],
                        "tools": slate, "context": r.get("context", {})})
 
         others = [n for n in pool if n not in names]
@@ -96,9 +99,9 @@ def main() -> None:
             continue
         replacement = pool[rng.choice(others)]
         neg_slate = [pool[n] for n in names if n != gold and n in pool] + [replacement]
-        stripped.append({"id": r["id"], "utterance": r["utterance"],
+        stripped.append({"id": key, "utterance": r["utterance"],
                          "tools": neg_slate, "context": r.get("context", {})})
-        expect[r["id"]] = gold
+        expect[key] = gold
 
     if not stripped:
         sys.exit("no rows could have their gold tool removed")

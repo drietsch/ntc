@@ -55,10 +55,11 @@ import json, sys
 gold, out, registry = sys.argv[1], sys.argv[2], sys.argv[3]
 tools = {t["name"]: t for t in json.load(open(registry))}
 with open(out, "w") as f:
-    for line in open(gold):
+    for n, line in enumerate(open(gold)):
         r = json.loads(line)
         slate = [tools[c["name"] if isinstance(c, dict) else c] for c in r["candidates"]]
-        f.write(json.dumps({"id": r["id"], "utterance": r["utterance"],
+        # `esa.row_key`: id alone collides across rows with different slates.
+        f.write(json.dumps({"id": f'{r["id"]}#{n}', "utterance": r["utterance"],
                             "tools": slate, "context": r.get("context", {})},
                            ensure_ascii=False) + "\n")
 PY

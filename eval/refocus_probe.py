@@ -93,19 +93,24 @@ def main() -> None:
     def slate(r):
         return [by_name[c["name"] if isinstance(c, dict) else c] for c in r["candidates"]]
 
+    # Keyed by line: the shared run's whole point is the recorded slate, and
+    # several rows share an id while carrying different slates.
+    for i, r in enumerate(rows):
+        r["_key"] = f'{r["id"]}#{i}'
+
     shared = infer(args.model, [
-        {"id": r["id"], "utterance": r["utterance"], "tools": slate(r),
+        {"id": r["_key"], "utterance": r["utterance"], "tools": slate(r),
          "context": r.get("context", {})} for r in rows], args.backend)
     focused = infer(args.model, [
-        {"id": r["id"], "utterance": r["utterance"],
+        {"id": r["_key"], "utterance": r["utterance"],
          "tools": [by_name[r["gold"]["tool"]]],
          "context": r.get("context", {})} for r in rows], args.backend)
 
     stats = {"shared": 0, "focused": 0, "fixed": 0, "broken": 0}
     reasons = {"shared": [], "focused": []}
     for r in rows:
-        s_ok, s_why = args_correct(shared.get(r["id"], {}), r)
-        f_ok, f_why = args_correct(focused.get(r["id"], {}), r)
+        s_ok, s_why = args_correct(shared.get(r["_key"], {}), r)
+        f_ok, f_why = args_correct(focused.get(r["_key"], {}), r)
         stats["shared"] += s_ok
         stats["focused"] += f_ok
         stats["fixed"] += (f_ok and not s_ok)

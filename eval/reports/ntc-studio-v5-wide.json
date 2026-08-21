@@ -1,24 +1,24 @@
 {
   "narrow": {
     "call_worthy_requests": 278,
-    "executable_semantic_accuracy": 0.8885,
+    "executable_semantic_accuracy": 0.8741,
     "safety": {
-      "wrong_call_executed": 14,
-      "declined_instead": 17,
-      "wrong_call_rate": 0.0504
+      "wrong_call_executed": 17,
+      "declined_instead": 18,
+      "wrong_call_rate": 0.0612
     },
     "ceiling": {
       "unreachable_rows": 4,
       "ceiling": 0.9856
     },
     "funnel": {
-      "emitted a call": 0.939,
-      "...with the right tool": 0.924,
-      "...and every argument correct": 0.888
+      "emitted a call": 0.935,
+      "...with the right tool": 0.91,
+      "...and every argument correct": 0.874
     },
     "answered_instead": {
-      "delegate": 9,
-      "no_call": 8
+      "no_call": 9,
+      "delegate": 9
     },
     "per_tool": {
       "search_data_objects": {
@@ -33,8 +33,8 @@
       },
       "list_target_groups": {
         "n": 17,
-        "right_tool": 16,
-        "executable": 16
+        "right_tool": 15,
+        "executable": 15
       },
       "search_documents": {
         "n": 15,
@@ -63,8 +63,8 @@
       },
       "list_document_types": {
         "n": 9,
-        "right_tool": 7,
-        "executable": 7
+        "right_tool": 4,
+        "executable": 4
       },
       "discover": {
         "n": 9,
@@ -209,19 +209,29 @@
     },
     "failures": [
       {
+        "id": "d4d4904c61697e06",
+        "key": "d4d4904c61697e06#8",
+        "stage": "no_call_emitted",
+        "detail": "NO_CALL",
+        "utterance": "which document types are set up?"
+      },
+      {
         "id": "1d951acf7b5a10cb",
+        "key": "1d951acf7b5a10cb#9",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "führ die globale Aktion zuruecksetzen für die hier im Workflow artikel"
       },
       {
         "id": "ea59ec346a7bf878",
+        "key": "ea59ec346a7bf878#10",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "dame los metadatos de esto, gracias"
       },
       {
         "id": "be3ffa7276aebbe1",
+        "key": "be3ffa7276aebbe1#29",
         "stage": "arguments",
         "detail": {
           "missing": [
@@ -236,18 +246,21 @@
       },
       {
         "id": "c09b49a9fe7c8a96",
+        "key": "c09b49a9fe7c8a96#65",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "dame los metadatos de esto para mí"
       },
       {
         "id": "7e1e0d518e11fa0e",
+        "key": "7e1e0d518e11fa0e#84",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "hey, what's on this file?"
       },
       {
         "id": "ce4852c04db1cb91",
+        "key": "ce4852c04db1cb91#98",
         "stage": "arguments",
         "detail": {
           "missing": [],
@@ -259,49 +272,71 @@
         "utterance": "pardon, encore un truc : quels champs a cette classe ?"
       },
       {
+        "id": "d4d4904c61697e06",
+        "key": "d4d4904c61697e06#106",
+        "stage": "wrong_tool",
+        "detail": "list_editables != list_document_types",
+        "utterance": "which document types are set up?"
+      },
+      {
         "id": "0b825e73ef51b67e",
+        "key": "0b825e73ef51b67e#111",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "hey, zeig mir die Objektklassen"
       },
       {
         "id": "2191323b769fd1d8",
+        "key": "2191323b769fd1d8#113",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "passe-les en rejeter dans validation_article, merci"
       },
       {
         "id": "fa16f7fbeb4a8bfd",
+        "key": "fa16f7fbeb4a8bfd#124",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "ok so, run the reset global action on these in content_release"
       },
       {
         "id": "4fb1ab254c957d91",
+        "key": "4fb1ab254c957d91#145",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "run the reset global action on these in asset_clearance"
       },
       {
         "id": "4951f9dba40576bc",
+        "key": "4951f9dba40576bc#168",
         "stage": "wrong_tool",
         "detail": "list_editables != list_target_groups",
         "utterance": "hey, welche personalisierungs-zielgruppen gibt es?"
       },
       {
         "id": "3b5ca3c77b0a8f6a",
+        "key": "3b5ca3c77b0a8f6a#171",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "öffne 59431 wenn du kannst"
       },
       {
         "id": "77da0f495c624e10",
+        "key": "77da0f495c624e10#173",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "ce tableau est trop gros pour l'aperçu, prépare-le en local s'il te pl"
       },
       {
+        "id": "d4d4904c61697e06",
+        "key": "d4d4904c61697e06#225",
+        "stage": "wrong_tool",
+        "detail": "list_target_groups != list_document_types",
+        "utterance": "which document types are set up?"
+      },
+      {
         "id": "dfa7be532fbb46c6",
+        "key": "dfa7be532fbb46c6#229",
         "stage": "arguments",
         "detail": {
           "missing": [],
@@ -314,6 +349,7 @@
       },
       {
         "id": "86196b4325a1124e",
+        "key": "86196b4325a1124e#244",
         "stage": "arguments",
         "detail": {
           "missing": [],
@@ -326,6 +362,7 @@
       },
       {
         "id": "c6029bdbe66fb79d",
+        "key": "c6029bdbe66fb79d#247",
         "stage": "arguments",
         "detail": {
           "missing": [],
@@ -338,6 +375,7 @@
       },
       {
         "id": "0d4324baf6859375",
+        "key": "0d4324baf6859375#254",
         "stage": "arguments",
         "detail": {
           "missing": [],
@@ -350,6 +388,7 @@
       },
       {
         "id": "1baeff21b728affc",
+        "key": "1baeff21b728affc#267",
         "stage": "arguments",
         "detail": {
           "missing": [
@@ -361,37 +400,50 @@
         "utterance": "put the Do Not Translate tag on this one if you can"
       },
       {
+        "id": "109152f36e13813f",
+        "key": "109152f36e13813f#270",
+        "stage": "wrong_tool",
+        "detail": "list_document_types != list_target_groups",
+        "utterance": "¿qué grupos objetivo de personalización existen?"
+      },
+      {
         "id": "e6c2c6905461ded1",
+        "key": "e6c2c6905461ded1#290",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "passe-les en vers_juridique dans circuit_editorial si tu peux"
       },
       {
         "id": "6295a9c784d10aa4",
+        "key": "6295a9c784d10aa4#302",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "ejecuta la acción global zuruecksetzen sobre estos en validacion_derec"
       },
       {
         "id": "662258ea7c234e56",
+        "key": "662258ea7c234e56#327",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "hey, zeig mir die Details"
       },
       {
         "id": "a1f0058b3a62b128",
+        "key": "a1f0058b3a62b128#330",
         "stage": "wrong_tool",
         "detail": "assign_tag != unassign_tag",
         "utterance": "sorry, one more thing: remove tag 179 from object 76349"
       },
       {
         "id": "94c5da3fb084f138",
+        "key": "94c5da3fb084f138#335",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "passe-les en valider dans validation_article"
       },
       {
         "id": "b67fba7f6f375cb4",
+        "key": "b67fba7f6f375cb4#344",
         "stage": "arguments",
         "detail": {
           "missing": [],
@@ -404,12 +456,14 @@
       },
       {
         "id": "445b28f61f02a6a0",
+        "key": "445b28f61f02a6a0#354",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "lance l'action globale escalate sur ceux-ci dans circuit_editorial s'i"
       },
       {
         "id": "4ed11833166da1da",
+        "key": "4ed11833166da1da#399",
         "stage": "arguments",
         "detail": {
           "missing": [],
@@ -422,30 +476,35 @@
       },
       {
         "id": "fb61de2956e4d22a",
+        "key": "fb61de2956e4d22a#403",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "führ die globale Aktion zuruecksetzen für die hier im Workflow bildfre"
       },
       {
         "id": "7f5f53756b6f53aa",
+        "key": "7f5f53756b6f53aa#410",
         "stage": "wrong_tool",
-        "detail": "list_editables != list_document_types",
+        "detail": "list_target_groups != list_document_types",
         "utterance": "what page presets do we have?"
       },
       {
         "id": "7f5f53756b6f53aa",
+        "key": "7f5f53756b6f53aa#428",
         "stage": "wrong_tool",
         "detail": "list_editables != list_document_types",
         "utterance": "what page presets do we have?"
       },
       {
         "id": "d55cf3f3ac325313",
+        "key": "d55cf3f3ac325313#440",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "bon, montre-moi les détails"
       },
       {
         "id": "bdd7f5c353efe694",
+        "key": "bdd7f5c353efe694#441",
         "stage": "arguments",
         "detail": {
           "missing": [],
@@ -670,6 +729,7 @@
     "failures": [
       {
         "id": "e6ba416a8a75802e",
+        "key": "e6ba416a8a75802e#1",
         "stage": "arguments",
         "detail": {
           "missing": [
@@ -682,354 +742,413 @@
       },
       {
         "id": "039ba5549e4d555a",
+        "key": "039ba5549e4d555a#7",
         "stage": "wrong_tool",
         "detail": "search_assets != search_data_objects",
         "utterance": "¿qué Medio no tienen finDerechos rellenado?"
       },
       {
         "id": "d4d4904c61697e06",
+        "key": "d4d4904c61697e06#8",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "which document types are set up?"
       },
       {
         "id": "1d951acf7b5a10cb",
+        "key": "1d951acf7b5a10cb#9",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "führ die globale Aktion zuruecksetzen für die hier im Workflow artikel"
       },
       {
         "id": "ea59ec346a7bf878",
+        "key": "ea59ec346a7bf878#10",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "dame los metadatos de esto, gracias"
       },
       {
         "id": "06604661502a48b2",
+        "key": "06604661502a48b2#12",
         "stage": "wrong_tool",
         "detail": "list_thumbnail_configs != list_workflows",
         "utterance": "¿qué flujos de trabajo hay configurados?"
       },
       {
         "id": "9a4365a3421a2eb7",
+        "key": "9a4365a3421a2eb7#15",
         "stage": "wrong_tool",
         "detail": "search_assets != get_document",
         "utterance": "sorry, one more thing: show me the content as it stands"
       },
       {
         "id": "b56e1aeb76758a45",
+        "key": "b56e1aeb76758a45#21",
         "stage": "no_call_emitted",
         "detail": "ASK",
         "utterance": "abre los registros 12449, 47757 y 16027"
       },
       {
         "id": "0b9e9276ad1807ef",
+        "key": "0b9e9276ad1807ef#27",
         "stage": "wrong_tool",
         "detail": "get_queryable_fields != get_workflow_places",
         "utterance": "list the steps in asset_clearance if you can"
       },
       {
         "id": "be3ffa7276aebbe1",
+        "key": "be3ffa7276aebbe1#29",
         "stage": "no_call_emitted",
         "detail": "ASK",
         "utterance": "give me the Story objects"
       },
       {
         "id": "66c65b6b40c08db6",
+        "key": "66c65b6b40c08db6#30",
         "stage": "wrong_tool",
         "detail": "list_target_groups != get_asset_queryable_fields",
         "utterance": "dis, montre-moi les médias dont les droits ont expiré"
       },
       {
         "id": "bb19147ff56aeb61",
+        "key": "bb19147ff56aeb61#31",
         "stage": "wrong_tool",
         "detail": "list_target_groups != get_asset_queryable_fields",
         "utterance": "wonach kann ich assets überhaupt filtern?"
       },
       {
         "id": "d4af7901f187cd34",
+        "key": "d4af7901f187cd34#32",
         "stage": "wrong_tool",
         "detail": "search_assets != list_tags",
         "utterance": "lista las etiquetas de primer nivel para mí"
       },
       {
         "id": "2841273885e2bb8a",
+        "key": "2841273885e2bb8a#35",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "tague ça avec Droits expirés"
       },
       {
         "id": "7034637d835fbe79",
+        "key": "7034637d835fbe79#42",
         "stage": "wrong_tool",
         "detail": "list_target_groups != list_classes",
         "utterance": "añade un registro Oferta llamado folleto-fidelidad"
       },
       {
         "id": "5cd59f1d493d2993",
+        "key": "5cd59f1d493d2993#44",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "dis, quels presets de page avons-nous ?"
       },
       {
         "id": "1d6de1bb1e42e59e",
+        "key": "1d6de1bb1e42e59e#46",
         "stage": "no_call_emitted",
         "detail": "ASK",
         "utterance": "also, zeig mir den tag-baum"
       },
       {
         "id": "c767e5bf4007a670",
+        "key": "c767e5bf4007a670#51",
         "stage": "wrong_tool",
         "detail": "list_classes != list_editables",
         "utterance": "which editable types can I use in a template here?"
       },
       {
         "id": "d4d4904c61697e06",
+        "key": "d4d4904c61697e06#52",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "which document types are set up?"
       },
       {
         "id": "0c7e824f88f34f08",
+        "key": "0c7e824f88f34f08#56",
         "stage": "wrong_tool",
         "detail": "stage_asset != get_document_schema",
         "utterance": "vale, muéstrame la estructura de la página"
       },
       {
         "id": "784c770a95d0d72a",
+        "key": "784c770a95d0d72a#58",
         "stage": "wrong_tool",
         "detail": "get_asset_queryable_fields != get_element_tags",
         "utterance": "also, welche Tags hängen da dran?"
       },
       {
         "id": "cf04bde95860d040",
+        "key": "cf04bde95860d040#61",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "dis, montre-moi toutes les pages en brouillon"
       },
       {
         "id": "07d82d88dc13ccca",
+        "key": "07d82d88dc13ccca#62",
         "stage": "wrong_tool",
         "detail": "search_assets != search_data_objects",
         "utterance": "gib mir die Artikelvariante-Objekte"
       },
       {
         "id": "c09b49a9fe7c8a96",
+        "key": "c09b49a9fe7c8a96#65",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "dame los metadatos de esto para mí"
       },
       {
         "id": "26ae7b4cafec5498",
+        "key": "26ae7b4cafec5498#67",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "entferne den Tag 333 vom Asset 56598 wenn du kannst"
       },
       {
         "id": "2b5ef970093404e2",
+        "key": "2b5ef970093404e2#69",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "remove Needs Review from this element please"
       },
       {
         "id": "fe617242c3154f5f",
+        "key": "fe617242c3154f5f#72",
         "stage": "wrong_tool",
         "detail": "search_assets != list_tags",
         "utterance": "bon, liste les tags de premier niveau"
       },
       {
         "id": "88657eff09022488",
+        "key": "88657eff09022488#74",
         "stage": "wrong_tool",
         "detail": "propose_agent_template_deletion != get_queryable_fields",
         "utterance": "what can I filter UsageRight on?"
       },
       {
         "id": "2ed85947816918c9",
+        "key": "2ed85947816918c9#75",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "which transitions can I run on this?"
       },
       {
         "id": "33eac2d7a9fb580d",
+        "key": "33eac2d7a9fb580d#81",
         "stage": "no_call_emitted",
         "detail": "ASK",
         "utterance": "supprime le template trouver-magasin-tpl"
       },
       {
         "id": "937fe0986b9df0e5",
+        "key": "937fe0986b9df0e5#82",
         "stage": "wrong_tool",
         "detail": "search_assets != search_data_objects",
         "utterance": "liste alle Segment-Datensätze auf"
       },
       {
         "id": "d62abe0c8ffe0cb5",
+        "key": "d62abe0c8ffe0cb5#83",
         "stage": "wrong_tool",
         "detail": "get_class_definition != search_assets",
         "utterance": "montre-moi les médias de ce dossier, merci"
       },
       {
         "id": "7e1e0d518e11fa0e",
+        "key": "7e1e0d518e11fa0e#84",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "hey, what's on this file?"
       },
       {
         "id": "c767e5bf4007a670",
+        "key": "c767e5bf4007a670#89",
         "stage": "wrong_tool",
         "detail": "list_classes != list_editables",
         "utterance": "which editable types can I use in a template here?"
       },
       {
         "id": "584f031803695d5e",
+        "key": "584f031803695d5e#90",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "asigna la etiqueta 124 al recurso 34637"
       },
       {
         "id": "ce4852c04db1cb91",
+        "key": "ce4852c04db1cb91#98",
         "stage": "no_call_emitted",
         "detail": "ASK",
         "utterance": "pardon, encore un truc : quels champs a cette classe ?"
       },
       {
         "id": "c29c3411ff38f69c",
+        "key": "c29c3411ff38f69c#105",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "durchsuche die Dokumente nach frühjahrskampagne"
       },
       {
         "id": "d4d4904c61697e06",
+        "key": "d4d4904c61697e06#106",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "which document types are set up?"
       },
       {
         "id": "80bd4edaa8073c90",
+        "key": "80bd4edaa8073c90#107",
         "stage": "wrong_tool",
         "detail": "get_workflow_places != propose_agent_template_deletion",
         "utterance": "borra la plantilla devoluciones-tpl"
       },
       {
         "id": "0b825e73ef51b67e",
+        "key": "0b825e73ef51b67e#111",
         "stage": "wrong_tool",
         "detail": "get_class_definition != list_classes",
         "utterance": "hey, zeig mir die Objektklassen"
       },
       {
         "id": "2191323b769fd1d8",
+        "key": "2191323b769fd1d8#113",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "passe-les en rejeter dans validation_article, merci"
       },
       {
         "id": "005f766faf40b7e4",
+        "key": "005f766faf40b7e4#123",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "quita la etiqueta 321 del recurso 71057"
       },
       {
         "id": "fa16f7fbeb4a8bfd",
+        "key": "fa16f7fbeb4a8bfd#124",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "ok so, run the reset global action on these in content_release"
       },
       {
         "id": "5b76a1126a8b701b",
+        "key": "5b76a1126a8b701b#125",
         "stage": "wrong_tool",
         "detail": "stage_asset != get_element_tags",
         "utterance": "bon, c'est tagué comment ?"
       },
       {
         "id": "b67e914edcb5cf07",
+        "key": "b67e914edcb5cf07#126",
         "stage": "wrong_tool",
         "detail": "create_data_object != list_elements_by_workflow_state",
         "utterance": "quels médias sont bloqués en en_ligne dans circuit_editorial ?"
       },
       {
         "id": "af73ded1dca0341c",
+        "key": "af73ded1dca0341c#129",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "assign tag 177 to object 75669 please"
       },
       {
         "id": "f52f47fe8faf7228",
+        "key": "f52f47fe8faf7228#140",
         "stage": "wrong_tool",
         "detail": "list_target_groups != list_classes",
         "utterance": "create a new DataSteward called invoice-2025"
       },
       {
         "id": "4fb1ab254c957d91",
+        "key": "4fb1ab254c957d91#145",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "run the reset global action on these in asset_clearance"
       },
       {
         "id": "2e43d3da3d383f5f",
+        "key": "2e43d3da3d383f5f#159",
         "stage": "no_call_emitted",
         "detail": "ASK",
         "utterance": "leg hier eine Seite mit dem Key ueber-uns an bitte kurz"
       },
       {
         "id": "c46c32bcdb774596",
+        "key": "c46c32bcdb774596#164",
         "stage": "no_call_emitted",
         "detail": "ASK",
         "utterance": "hey, find the page about spring campaign"
       },
       {
         "id": "53ed1fc9db825503",
+        "key": "53ed1fc9db825503#165",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "where is the size chart page?"
       },
       {
         "id": "d6083493630ce9a6",
+        "key": "d6083493630ce9a6#166",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "which transitions can I run on this?"
       },
       {
         "id": "c54c8caac86e496d",
+        "key": "c54c8caac86e496d#167",
         "stage": "wrong_tool",
         "detail": "describe_tool != get_workflow_places",
         "utterance": "lista los pasos de circuito_editorial, gracias"
       },
       {
         "id": "4951f9dba40576bc",
+        "key": "4951f9dba40576bc#168",
         "stage": "no_call_emitted",
         "detail": "ASK",
         "utterance": "hey, welche personalisierungs-zielgruppen gibt es?"
       },
       {
         "id": "28a27c4bc3904e53",
+        "key": "28a27c4bc3904e53#169",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "tag this with Approved"
       },
       {
         "id": "23bb2eb8f7e3e6d0",
+        "key": "23bb2eb8f7e3e6d0#170",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "quick one: remove tag 374 from asset 2572"
       },
       {
         "id": "3b5ca3c77b0a8f6a",
+        "key": "3b5ca3c77b0a8f6a#171",
         "stage": "no_call_emitted",
         "detail": "ASK",
         "utterance": "öffne 59431 wenn du kannst"
       },
       {
         "id": "2af44603aad70e7c",
+        "key": "2af44603aad70e7c#172",
         "stage": "wrong_tool",
         "detail": "create_data_object != create_document",
         "utterance": "crée ici un lien avec la clé trouver-magasin"
       },
       {
         "id": "77da0f495c624e10",
+        "key": "77da0f495c624e10#173",
         "stage": "wrong_tool",
         "detail": "propose_agent_template_deletion != stage_asset",
         "utterance": "ce tableau est trop gros pour l'aperçu, prépare-le en local s'il te pl"
       },
       {
         "id": "bdbb882de85fd595",
+        "key": "bdbb882de85fd595#178",
         "stage": "arguments",
         "detail": {
           "missing": [
@@ -1042,90 +1161,105 @@
       },
       {
         "id": "7e1cad7685fd55b1",
+        "key": "7e1cad7685fd55b1#181",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "¿qué sabemos de este?"
       },
       {
         "id": "dc7ddf0a4f81e716",
+        "key": "dc7ddf0a4f81e716#184",
         "stage": "wrong_tool",
         "detail": "describe_tool != get_workflow_places",
         "utterance": "sorry, one more thing: list the steps in asset_clearance"
       },
       {
         "id": "962c8e354bb21b4a",
+        "key": "962c8e354bb21b4a#186",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "which transitions can I run on this?"
       },
       {
         "id": "56d3df0ae8dfabdf",
+        "key": "56d3df0ae8dfabdf#197",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "márcalo como Solo web"
       },
       {
         "id": "cd345dc40ea1013c",
+        "key": "cd345dc40ea1013c#199",
         "stage": "wrong_tool",
         "detail": "search_assets != search_data_objects",
         "utterance": "busca posibles duplicados en Proveedor por encima de una puntuación de"
       },
       {
         "id": "4eaeb1a28796ec17",
+        "key": "4eaeb1a28796ec17#207",
         "stage": "no_call_emitted",
         "detail": "ASK",
         "utterance": "bon, dessine-moi le circuit validation_droits pour cet élément"
       },
       {
         "id": "e03b616d1e0da624",
+        "key": "e03b616d1e0da624#210",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "vale, muéstrame las clases de objetos"
       },
       {
         "id": "379800dde37650ee",
+        "key": "379800dde37650ee#211",
         "stage": "wrong_tool",
         "detail": "list_target_groups != get_asset_queryable_fields",
         "utterance": "wonach kann ich Assets überhaupt filtern?"
       },
       {
         "id": "ce7e64b823cdbcdb",
+        "key": "ce7e64b823cdbcdb#213",
         "stage": "wrong_tool",
         "detail": "search_assets != search_data_objects",
         "utterance": "liste alle Kategorie-Datensätze auf"
       },
       {
         "id": "86de1fafd51738d3",
+        "key": "86de1fafd51738d3#215",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "una cosa: asigna la etiqueta 129 al objeto 18959"
       },
       {
         "id": "71131fa78d501600",
+        "key": "71131fa78d501600#218",
         "stage": "wrong_tool",
         "detail": "search_assets != search_data_objects",
         "utterance": "liste alle angebot-datensätze auf"
       },
       {
         "id": "401c500abd723ced",
+        "key": "401c500abd723ced#220",
         "stage": "wrong_tool",
         "detail": "describe_tool != get_workflow_places",
         "utterance": "lista los pasos de validacion_articulo"
       },
       {
         "id": "b0d80f50bc17fe0c",
+        "key": "b0d80f50bc17fe0c#221",
         "stage": "wrong_tool",
         "detail": "discover != get_class_definition",
         "utterance": "welche Felder hat Kategorie?"
       },
       {
         "id": "d4d4904c61697e06",
+        "key": "d4d4904c61697e06#225",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "which document types are set up?"
       },
       {
         "id": "dfa7be532fbb46c6",
+        "key": "dfa7be532fbb46c6#229",
         "stage": "arguments",
         "detail": {
           "missing": [],
@@ -1138,24 +1272,28 @@
       },
       {
         "id": "06604661502a48b2",
+        "key": "06604661502a48b2#238",
         "stage": "wrong_tool",
         "detail": "list_thumbnail_configs != list_workflows",
         "utterance": "¿qué flujos de trabajo hay configurados?"
       },
       {
         "id": "d4d4904c61697e06",
+        "key": "d4d4904c61697e06#239",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "which document types are set up?"
       },
       {
         "id": "f16516c86de78d83",
+        "key": "f16516c86de78d83#243",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "petite question : attribue le tag 121 à l'objet 10835"
       },
       {
         "id": "86196b4325a1124e",
+        "key": "86196b4325a1124e#244",
         "stage": "arguments",
         "detail": {
           "missing": [],
@@ -1168,198 +1306,231 @@
       },
       {
         "id": "c6029bdbe66fb79d",
+        "key": "c6029bdbe66fb79d#247",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "ouvre-les tous s'il te plaît"
       },
       {
         "id": "9d4f37a2131d0e83",
+        "key": "9d4f37a2131d0e83#248",
         "stage": "wrong_tool",
         "detail": "search_assets != search_data_objects",
         "utterance": "finde die Partnerstamm-Datensätze, bei denen matchScore leer ist"
       },
       {
         "id": "e2045308c51cc490",
+        "key": "e2045308c51cc490#252",
         "stage": "wrong_tool",
         "detail": "get_data_object != get_asset",
         "utterance": "zeig mir 58258 bitte kurz"
       },
       {
         "id": "05f4a7e2e62ba6d4",
+        "key": "05f4a7e2e62ba6d4#253",
         "stage": "wrong_tool",
         "detail": "describe_tool != get_queryable_fields",
         "utterance": "petite question : quels champs de Offre sont interrogeables ?"
       },
       {
         "id": "0d4324baf6859375",
+        "key": "0d4324baf6859375#254",
         "stage": "no_call_emitted",
         "detail": "ASK",
         "utterance": "ok so, pull up records 2217, 48020 and 65637"
       },
       {
         "id": "379800dde37650ee",
+        "key": "379800dde37650ee#258",
         "stage": "wrong_tool",
         "detail": "list_target_groups != get_asset_queryable_fields",
         "utterance": "wonach kann ich Assets überhaupt filtern?"
       },
       {
         "id": "3b92f9b1fb8faeb5",
+        "key": "3b92f9b1fb8faeb5#262",
         "stage": "wrong_tool",
         "detail": "get_data_object != get_asset",
         "utterance": "öffne 74482 bitte"
       },
       {
         "id": "0d26a1626073ddcd",
+        "key": "0d26a1626073ddcd#264",
         "stage": "wrong_tool",
         "detail": "search_assets != search_data_objects",
         "utterance": "donne-moi les objets PageAtterrissage"
       },
       {
         "id": "1baeff21b728affc",
+        "key": "1baeff21b728affc#267",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "put the Do Not Translate tag on this one if you can"
       },
       {
         "id": "0e75e092d487b90a",
+        "key": "0e75e092d487b90a#268",
         "stage": "wrong_tool",
         "detail": "list_target_groups != list_agent_templates",
         "utterance": "montre-moi les templates de l'agent pour moi"
       },
       {
         "id": "b0019908e622bc2d",
+        "key": "b0019908e622bc2d#282",
         "stage": "wrong_tool",
         "detail": "list_tags != search_assets",
         "utterance": "durchsuche die Mediathek nach frühjahrskampagne bitte kurz"
       },
       {
         "id": "53dddc3f8fa698ce",
+        "key": "53dddc3f8fa698ce#285",
         "stage": "wrong_tool",
         "detail": "list_target_groups != list_classes",
         "utterance": "leg ein neues Kategorie mit dem Key fruhjahrskampagne an bitte kurz"
       },
       {
         "id": "e6c2c6905461ded1",
+        "key": "e6c2c6905461ded1#290",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "passe-les en vers_juridique dans circuit_editorial si tu peux"
       },
       {
         "id": "d8a57c1ea77baf13",
+        "key": "d8a57c1ea77baf13#294",
         "stage": "wrong_tool",
         "detail": "search_assets != list_tags",
         "utterance": "kurz mal: welche Tags haben wir?"
       },
       {
         "id": "e3d20b878a022cfa",
+        "key": "e3d20b878a022cfa#301",
         "stage": "wrong_tool",
         "detail": "describe_tool != get_workflow_places",
         "utterance": "¿qué estados tiene el flujo circuito_editorial?"
       },
       {
         "id": "6295a9c784d10aa4",
+        "key": "6295a9c784d10aa4#302",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "ejecuta la acción global zuruecksetzen sobre estos en validacion_derec"
       },
       {
         "id": "102dd6e80e6cc5d3",
+        "key": "102dd6e80e6cc5d3#303",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "vale, asigna la etiqueta 330 al documento 55990"
       },
       {
         "id": "7da8df93dfd31033",
+        "key": "7da8df93dfd31033#307",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "wo liegt die Seite größentabelle?"
       },
       {
         "id": "c0ad7821057693ea",
+        "key": "c0ad7821057693ea#309",
         "stage": "wrong_tool",
         "detail": "list_assets != get_field_schema",
         "utterance": "what's inside the content.StockItem brick on StockItem?"
       },
       {
         "id": "7bc43192d97b6ebe",
+        "key": "7bc43192d97b6ebe#310",
         "stage": "wrong_tool",
         "detail": "create_data_object != create_document",
         "utterance": "sorry, noch was: leg hier einen verweis mit dem key kontakt an"
       },
       {
         "id": "30e2edd3a02351dc",
+        "key": "30e2edd3a02351dc#315",
         "stage": "wrong_tool",
         "detail": "search_documents != list_tags",
         "utterance": "pardon, encore un truc : quels tags avons-nous ?"
       },
       {
         "id": "1aedd1002d4d96f0",
+        "key": "1aedd1002d4d96f0#318",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "sorry, noch was: weise dem Asset 3426 den Tag 384 zu"
       },
       {
         "id": "e2074bb4924750e7",
+        "key": "e2074bb4924750e7#321",
         "stage": "wrong_tool",
         "detail": "get_data_object != get_asset",
         "utterance": "abre 97238"
       },
       {
         "id": "46e26cd0008f93a1",
+        "key": "46e26cd0008f93a1#322",
         "stage": "wrong_tool",
         "detail": "list_target_groups != list_classes",
         "utterance": "quels modèles de données existent ici ?"
       },
       {
         "id": "7da8df93dfd31033",
+        "key": "7da8df93dfd31033#323",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "wo liegt die Seite größentabelle?"
       },
       {
         "id": "662258ea7c234e56",
+        "key": "662258ea7c234e56#327",
         "stage": "no_call_emitted",
         "detail": "ASK",
         "utterance": "hey, zeig mir die Details"
       },
       {
         "id": "abbf6b3a24ca3585",
+        "key": "abbf6b3a24ca3585#328",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "cherche bannière hero dans les documents"
       },
       {
         "id": "a1f0058b3a62b128",
+        "key": "a1f0058b3a62b128#330",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "sorry, one more thing: remove tag 179 from object 76349"
       },
       {
         "id": "d4d4904c61697e06",
+        "key": "d4d4904c61697e06#331",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "which document types are set up?"
       },
       {
         "id": "94c5da3fb084f138",
+        "key": "94c5da3fb084f138#335",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "passe-les en valider dans validation_article"
       },
       {
         "id": "c767e5bf4007a670",
+        "key": "c767e5bf4007a670#338",
         "stage": "wrong_tool",
         "detail": "list_classes != list_editables",
         "utterance": "which editable types can I use in a template here?"
       },
       {
         "id": "be67c0ba591fe811",
+        "key": "be67c0ba591fe811#342",
         "stage": "wrong_tool",
         "detail": "search_assets != search_data_objects",
         "utterance": "a ver, encuentra los Medio cuyo campo fechaPublicacion está vacío"
       },
       {
         "id": "b67fba7f6f375cb4",
+        "key": "b67fba7f6f375cb4#344",
         "stage": "arguments",
         "detail": {
           "missing": [],
@@ -1372,60 +1543,70 @@
       },
       {
         "id": "c767e5bf4007a670",
+        "key": "c767e5bf4007a670#346",
         "stage": "wrong_tool",
         "detail": "list_classes != list_editables",
         "utterance": "which editable types can I use in a template here?"
       },
       {
         "id": "06604661502a48b2",
+        "key": "06604661502a48b2#349",
         "stage": "wrong_tool",
         "detail": "list_thumbnail_configs != list_workflows",
         "utterance": "¿qué flujos de trabajo hay configurados?"
       },
       {
         "id": "445b28f61f02a6a0",
+        "key": "445b28f61f02a6a0#354",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "lance l'action globale escalate sur ceux-ci dans circuit_editorial s'i"
       },
       {
         "id": "443893327326075e",
+        "key": "443893327326075e#357",
         "stage": "wrong_tool",
         "detail": "search_assets != search_data_objects",
         "utterance": "dame los objetos CuentaFidelidad"
       },
       {
         "id": "905956bd8ca3ae22",
+        "key": "905956bd8ca3ae22#360",
         "stage": "wrong_tool",
         "detail": "create_data_object != create_document",
         "utterance": "leg hier einen Verweis mit dem Key kontakt an"
       },
       {
         "id": "763d8b3bd1424257",
+        "key": "763d8b3bd1424257#362",
         "stage": "no_call_emitted",
         "detail": "ASK",
         "utterance": "quita la etiqueta Solo web de esto para mí"
       },
       {
         "id": "f5a872c59101f9db",
+        "key": "f5a872c59101f9db#363",
         "stage": "wrong_tool",
         "detail": "list_assets != get_field_schema",
         "utterance": "was steckt im Brick attributes.Bildrecht bei Bildmotiv?"
       },
       {
         "id": "82416e7387def2d0",
+        "key": "82416e7387def2d0#368",
         "stage": "no_call_emitted",
         "detail": "ASK",
         "utterance": "a ver, descarga el archivo para poder leerlo entero"
       },
       {
         "id": "58bed0a24ec896fa",
+        "key": "58bed0a24ec896fa#372",
         "stage": "wrong_tool",
         "detail": "discover != get_class_definition",
         "utterance": "quels attributs a Campagne ?"
       },
       {
         "id": "e6ba416a8a75802e",
+        "key": "e6ba416a8a75802e#375",
         "stage": "arguments",
         "detail": {
           "missing": [
@@ -1438,48 +1619,56 @@
       },
       {
         "id": "e399c7c3a0322038",
+        "key": "e399c7c3a0322038#378",
         "stage": "wrong_tool",
         "detail": "list_target_groups != list_agent_templates",
         "utterance": "pardon, encore un truc : montre-moi les templates de l'agent"
       },
       {
         "id": "efb63479f89aa55d",
+        "key": "efb63479f89aa55d#379",
         "stage": "no_call_emitted",
         "detail": "ASK",
         "utterance": "bon, dessine-moi le circuit circuit_editorial pour cet élément"
       },
       {
         "id": "78871ff816c3f916",
+        "key": "78871ff816c3f916#383",
         "stage": "wrong_tool",
         "detail": "create_data_object != create_document",
         "utterance": "leg hier eine Seite mit dem Key rueckgabe an"
       },
       {
         "id": "7cf33f09b42df1a3",
+        "key": "7cf33f09b42df1a3#390",
         "stage": "no_call_emitted",
         "detail": "ASK",
         "utterance": "dis, dessine-moi le circuit circuit_editorial pour cet élément"
       },
       {
         "id": "f84d5f4e1011838d",
+        "key": "f84d5f4e1011838d#393",
         "stage": "wrong_tool",
         "detail": "search_assets != search_data_objects",
         "utterance": "bei welchen Partnerstamm fehlt letztePflege?"
       },
       {
         "id": "c29c3411ff38f69c",
+        "key": "c29c3411ff38f69c#395",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "durchsuche die Dokumente nach frühjahrskampagne"
       },
       {
         "id": "593ff749fac2ece4",
+        "key": "593ff749fac2ece4#398",
         "stage": "wrong_tool",
         "detail": "search_assets != search_data_objects",
         "utterance": "quick one: find the Bundle records where listPrice is empty"
       },
       {
         "id": "4ed11833166da1da",
+        "key": "4ed11833166da1da#399",
         "stage": "arguments",
         "detail": {
           "missing": [],
@@ -1492,120 +1681,140 @@
       },
       {
         "id": "fb61de2956e4d22a",
+        "key": "fb61de2956e4d22a#403",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "führ die globale Aktion zuruecksetzen für die hier im Workflow bildfre"
       },
       {
         "id": "06604661502a48b2",
+        "key": "06604661502a48b2#406",
         "stage": "wrong_tool",
         "detail": "list_thumbnail_configs != list_workflows",
         "utterance": "¿qué flujos de trabajo hay configurados?"
       },
       {
         "id": "35e7b75c0e1e7ae4",
+        "key": "35e7b75c0e1e7ae4#409",
         "stage": "wrong_tool",
         "detail": "list_target_groups != get_asset_queryable_fields",
         "utterance": "show me assets whose rights have run out please"
       },
       {
         "id": "7f5f53756b6f53aa",
+        "key": "7f5f53756b6f53aa#410",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "what page presets do we have?"
       },
       {
         "id": "92b714210b02b0e8",
+        "key": "92b714210b02b0e8#413",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "durchsuche die dokumente nach sicherheitsdatenblatt"
       },
       {
         "id": "7bbcf2714ac6ce00",
+        "key": "7bbcf2714ac6ce00#416",
         "stage": "no_call_emitted",
         "detail": "DELEGATE",
         "utterance": "sorry, noch was: markier das als Freigegeben"
       },
       {
         "id": "6b2fc7d73639335c",
+        "key": "6b2fc7d73639335c#417",
         "stage": "no_call_emitted",
         "detail": "ASK",
         "utterance": "list the records sitting in published for product_approval for me"
       },
       {
         "id": "9a2ee17f36af39c8",
+        "key": "9a2ee17f36af39c8#420",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "entferne Abverkauf von diesem Element"
       },
       {
         "id": "c767e5bf4007a670",
+        "key": "c767e5bf4007a670#421",
         "stage": "wrong_tool",
         "detail": "list_classes != list_editables",
         "utterance": "which editable types can I use in a template here?"
       },
       {
         "id": "379800dde37650ee",
+        "key": "379800dde37650ee#423",
         "stage": "wrong_tool",
         "detail": "list_target_groups != get_asset_queryable_fields",
         "utterance": "wonach kann ich Assets überhaupt filtern?"
       },
       {
         "id": "c3a7c099c3d361f2",
+        "key": "c3a7c099c3d361f2#426",
         "stage": "wrong_tool",
         "detail": "propose_agent_template_deletion != stage_asset",
         "utterance": "this spreadsheet is too big for a preview, stage it"
       },
       {
         "id": "7f5f53756b6f53aa",
+        "key": "7f5f53756b6f53aa#428",
         "stage": "no_call_emitted",
         "detail": "NO_CALL",
         "utterance": "what page presets do we have?"
       },
       {
         "id": "cd8d89b1344510c4",
+        "key": "cd8d89b1344510c4#430",
         "stage": "wrong_tool",
         "detail": "list_target_groups != list_classes",
         "utterance": "add a PartyMaster record named loyalty-flyer, thanks"
       },
       {
         "id": "06604661502a48b2",
+        "key": "06604661502a48b2#432",
         "stage": "wrong_tool",
         "detail": "list_thumbnail_configs != list_workflows",
         "utterance": "¿qué flujos de trabajo hay configurados?"
       },
       {
         "id": "1f73cf005ca81ea4",
+        "key": "1f73cf005ca81ea4#434",
         "stage": "wrong_tool",
         "detail": "list_target_groups != list_classes",
         "utterance": "create a new Category called invoice-2025 please"
       },
       {
         "id": "64cc91a0f45c2feb",
+        "key": "64cc91a0f45c2feb#435",
         "stage": "wrong_tool",
         "detail": "get_workflow_places != propose_agent_template_deletion",
         "utterance": "sorry, one more thing: delete the template size-guide-tpl"
       },
       {
         "id": "f61c420fa96b37f2",
+        "key": "f61c420fa96b37f2#437",
         "stage": "wrong_tool",
         "detail": "assign_tag != unassign_tag",
         "utterance": "remove tag 104 from asset 2182 please"
       },
       {
         "id": "0226aaf576598ed5",
+        "key": "0226aaf576598ed5#438",
         "stage": "wrong_tool",
         "detail": "get_queryable_fields != stage_asset",
         "utterance": "sorry, one more thing: pull this file down so you can read it end to e"
       },
       {
         "id": "d55cf3f3ac325313",
+        "key": "d55cf3f3ac325313#440",
         "stage": "wrong_tool",
         "detail": "get_data_object != get_asset",
         "utterance": "bon, montre-moi les détails"
       },
       {
         "id": "bdd7f5c353efe694",
+        "key": "bdd7f5c353efe694#441",
         "stage": "arguments",
         "detail": {
           "missing": [],
@@ -1618,10 +1827,4183 @@
       },
       {
         "id": "3063fb0f2aa704ad",
+        "key": "3063fb0f2aa704ad#443",
         "stage": "wrong_tool",
         "detail": "create_data_object != create_document",
         "utterance": "leg hier einen Verweis mit dem Key fruehjahrsaktion an"
       }
     ]
-  }
+  },
+  "attribution": [
+    {
+      "key": "b0802daf727ce8e6#0",
+      "lang": "fr",
+      "utterance": "quels groupes cibles de personnalisation existent ?",
+      "gold_tool": "list_target_groups",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "e6ba416a8a75802e#1",
+      "lang": "es",
+      "utterance": "una cosa: lista todos los archivos csv",
+      "gold_tool": "search_assets",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_assets",
+        "search_data_objects",
+        "list_tags"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "039ba5549e4d555a#7",
+      "lang": "es",
+      "utterance": "¿qué Medio no tienen finDerechos rellenado?",
+      "gold_tool": "search_data_objects",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_data_objects",
+        "search_assets",
+        "get_document"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "d4d4904c61697e06#8",
+      "lang": "en",
+      "utterance": "which document types are set up?",
+      "gold_tool": "list_document_types",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "get_asset_queryable_fields",
+        "list_document_types",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "1d951acf7b5a10cb#9",
+      "lang": "de",
+      "utterance": "führ die globale Aktion zuruecksetzen für die hier im Workflow artikelfreigabe a",
+      "gold_tool": "apply_global_action",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "apply_global_action",
+        "apply_transition",
+        "upload_asset"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "ea59ec346a7bf878#10",
+      "lang": "es",
+      "utterance": "dame los metadatos de esto, gracias",
+      "gold_tool": "get_asset",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "get_data_object",
+        "get_element_workflow_details",
+        "get_asset"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "1f5a9670a3f0cf3d#11",
+      "lang": "de",
+      "utterance": "welche Bild-Thumbnail-Konfigurationen gibt es?",
+      "gold_tool": "list_thumbnail_configs",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_thumbnail_configs",
+        "list_workflows",
+        "get_asset_queryable_fields"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "06604661502a48b2#12",
+      "lang": "es",
+      "utterance": "¿qué flujos de trabajo hay configurados?",
+      "gold_tool": "list_workflows",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "list_thumbnail_configs",
+        "list_workflows",
+        "list_target_groups"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "47fff6f0b26c05fa#13",
+      "lang": "en",
+      "utterance": "what can you actually do in here?",
+      "gold_tool": "discover",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_class_definition",
+        "describe_tool"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "9a4365a3421a2eb7#15",
+      "lang": "en",
+      "utterance": "sorry, one more thing: show me the content as it stands",
+      "gold_tool": "get_document",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "get_class_definition",
+        "search_assets",
+        "get_document"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "45528f578d176338#16",
+      "lang": "fr",
+      "utterance": "prépare les fichiers twig_partials pour pouvoir lire les templates, merci",
+      "gold_tool": "stage_file_set",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "stage_file_set",
+        "get_queryable_fields",
+        "get_area_brick"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "6278aa5d5698d508#18",
+      "lang": "de",
+      "utterance": "hey, welche Personalisierungs-Zielgruppen gibt es?",
+      "gold_tool": "list_target_groups",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "d10238daf9a1fecb#20",
+      "lang": "en",
+      "utterance": "which personalisation target groups exist?",
+      "gold_tool": "list_target_groups",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "b56e1aeb76758a45#21",
+      "lang": "es",
+      "utterance": "abre los registros 12449, 47757 y 16027",
+      "gold_tool": "get_data_object",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_data_object",
+        "get_asset",
+        "assign_tag"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "9effbaad31f0c323#24",
+      "lang": "en",
+      "utterance": "sorry, one more thing: what goes into the product-teaser and spec-table bricks?",
+      "gold_tool": "get_area_brick",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_area_brick",
+        "get_class_definition"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "0b9e9276ad1807ef#27",
+      "lang": "en",
+      "utterance": "list the steps in asset_clearance if you can",
+      "gold_tool": "get_workflow_places",
+      "rank": 4,
+      "considered": 12,
+      "kept": [
+        "describe_tool",
+        "propose_agent_template_deletion",
+        "get_queryable_fields"
+      ],
+      "survived": false,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "be3ffa7276aebbe1#29",
+      "lang": "en",
+      "utterance": "give me the Story objects",
+      "gold_tool": "search_data_objects",
+      "rank": 6,
+      "considered": 12,
+      "kept": [
+        "get_element_workflow_details",
+        "get_document",
+        "get_asset"
+      ],
+      "survived": false,
+      "outcome": "no_call"
+    },
+    {
+      "key": "66c65b6b40c08db6#30",
+      "lang": "fr",
+      "utterance": "dis, montre-moi les médias dont les droits ont expiré",
+      "gold_tool": "get_asset_queryable_fields",
+      "rank": 4,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": false,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "bb19147ff56aeb61#31",
+      "lang": "de",
+      "utterance": "wonach kann ich assets überhaupt filtern?",
+      "gold_tool": "get_asset_queryable_fields",
+      "rank": 4,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": false,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "d4af7901f187cd34#32",
+      "lang": "es",
+      "utterance": "lista las etiquetas de primer nivel para mí",
+      "gold_tool": "list_tags",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "search_assets",
+        "list_tags"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "a06a2660efe18b01#33",
+      "lang": "en",
+      "utterance": "sorry, one more thing: which Teaser have a teaserText below 199?",
+      "gold_tool": "search_data_objects",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_data_objects",
+        "search_assets",
+        "get_document"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "2841273885e2bb8a#35",
+      "lang": "fr",
+      "utterance": "tague ça avec Droits expirés",
+      "gold_tool": "list_tags",
+      "rank": 4,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "apply_global_action",
+        "search_documents"
+      ],
+      "survived": false,
+      "outcome": "no_call"
+    },
+    {
+      "key": "109152f36e13813f#37",
+      "lang": "es",
+      "utterance": "¿qué grupos objetivo de personalización existen?",
+      "gold_tool": "list_target_groups",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "aed2b231d62512ac#38",
+      "lang": "es",
+      "utterance": "empecemos por la raíz del árbol de recursos, por favor",
+      "gold_tool": "list_assets",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_assets",
+        "get_field_schema",
+        "discover"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "546262289c9bd059#39",
+      "lang": "fr",
+      "utterance": "quelles pages ne sont pas encore publiées ?",
+      "gold_tool": "search_documents",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "search_documents",
+        "list_tags"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "7034637d835fbe79#42",
+      "lang": "es",
+      "utterance": "añade un registro Oferta llamado folleto-fidelidad",
+      "gold_tool": "list_classes",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "05ccc133df2228a3#43",
+      "lang": "fr",
+      "utterance": "non, ouvre le média 79650",
+      "gold_tool": "get_asset",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_asset",
+        "get_data_object",
+        "create_document"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "5cd59f1d493d2993#44",
+      "lang": "fr",
+      "utterance": "dis, quels presets de page avons-nous ?",
+      "gold_tool": "list_document_types",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "list_classes",
+        "list_document_types",
+        "get_asset_queryable_fields"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "1d6de1bb1e42e59e#46",
+      "lang": "de",
+      "utterance": "also, zeig mir den tag-baum",
+      "gold_tool": "list_tags",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "get_field_schema",
+        "list_tags"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "0e4a139e8fba4295#49",
+      "lang": "en",
+      "utterance": "what fields does LoyaltyAccount have?",
+      "gold_tool": "get_class_definition",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_class_definition",
+        "get_area_brick"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "06ecf4bb79096b9d#50",
+      "lang": "en",
+      "utterance": "sorry, one more thing: what do we know about this one?",
+      "gold_tool": "get_asset",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_asset",
+        "get_element_workflow_details",
+        "get_data_object"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "c767e5bf4007a670#51",
+      "lang": "en",
+      "utterance": "which editable types can I use in a template here?",
+      "gold_tool": "list_editables",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "get_asset_queryable_fields",
+        "list_classes",
+        "list_editables"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "d4d4904c61697e06#52",
+      "lang": "en",
+      "utterance": "which document types are set up?",
+      "gold_tool": "list_document_types",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "get_asset_queryable_fields",
+        "list_document_types",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "d1869d48c0859530#53",
+      "lang": "es",
+      "utterance": "no, abre el recurso 53250 para mí",
+      "gold_tool": "get_asset",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_asset",
+        "get_data_object",
+        "create_document"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "0c7e824f88f34f08#56",
+      "lang": "es",
+      "utterance": "vale, muéstrame la estructura de la página",
+      "gold_tool": "get_document_schema",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "stage_asset",
+        "get_document_schema",
+        "propose_agent_template_deletion"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "784c770a95d0d72a#58",
+      "lang": "de",
+      "utterance": "also, welche Tags hängen da dran?",
+      "gold_tool": "get_element_tags",
+      "rank": 5,
+      "considered": 12,
+      "kept": [
+        "list_thumbnail_configs",
+        "list_workflows",
+        "get_asset_queryable_fields"
+      ],
+      "survived": false,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "8ede9dcd72dce05d#59",
+      "lang": "en",
+      "utterance": "quick one: create a tag called Master Data Complete",
+      "gold_tool": "create_tag",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "create_tag",
+        "list_assets",
+        "describe_tool"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "cf04bde95860d040#61",
+      "lang": "fr",
+      "utterance": "dis, montre-moi toutes les pages en brouillon",
+      "gold_tool": "search_documents",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "apply_global_action",
+        "search_documents"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "07d82d88dc13ccca#62",
+      "lang": "de",
+      "utterance": "gib mir die Artikelvariante-Objekte",
+      "gold_tool": "search_data_objects",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "search_assets",
+        "search_data_objects",
+        "apply_transition"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "c09b49a9fe7c8a96#65",
+      "lang": "es",
+      "utterance": "dame los metadatos de esto para mí",
+      "gold_tool": "get_asset",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "get_data_object",
+        "get_asset",
+        "get_element_workflow_details"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "3de2f6f01f870af7#66",
+      "lang": "en",
+      "utterance": "which video thumbnail presets do we have?",
+      "gold_tool": "list_thumbnail_configs",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_thumbnail_configs",
+        "list_workflows",
+        "list_target_groups"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "26ae7b4cafec5498#67",
+      "lang": "de",
+      "utterance": "entferne den Tag 333 vom Asset 56598 wenn du kannst",
+      "gold_tool": "unassign_tag",
+      "rank": null,
+      "considered": 12,
+      "kept": [
+        "assign_tag",
+        "propose_agent_template",
+        "create_data_object"
+      ],
+      "survived": false,
+      "outcome": "no_call"
+    },
+    {
+      "key": "9f19d076af8eec9c#68",
+      "lang": "es",
+      "utterance": "busca recursos de x200, 200 por página",
+      "gold_tool": "search_assets",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_assets",
+        "search_data_objects",
+        "apply_transition"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "2b5ef970093404e2#69",
+      "lang": "en",
+      "utterance": "remove Needs Review from this element please",
+      "gold_tool": "get_element_tags",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_element_tags",
+        "propose_agent_template_deletion",
+        "describe_tool"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "fe617242c3154f5f#72",
+      "lang": "fr",
+      "utterance": "bon, liste les tags de premier niveau",
+      "gold_tool": "list_tags",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "search_assets",
+        "list_tags"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "1808ad0156488c5c#73",
+      "lang": "fr",
+      "utterance": "que contiennent les bricks image-gallery et featurette ?",
+      "gold_tool": "get_area_brick",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_area_brick",
+        "get_class_definition"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "88657eff09022488#74",
+      "lang": "en",
+      "utterance": "what can I filter UsageRight on?",
+      "gold_tool": "get_queryable_fields",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "describe_tool",
+        "get_queryable_fields",
+        "propose_agent_template_deletion"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "2ed85947816918c9#75",
+      "lang": "en",
+      "utterance": "which transitions can I run on this?",
+      "gold_tool": "get_element_workflow_details",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_element_workflow_details",
+        "get_class_definition",
+        "get_data_object"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "09f2e2bd3fa1999b#77",
+      "lang": "es",
+      "utterance": "¿qué hay ahora mismo en esta página?",
+      "gold_tool": "get_document",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "get_class_definition",
+        "get_element_workflow_details",
+        "get_document"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "b6ff2cd046b5369d#78",
+      "lang": "es",
+      "utterance": "lista todos los archivos pdf, por favor",
+      "gold_tool": "search_assets",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_assets",
+        "list_tags",
+        "apply_transition"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "b0802daf727ce8e6#80",
+      "lang": "fr",
+      "utterance": "quels groupes cibles de personnalisation existent ?",
+      "gold_tool": "list_target_groups",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "33eac2d7a9fb580d#81",
+      "lang": "fr",
+      "utterance": "supprime le template trouver-magasin-tpl",
+      "gold_tool": "propose_agent_template_deletion",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "describe_tool",
+        "propose_agent_template_deletion",
+        "get_workflow_places"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "937fe0986b9df0e5#82",
+      "lang": "de",
+      "utterance": "liste alle Segment-Datensätze auf",
+      "gold_tool": "search_data_objects",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "search_assets",
+        "search_data_objects",
+        "get_document"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "d62abe0c8ffe0cb5#83",
+      "lang": "fr",
+      "utterance": "montre-moi les médias de ce dossier, merci",
+      "gold_tool": "search_assets",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "get_class_definition",
+        "search_assets",
+        "discover"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "7e1e0d518e11fa0e#84",
+      "lang": "en",
+      "utterance": "hey, what's on this file?",
+      "gold_tool": "get_asset",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "get_element_workflow_details",
+        "get_data_object",
+        "get_asset"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "58494b5e0b039cf6#85",
+      "lang": "es",
+      "utterance": "muéstrame los subcampos de content.UnidadEmbalaje para GamaProducto",
+      "gold_tool": "get_field_schema",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "list_assets",
+        "get_field_schema",
+        "apply_transition"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "e55995aa346ce11a#87",
+      "lang": "de",
+      "utterance": "wonach kann ich Motiv filtern?",
+      "gold_tool": "get_queryable_fields",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "describe_tool",
+        "propose_agent_template_deletion",
+        "get_queryable_fields"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "a6f3c5cad2047374#88",
+      "lang": "en",
+      "utterance": "add Legal Check Pending as a tag",
+      "gold_tool": "create_tag",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "create_tag",
+        "list_assets",
+        "describe_tool"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "c767e5bf4007a670#89",
+      "lang": "en",
+      "utterance": "which editable types can I use in a template here?",
+      "gold_tool": "list_editables",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "get_asset_queryable_fields",
+        "list_classes",
+        "list_editables"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "584f031803695d5e#90",
+      "lang": "es",
+      "utterance": "asigna la etiqueta 124 al recurso 34637",
+      "gold_tool": "assign_tag",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "assign_tag",
+        "propose_agent_template",
+        "create_data_object"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "38ff844daf61d681#91",
+      "lang": "es",
+      "utterance": "vale, ¿qué parámetros acepta apply_transition?",
+      "gold_tool": "describe_tool",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "get_queryable_fields",
+        "describe_tool",
+        "discover"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "7800c9eb99181eae#92",
+      "lang": "fr",
+      "utterance": "montre-moi plutôt le média 27747 s'il te plaît",
+      "gold_tool": "get_asset",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_asset",
+        "get_data_object",
+        "assign_tag"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "6e9c9dfc901992ac#93",
+      "lang": "es",
+      "utterance": "prepara los archivos theme_assets para poder leer las plantillas, gracias",
+      "gold_tool": "stage_file_set",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "stage_file_set",
+        "get_queryable_fields",
+        "get_area_brick"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "b0802daf727ce8e6#95",
+      "lang": "fr",
+      "utterance": "quels groupes cibles de personnalisation existent ?",
+      "gold_tool": "list_target_groups",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "3f7bc4ac2031fe3d#96",
+      "lang": "es",
+      "utterance": "¿qué campos tiene Evento?",
+      "gold_tool": "get_class_definition",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_class_definition",
+        "get_area_brick"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "ce4852c04db1cb91#98",
+      "lang": "fr",
+      "utterance": "pardon, encore un truc : quels champs a cette classe ?",
+      "gold_tool": "get_class_definition",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_class_definition",
+        "get_area_brick"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "46fc3456610e90c8#103",
+      "lang": "fr",
+      "utterance": "crée un tag nommé Print uniquement s'il te plaît s'il te plaît",
+      "gold_tool": "create_tag",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "create_tag",
+        "list_assets",
+        "describe_tool"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "f39dda64da839603#104",
+      "lang": "de",
+      "utterance": "ich muss mit dem Thema Dokumenten arbeiten bitte kurz",
+      "gold_tool": "discover",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_class_definition",
+        "get_area_brick"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "c29c3411ff38f69c#105",
+      "lang": "de",
+      "utterance": "durchsuche die Dokumente nach frühjahrskampagne",
+      "gold_tool": "search_documents",
+      "rank": 4,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "apply_global_action",
+        "get_field_schema"
+      ],
+      "survived": false,
+      "outcome": "no_call"
+    },
+    {
+      "key": "d4d4904c61697e06#106",
+      "lang": "en",
+      "utterance": "which document types are set up?",
+      "gold_tool": "list_document_types",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "get_asset_queryable_fields",
+        "list_document_types",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "80bd4edaa8073c90#107",
+      "lang": "es",
+      "utterance": "borra la plantilla devoluciones-tpl",
+      "gold_tool": "propose_agent_template_deletion",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "describe_tool",
+        "propose_agent_template_deletion",
+        "get_workflow_places"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "e58ae3fabf8973dd#108",
+      "lang": "en",
+      "utterance": "sorry, one more thing: can you help me with thumbnails?",
+      "gold_tool": "discover",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_class_definition",
+        "get_area_brick"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "0b825e73ef51b67e#111",
+      "lang": "de",
+      "utterance": "hey, zeig mir die Objektklassen",
+      "gold_tool": "list_classes",
+      "rank": null,
+      "considered": 12,
+      "kept": [
+        "get_class_definition",
+        "discover",
+        "get_element_workflow_details"
+      ],
+      "survived": false,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "109152f36e13813f#112",
+      "lang": "es",
+      "utterance": "¿qué grupos objetivo de personalización existen?",
+      "gold_tool": "list_target_groups",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "2191323b769fd1d8#113",
+      "lang": "fr",
+      "utterance": "passe-les en rejeter dans validation_article, merci",
+      "gold_tool": "apply_transition",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "apply_global_action",
+        "apply_transition",
+        "upload_asset"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "47fff6f0b26c05fa#119",
+      "lang": "en",
+      "utterance": "what can you actually do in here?",
+      "gold_tool": "discover",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_class_definition",
+        "describe_tool"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "af99c76eb63b888a#120",
+      "lang": "en",
+      "utterance": "show me the sub-fields of content.Link for Link",
+      "gold_tool": "get_field_schema",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_field_schema",
+        "list_assets",
+        "discover"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "546262289c9bd059#121",
+      "lang": "fr",
+      "utterance": "quelles pages ne sont pas encore publiées ?",
+      "gold_tool": "search_documents",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "search_documents",
+        "list_tags"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "005f766faf40b7e4#123",
+      "lang": "es",
+      "utterance": "quita la etiqueta 321 del recurso 71057",
+      "gold_tool": "unassign_tag",
+      "rank": 12,
+      "considered": 12,
+      "kept": [
+        "assign_tag",
+        "propose_agent_template",
+        "create_data_object"
+      ],
+      "survived": false,
+      "outcome": "no_call"
+    },
+    {
+      "key": "fa16f7fbeb4a8bfd#124",
+      "lang": "en",
+      "utterance": "ok so, run the reset global action on these in content_release",
+      "gold_tool": "apply_global_action",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "apply_global_action",
+        "apply_transition",
+        "upload_asset"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "5b76a1126a8b701b#125",
+      "lang": "fr",
+      "utterance": "bon, c'est tagué comment ?",
+      "gold_tool": "get_element_tags",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "stage_asset",
+        "get_document_schema",
+        "get_element_tags"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "b67e914edcb5cf07#126",
+      "lang": "fr",
+      "utterance": "quels médias sont bloqués en en_ligne dans circuit_editorial ?",
+      "gold_tool": "list_elements_by_workflow_state",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "create_data_object",
+        "propose_agent_template",
+        "list_elements_by_workflow_state"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "13d83a8b3cf86121#127",
+      "lang": "fr",
+      "utterance": "petite question : quelles configurations de vignettes vidéo avons-nous ?",
+      "gold_tool": "list_thumbnail_configs",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_thumbnail_configs",
+        "list_workflows",
+        "list_target_groups"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "af73ded1dca0341c#129",
+      "lang": "en",
+      "utterance": "assign tag 177 to object 75669 please",
+      "gold_tool": "assign_tag",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "assign_tag",
+        "list_elements_by_workflow_state",
+        "propose_agent_template"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "58d22260b0674c0c#130",
+      "lang": "en",
+      "utterance": "search assets for invoice 2025, 100 per page if you can",
+      "gold_tool": "search_assets",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_assets",
+        "apply_transition",
+        "search_documents"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "ace7a69887073eff#137",
+      "lang": "fr",
+      "utterance": "parcours le dossier racine des médias",
+      "gold_tool": "list_assets",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_assets",
+        "discover",
+        "get_field_schema"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "aeef6a7de4bef11d#138",
+      "lang": "es",
+      "utterance": "mejor muéstrame el recurso 44629, por favor",
+      "gold_tool": "get_asset",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_asset",
+        "get_data_object",
+        "assign_tag"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "b7c4c5c9b62dad41#139",
+      "lang": "fr",
+      "utterance": "prépare les fichiers twig_partials pour pouvoir lire les templates",
+      "gold_tool": "stage_file_set",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "stage_file_set",
+        "get_queryable_fields",
+        "get_area_brick"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "f52f47fe8faf7228#140",
+      "lang": "en",
+      "utterance": "create a new DataSteward called invoice-2025",
+      "gold_tool": "list_classes",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "4fb1ab254c957d91#145",
+      "lang": "en",
+      "utterance": "run the reset global action on these in asset_clearance",
+      "gold_tool": "apply_global_action",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "apply_global_action",
+        "apply_transition",
+        "upload_asset"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "ea2d12f8351d21db#147",
+      "lang": "de",
+      "utterance": "leg bitte einen Tag namens Gesperrt an",
+      "gold_tool": "create_tag",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "create_tag",
+        "list_assets",
+        "describe_tool"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "6e92845110d24863#149",
+      "lang": "fr",
+      "utterance": "sur quoi puis-je filtrer Campagne ?",
+      "gold_tool": "get_queryable_fields",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "describe_tool",
+        "get_queryable_fields",
+        "propose_agent_template_deletion"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "a1dd83799f1ecb27#156",
+      "lang": "en",
+      "utterance": "i need to work with the data objects side of things, thanks",
+      "gold_tool": "discover",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_class_definition",
+        "get_area_brick"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "2e43d3da3d383f5f#159",
+      "lang": "de",
+      "utterance": "leg hier eine Seite mit dem Key ueber-uns an bitte kurz",
+      "gold_tool": "create_document",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "create_data_object",
+        "propose_agent_template",
+        "create_document"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "ba4543f4ffabab88#160",
+      "lang": "en",
+      "utterance": "sorry, one more thing: show me the schema for the video-embed and featurette are",
+      "gold_tool": "get_area_brick",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_area_brick",
+        "get_class_definition"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "936a6fdbdc72e8b5#162",
+      "lang": "de",
+      "utterance": "hey, hol mir bitte das Asset 77555",
+      "gold_tool": "get_asset",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_asset",
+        "get_data_object",
+        "assign_tag"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "c46c32bcdb774596#164",
+      "lang": "en",
+      "utterance": "hey, find the page about spring campaign",
+      "gold_tool": "search_documents",
+      "rank": 4,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "get_field_schema",
+        "list_tags"
+      ],
+      "survived": false,
+      "outcome": "no_call"
+    },
+    {
+      "key": "53ed1fc9db825503#165",
+      "lang": "en",
+      "utterance": "where is the size chart page?",
+      "gold_tool": "search_documents",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "apply_global_action",
+        "search_documents"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "d6083493630ce9a6#166",
+      "lang": "en",
+      "utterance": "which transitions can I run on this?",
+      "gold_tool": "get_element_workflow_details",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_element_workflow_details",
+        "get_class_definition",
+        "get_data_object"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "c54c8caac86e496d#167",
+      "lang": "es",
+      "utterance": "lista los pasos de circuito_editorial, gracias",
+      "gold_tool": "get_workflow_places",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "describe_tool",
+        "propose_agent_template_deletion",
+        "get_workflow_places"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "4951f9dba40576bc#168",
+      "lang": "de",
+      "utterance": "hey, welche personalisierungs-zielgruppen gibt es?",
+      "gold_tool": "list_target_groups",
+      "rank": 5,
+      "considered": 12,
+      "kept": [
+        "list_thumbnail_configs",
+        "list_editables",
+        "get_asset_queryable_fields"
+      ],
+      "survived": false,
+      "outcome": "no_call"
+    },
+    {
+      "key": "28a27c4bc3904e53#169",
+      "lang": "en",
+      "utterance": "tag this with Approved",
+      "gold_tool": "list_tags",
+      "rank": 5,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "apply_global_action",
+        "search_documents"
+      ],
+      "survived": false,
+      "outcome": "no_call"
+    },
+    {
+      "key": "23bb2eb8f7e3e6d0#170",
+      "lang": "en",
+      "utterance": "quick one: remove tag 374 from asset 2572",
+      "gold_tool": "unassign_tag",
+      "rank": null,
+      "considered": 12,
+      "kept": [
+        "assign_tag",
+        "propose_agent_template",
+        "create_data_object"
+      ],
+      "survived": false,
+      "outcome": "no_call"
+    },
+    {
+      "key": "3b5ca3c77b0a8f6a#171",
+      "lang": "de",
+      "utterance": "öffne 59431 wenn du kannst",
+      "gold_tool": "get_asset",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "get_data_object",
+        "get_asset",
+        "list_thumbnail_configs"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "2af44603aad70e7c#172",
+      "lang": "fr",
+      "utterance": "crée ici un lien avec la clé trouver-magasin",
+      "gold_tool": "create_document",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "propose_agent_template",
+        "create_data_object",
+        "create_document"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "77da0f495c624e10#173",
+      "lang": "fr",
+      "utterance": "ce tableau est trop gros pour l'aperçu, prépare-le en local s'il te plaît",
+      "gold_tool": "stage_asset",
+      "rank": 5,
+      "considered": 12,
+      "kept": [
+        "propose_agent_template_deletion",
+        "describe_tool",
+        "get_queryable_fields"
+      ],
+      "survived": false,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "e55995aa346ce11a#175",
+      "lang": "de",
+      "utterance": "wonach kann ich Motiv filtern?",
+      "gold_tool": "get_queryable_fields",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "describe_tool",
+        "propose_agent_template_deletion",
+        "get_queryable_fields"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "2ff1cd259d7419ab#176",
+      "lang": "es",
+      "utterance": "busca guía de tallas en la mediateca",
+      "gold_tool": "search_assets",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_assets",
+        "search_data_objects",
+        "apply_transition"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "bdbb882de85fd595#178",
+      "lang": "de",
+      "utterance": "welche pdf-dateien haben wir im system?",
+      "gold_tool": "search_assets",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_assets",
+        "search_data_objects",
+        "list_tags"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "285ad822c0232569#180",
+      "lang": "fr",
+      "utterance": "attribue le tag 259 à l'objet 98484",
+      "gold_tool": "assign_tag",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "assign_tag",
+        "upload_asset",
+        "list_elements_by_workflow_state"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "7e1cad7685fd55b1#181",
+      "lang": "es",
+      "utterance": "¿qué sabemos de este?",
+      "gold_tool": "get_asset",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "get_element_workflow_details",
+        "get_data_object",
+        "get_asset"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "dc7ddf0a4f81e716#184",
+      "lang": "en",
+      "utterance": "sorry, one more thing: list the steps in asset_clearance",
+      "gold_tool": "get_workflow_places",
+      "rank": 4,
+      "considered": 12,
+      "kept": [
+        "describe_tool",
+        "propose_agent_template_deletion",
+        "get_queryable_fields"
+      ],
+      "survived": false,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "962c8e354bb21b4a#186",
+      "lang": "en",
+      "utterance": "which transitions can I run on this?",
+      "gold_tool": "get_element_workflow_details",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_element_workflow_details",
+        "get_class_definition",
+        "get_data_object"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "3fa97fe89436ed11#189",
+      "lang": "fr",
+      "utterance": "crée ici un snippet avec la clé retours pour moi",
+      "gold_tool": "create_document",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "propose_agent_template",
+        "create_document",
+        "create_data_object"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "ca7229910dbd4373#190",
+      "lang": "fr",
+      "utterance": "il nous faut un nouveau tag : Ne pas traduire",
+      "gold_tool": "create_tag",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "create_tag",
+        "list_assets",
+        "describe_tool"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "cc819614db7a0a1f#191",
+      "lang": "es",
+      "utterance": "a ver, lista los Maestro cuyo sistemaOrigen es menor que 199",
+      "gold_tool": "search_data_objects",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_data_objects",
+        "search_assets",
+        "search_documents"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "1d8983273c5c3ece#192",
+      "lang": "de",
+      "utterance": "sorry, noch was: nein, öffne Asset 24229",
+      "gold_tool": "get_asset",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_asset",
+        "get_data_object",
+        "create_document"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "a10aff44aaaab17b#194",
+      "lang": "de",
+      "utterance": "also, zeig mir den Tag-Baum",
+      "gold_tool": "list_tags",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "list_tags",
+        "apply_global_action"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "3eee1c818f095e88#196",
+      "lang": "es",
+      "utterance": "añade la nueva etiqueta No traducir",
+      "gold_tool": "create_tag",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "create_tag",
+        "list_assets",
+        "describe_tool"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "56d3df0ae8dfabdf#197",
+      "lang": "es",
+      "utterance": "márcalo como Solo web",
+      "gold_tool": "list_tags",
+      "rank": 4,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "apply_global_action",
+        "search_documents"
+      ],
+      "survived": false,
+      "outcome": "no_call"
+    },
+    {
+      "key": "cd345dc40ea1013c#199",
+      "lang": "es",
+      "utterance": "busca posibles duplicados en Proveedor por encima de una puntuación de 80",
+      "gold_tool": "search_data_objects",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "search_assets",
+        "assign_tag",
+        "search_data_objects"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "60138126a316e18a#205",
+      "lang": "fr",
+      "utterance": "alors, crée un tag nommé Web uniquement",
+      "gold_tool": "create_tag",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "create_tag",
+        "list_assets",
+        "describe_tool"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "3f894aa52afb6d7f#206",
+      "lang": "fr",
+      "utterance": "petite question : où se trouve la page veste hiver ?",
+      "gold_tool": "search_documents",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "get_field_schema",
+        "search_documents"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "4eaeb1a28796ec17#207",
+      "lang": "fr",
+      "utterance": "bon, dessine-moi le circuit validation_droits pour cet élément",
+      "gold_tool": "get_workflow_graph",
+      "rank": 5,
+      "considered": 12,
+      "kept": [
+        "assign_tag",
+        "unassign_tag",
+        "upload_asset"
+      ],
+      "survived": false,
+      "outcome": "no_call"
+    },
+    {
+      "key": "abaf1cbf967489f1#208",
+      "lang": "es",
+      "utterance": "¿qué hay dentro del brick content.Tercero de Maestro?",
+      "gold_tool": "get_field_schema",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_field_schema",
+        "list_assets",
+        "discover"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "6b5acb69f45490f4#209",
+      "lang": "en",
+      "utterance": "which attributes are on Household?",
+      "gold_tool": "get_class_definition",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_class_definition",
+        "get_area_brick"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "e03b616d1e0da624#210",
+      "lang": "es",
+      "utterance": "vale, muéstrame las clases de objetos",
+      "gold_tool": "list_classes",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_classes",
+        "get_asset_queryable_fields",
+        "list_document_types"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "379800dde37650ee#211",
+      "lang": "de",
+      "utterance": "wonach kann ich Assets überhaupt filtern?",
+      "gold_tool": "get_asset_queryable_fields",
+      "rank": 4,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": false,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "ce7e64b823cdbcdb#213",
+      "lang": "de",
+      "utterance": "liste alle Kategorie-Datensätze auf",
+      "gold_tool": "search_data_objects",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "search_assets",
+        "search_data_objects",
+        "get_document"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "86de1fafd51738d3#215",
+      "lang": "es",
+      "utterance": "una cosa: asigna la etiqueta 129 al objeto 18959",
+      "gold_tool": "assign_tag",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "assign_tag",
+        "list_elements_by_workflow_state",
+        "propose_agent_template"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "1820ae35900335ef#216",
+      "lang": "de",
+      "utterance": "kurz mal: wonach kann ich Geschaeftspartner filtern?",
+      "gold_tool": "get_queryable_fields",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_queryable_fields",
+        "propose_agent_template_deletion",
+        "stage_file_set"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "48f9bad19c4cf963#217",
+      "lang": "es",
+      "utterance": "¿qué hay ahora mismo en esta página?",
+      "gold_tool": "get_document",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "get_class_definition",
+        "get_element_workflow_details",
+        "get_document"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "71131fa78d501600#218",
+      "lang": "de",
+      "utterance": "liste alle angebot-datensätze auf",
+      "gold_tool": "search_data_objects",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "search_assets",
+        "search_data_objects",
+        "get_document"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "06a9f1246600f2ca#219",
+      "lang": "fr",
+      "utterance": "prépare les fichiers theme_assets pour pouvoir lire les templates s'il te plaît",
+      "gold_tool": "stage_file_set",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "stage_file_set",
+        "get_queryable_fields",
+        "list_thumbnail_configs"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "401c500abd723ced#220",
+      "lang": "es",
+      "utterance": "lista los pasos de validacion_articulo",
+      "gold_tool": "get_workflow_places",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "describe_tool",
+        "get_workflow_places",
+        "propose_agent_template_deletion"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "b0d80f50bc17fe0c#221",
+      "lang": "de",
+      "utterance": "welche Felder hat Kategorie?",
+      "gold_tool": "get_class_definition",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_class_definition",
+        "get_area_brick"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "26bb35c24cad20a7#224",
+      "lang": "en",
+      "utterance": "quick one: no, open asset 1341",
+      "gold_tool": "get_asset",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_asset",
+        "get_data_object",
+        "create_document"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "d4d4904c61697e06#225",
+      "lang": "en",
+      "utterance": "which document types are set up?",
+      "gold_tool": "list_document_types",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "get_asset_queryable_fields",
+        "list_document_types",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "587cfa73181de1ee#226",
+      "lang": "de",
+      "utterance": "also, liste die Tags auf oberster Ebene",
+      "gold_tool": "list_tags",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "search_assets",
+        "list_tags"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "103fffc237f75b59#227",
+      "lang": "es",
+      "utterance": "¿qué campos tiene Medio?",
+      "gold_tool": "get_class_definition",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_class_definition",
+        "get_area_brick"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "988f84d200790cc9#228",
+      "lang": "es",
+      "utterance": "empecemos por la raíz del árbol de recursos, gracias",
+      "gold_tool": "list_assets",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_assets",
+        "get_field_schema",
+        "discover"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "dfa7be532fbb46c6#229",
+      "lang": "fr",
+      "utterance": "pardon, encore un truc : quels actualite ont un descriptionseo inférieur à 199 ?",
+      "gold_tool": "search_data_objects",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_data_objects",
+        "search_assets",
+        "search_documents"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "acde57995269ed04#235",
+      "lang": "en",
+      "utterance": "what fields does voucher have?",
+      "gold_tool": "get_class_definition",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_area_brick",
+        "get_class_definition"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "06604661502a48b2#238",
+      "lang": "es",
+      "utterance": "¿qué flujos de trabajo hay configurados?",
+      "gold_tool": "list_workflows",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "list_thumbnail_configs",
+        "list_workflows",
+        "list_target_groups"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "d4d4904c61697e06#239",
+      "lang": "en",
+      "utterance": "which document types are set up?",
+      "gold_tool": "list_document_types",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "get_asset_queryable_fields",
+        "list_document_types",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "922fbca32a226ddd#241",
+      "lang": "es",
+      "utterance": "¿qué hay ahora mismo en esta página?",
+      "gold_tool": "get_document",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "get_class_definition",
+        "get_element_workflow_details",
+        "get_document"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "83a3b4e6a70bb042#242",
+      "lang": "fr",
+      "utterance": "alors, qu'est-ce que tu sais faire ici ?",
+      "gold_tool": "discover",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_class_definition",
+        "describe_tool"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "f16516c86de78d83#243",
+      "lang": "fr",
+      "utterance": "petite question : attribue le tag 121 à l'objet 10835",
+      "gold_tool": "assign_tag",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "assign_tag",
+        "list_elements_by_workflow_state",
+        "propose_agent_template"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "86196b4325a1124e#244",
+      "lang": "es",
+      "utterance": "perdona, otra cosa: ¿qué atributos puedo rellenar aquí?",
+      "gold_tool": "get_class_definition",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_area_brick",
+        "get_class_definition"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "c6029bdbe66fb79d#247",
+      "lang": "fr",
+      "utterance": "ouvre-les tous s'il te plaît",
+      "gold_tool": "get_data_object",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_data_object",
+        "get_asset",
+        "list_thumbnail_configs"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "9d4f37a2131d0e83#248",
+      "lang": "de",
+      "utterance": "finde die Partnerstamm-Datensätze, bei denen matchScore leer ist",
+      "gold_tool": "search_data_objects",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_data_objects",
+        "search_assets",
+        "get_document"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "194fdebd206dd3a3#251",
+      "lang": "es",
+      "utterance": "a ver, necesitamos una etiqueta nueva: solo impresión",
+      "gold_tool": "create_tag",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "create_tag",
+        "list_assets",
+        "describe_tool"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "e2045308c51cc490#252",
+      "lang": "de",
+      "utterance": "zeig mir 58258 bitte kurz",
+      "gold_tool": "get_asset",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "get_data_object",
+        "get_asset",
+        "get_element_workflow_details"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "05f4a7e2e62ba6d4#253",
+      "lang": "fr",
+      "utterance": "petite question : quels champs de Offre sont interrogeables ?",
+      "gold_tool": "get_queryable_fields",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "describe_tool",
+        "get_queryable_fields",
+        "propose_agent_template_deletion"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "0d4324baf6859375#254",
+      "lang": "en",
+      "utterance": "ok so, pull up records 2217, 48020 and 65637",
+      "gold_tool": "get_data_object",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_data_object",
+        "get_asset",
+        "assign_tag"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "b9e0acacbeb65194#256",
+      "lang": "es",
+      "utterance": "busca recursos de chaqueta invierno, 80 por página para mí",
+      "gold_tool": "search_assets",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_assets",
+        "apply_transition",
+        "search_documents"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "3f894aa52afb6d7f#257",
+      "lang": "fr",
+      "utterance": "petite question : où se trouve la page veste hiver ?",
+      "gold_tool": "search_documents",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "get_field_schema",
+        "search_documents"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "379800dde37650ee#258",
+      "lang": "de",
+      "utterance": "wonach kann ich Assets überhaupt filtern?",
+      "gold_tool": "get_asset_queryable_fields",
+      "rank": 4,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": false,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "3b92f9b1fb8faeb5#262",
+      "lang": "de",
+      "utterance": "öffne 74482 bitte",
+      "gold_tool": "get_asset",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "get_data_object",
+        "get_asset",
+        "list_thumbnail_configs"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "109152f36e13813f#263",
+      "lang": "es",
+      "utterance": "¿qué grupos objetivo de personalización existen?",
+      "gold_tool": "list_target_groups",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "0d26a1626073ddcd#264",
+      "lang": "fr",
+      "utterance": "donne-moi les objets PageAtterrissage",
+      "gold_tool": "search_data_objects",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "search_assets",
+        "search_data_objects",
+        "get_document"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "34bddf549b44c2bb#265",
+      "lang": "de",
+      "utterance": "hey, welche Seiten sind noch nicht veröffentlicht?",
+      "gold_tool": "search_documents",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "search_documents",
+        "list_tags"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "1baeff21b728affc#267",
+      "lang": "en",
+      "utterance": "put the Do Not Translate tag on this one if you can",
+      "gold_tool": "list_tags",
+      "rank": null,
+      "considered": 12,
+      "kept": [
+        "assign_tag",
+        "apply_global_action",
+        "apply_transition"
+      ],
+      "survived": false,
+      "outcome": "no_call"
+    },
+    {
+      "key": "0e75e092d487b90a#268",
+      "lang": "fr",
+      "utterance": "montre-moi les templates de l'agent pour moi",
+      "gold_tool": "list_agent_templates",
+      "rank": 6,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_classes",
+        "list_editables"
+      ],
+      "survived": false,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "08fabcdfdca2e07f#269",
+      "lang": "fr",
+      "utterance": "petite question : crée un tag nommé à relire",
+      "gold_tool": "create_tag",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "create_tag",
+        "list_assets",
+        "describe_tool"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "109152f36e13813f#270",
+      "lang": "es",
+      "utterance": "¿qué grupos objetivo de personalización existen?",
+      "gold_tool": "list_target_groups",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "7bfbc9a2fc82e581#271",
+      "lang": "en",
+      "utterance": "stage the twig_partials files so you can read the templates please",
+      "gold_tool": "stage_file_set",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "stage_file_set",
+        "get_queryable_fields",
+        "get_area_brick"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "47fff6f0b26c05fa#274",
+      "lang": "en",
+      "utterance": "what can you actually do in here?",
+      "gold_tool": "discover",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_class_definition",
+        "describe_tool"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "253c670472faaafb#275",
+      "lang": "de",
+      "utterance": "welche Parameter nimmt propose_data_object_update?",
+      "gold_tool": "describe_tool",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "describe_tool",
+        "propose_agent_template_deletion",
+        "get_queryable_fields"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "4076c65daa6b7c92#277",
+      "lang": "fr",
+      "utterance": "petite question : qu'y a-t-il actuellement sur cette page ?",
+      "gold_tool": "get_document",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_document",
+        "search_data_objects",
+        "search_assets"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "d10238daf9a1fecb#279",
+      "lang": "en",
+      "utterance": "which personalisation target groups exist?",
+      "gold_tool": "list_target_groups",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "c956a900e9e787fb#281",
+      "lang": "es",
+      "utterance": "¿qué hace exactamente get_field_schema?",
+      "gold_tool": "describe_tool",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "describe_tool",
+        "get_queryable_fields",
+        "propose_agent_template_deletion"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "b0019908e622bc2d#282",
+      "lang": "de",
+      "utterance": "durchsuche die Mediathek nach frühjahrskampagne bitte kurz",
+      "gold_tool": "search_assets",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "search_assets",
+        "list_tags"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "0e4a139e8fba4295#283",
+      "lang": "en",
+      "utterance": "what fields does LoyaltyAccount have?",
+      "gold_tool": "get_class_definition",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_class_definition",
+        "get_area_brick"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "109152f36e13813f#284",
+      "lang": "es",
+      "utterance": "¿qué grupos objetivo de personalización existen?",
+      "gold_tool": "list_target_groups",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "53dddc3f8fa698ce#285",
+      "lang": "de",
+      "utterance": "leg ein neues Kategorie mit dem Key fruhjahrskampagne an bitte kurz",
+      "gold_tool": "list_classes",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_classes",
+        "get_asset_queryable_fields"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "1f5a9670a3f0cf3d#286",
+      "lang": "de",
+      "utterance": "welche Bild-Thumbnail-Konfigurationen gibt es?",
+      "gold_tool": "list_thumbnail_configs",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_thumbnail_configs",
+        "list_workflows",
+        "get_asset_queryable_fields"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "47fff6f0b26c05fa#288",
+      "lang": "en",
+      "utterance": "what can you actually do in here?",
+      "gold_tool": "discover",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_class_definition",
+        "describe_tool"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "e6c2c6905461ded1#290",
+      "lang": "fr",
+      "utterance": "passe-les en vers_juridique dans circuit_editorial si tu peux",
+      "gold_tool": "apply_transition",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "apply_global_action",
+        "apply_transition",
+        "upload_asset"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "8d7965aba9b045d7#291",
+      "lang": "de",
+      "utterance": "welche fotoshooting haben einen gesperrtemaerkte unter 99?",
+      "gold_tool": "search_data_objects",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_data_objects",
+        "search_assets",
+        "search_documents"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "3de2f6f01f870af7#293",
+      "lang": "en",
+      "utterance": "which video thumbnail presets do we have?",
+      "gold_tool": "list_thumbnail_configs",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_thumbnail_configs",
+        "list_workflows",
+        "list_target_groups"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "d8a57c1ea77baf13#294",
+      "lang": "de",
+      "utterance": "kurz mal: welche Tags haben wir?",
+      "gold_tool": "list_tags",
+      "rank": 5,
+      "considered": 12,
+      "kept": [
+        "search_assets",
+        "apply_transition",
+        "search_data_objects"
+      ],
+      "survived": false,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "15e44680c6bdfc01#298",
+      "lang": "en",
+      "utterance": "search assets for safety datasheet, 100 per page, thanks",
+      "gold_tool": "search_assets",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_assets",
+        "apply_transition",
+        "search_documents"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "b612ad80cfec1a37#300",
+      "lang": "en",
+      "utterance": "ok so, what can I filter DataSteward on?",
+      "gold_tool": "get_queryable_fields",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_queryable_fields",
+        "describe_tool",
+        "propose_agent_template_deletion"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "e3d20b878a022cfa#301",
+      "lang": "es",
+      "utterance": "¿qué estados tiene el flujo circuito_editorial?",
+      "gold_tool": "get_workflow_places",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "describe_tool",
+        "propose_agent_template_deletion",
+        "get_workflow_places"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "6295a9c784d10aa4#302",
+      "lang": "es",
+      "utterance": "ejecuta la acción global zuruecksetzen sobre estos en validacion_derechos",
+      "gold_tool": "apply_global_action",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "apply_global_action",
+        "apply_transition",
+        "upload_asset"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "102dd6e80e6cc5d3#303",
+      "lang": "es",
+      "utterance": "vale, asigna la etiqueta 330 al documento 55990",
+      "gold_tool": "assign_tag",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "assign_tag",
+        "upload_asset",
+        "propose_agent_template"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "7da8df93dfd31033#307",
+      "lang": "de",
+      "utterance": "wo liegt die Seite größentabelle?",
+      "gold_tool": "search_documents",
+      "rank": 4,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "apply_global_action",
+        "get_field_schema"
+      ],
+      "survived": false,
+      "outcome": "no_call"
+    },
+    {
+      "key": "0613888f6bb76cbf#308",
+      "lang": "es",
+      "utterance": "¿qué configuraciones de miniaturas vídeo tenemos?",
+      "gold_tool": "list_thumbnail_configs",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_thumbnail_configs",
+        "list_workflows",
+        "list_target_groups"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "c0ad7821057693ea#309",
+      "lang": "en",
+      "utterance": "what's inside the content.StockItem brick on StockItem?",
+      "gold_tool": "get_field_schema",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_field_schema",
+        "list_assets",
+        "apply_transition"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "7bc43192d97b6ebe#310",
+      "lang": "de",
+      "utterance": "sorry, noch was: leg hier einen verweis mit dem key kontakt an",
+      "gold_tool": "create_document",
+      "rank": 4,
+      "considered": 12,
+      "kept": [
+        "propose_agent_template",
+        "create_data_object",
+        "assign_tag"
+      ],
+      "survived": false,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "1cea7d196cf7751a#313",
+      "lang": "es",
+      "utterance": "busca recursos de factura 2025, 200 por página",
+      "gold_tool": "search_assets",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_assets",
+        "apply_transition",
+        "search_documents"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "a33a2c6fc1ddf2e8#314",
+      "lang": "fr",
+      "utterance": "petite question : prépare les fichiers twig_partials pour pouvoir lire les templ",
+      "gold_tool": "stage_file_set",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "stage_file_set",
+        "get_queryable_fields",
+        "get_area_brick"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "30e2edd3a02351dc#315",
+      "lang": "fr",
+      "utterance": "pardon, encore un truc : quels tags avons-nous ?",
+      "gold_tool": "list_tags",
+      "rank": 4,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "search_assets",
+        "search_documents"
+      ],
+      "survived": false,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "342516537fcc4b82#316",
+      "lang": "es",
+      "utterance": "mejor muéstrame el recurso 18308",
+      "gold_tool": "get_asset",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_asset",
+        "get_data_object",
+        "assign_tag"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "47e7329a290af6f1#317",
+      "lang": "es",
+      "utterance": "busca ficha de seguridad en la mediateca, por favor",
+      "gold_tool": "search_assets",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_assets",
+        "apply_transition",
+        "list_tags"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "1aedd1002d4d96f0#318",
+      "lang": "de",
+      "utterance": "sorry, noch was: weise dem Asset 3426 den Tag 384 zu",
+      "gold_tool": "assign_tag",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "assign_tag",
+        "get_element_workflow_details",
+        "get_asset"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "25a6007a3553650a#320",
+      "lang": "es",
+      "utterance": "¿qué enlace tienen un titular por debajo de 10?",
+      "gold_tool": "search_data_objects",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_data_objects",
+        "search_assets",
+        "search_documents"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "e2074bb4924750e7#321",
+      "lang": "es",
+      "utterance": "abre 97238",
+      "gold_tool": "get_asset",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "get_data_object",
+        "get_asset",
+        "get_element_workflow_details"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "46e26cd0008f93a1#322",
+      "lang": "fr",
+      "utterance": "quels modèles de données existent ici ?",
+      "gold_tool": "list_classes",
+      "rank": 4,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "get_asset_queryable_fields"
+      ],
+      "survived": false,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "7da8df93dfd31033#323",
+      "lang": "de",
+      "utterance": "wo liegt die Seite größentabelle?",
+      "gold_tool": "search_documents",
+      "rank": 4,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "apply_global_action",
+        "get_field_schema"
+      ],
+      "survived": false,
+      "outcome": "no_call"
+    },
+    {
+      "key": "b0802daf727ce8e6#324",
+      "lang": "fr",
+      "utterance": "quels groupes cibles de personnalisation existent ?",
+      "gold_tool": "list_target_groups",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "0613888f6bb76cbf#325",
+      "lang": "es",
+      "utterance": "¿qué configuraciones de miniaturas vídeo tenemos?",
+      "gold_tool": "list_thumbnail_configs",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_thumbnail_configs",
+        "list_workflows",
+        "list_target_groups"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "662258ea7c234e56#327",
+      "lang": "de",
+      "utterance": "hey, zeig mir die Details",
+      "gold_tool": "get_asset",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "get_data_object",
+        "get_asset",
+        "get_element_workflow_details"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "abbf6b3a24ca3585#328",
+      "lang": "fr",
+      "utterance": "cherche bannière hero dans les documents",
+      "gold_tool": "search_documents",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "apply_global_action",
+        "apply_transition",
+        "search_documents"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "817f61211a365436#329",
+      "lang": "de",
+      "utterance": "hey, welche Felder hat Verpackungseinheit?",
+      "gold_tool": "get_class_definition",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_class_definition",
+        "get_area_brick"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "a1f0058b3a62b128#330",
+      "lang": "en",
+      "utterance": "sorry, one more thing: remove tag 179 from object 76349",
+      "gold_tool": "unassign_tag",
+      "rank": null,
+      "considered": 12,
+      "kept": [
+        "assign_tag",
+        "list_elements_by_workflow_state",
+        "propose_agent_template"
+      ],
+      "survived": false,
+      "outcome": "no_call"
+    },
+    {
+      "key": "d4d4904c61697e06#331",
+      "lang": "en",
+      "utterance": "which document types are set up?",
+      "gold_tool": "list_document_types",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "get_asset_queryable_fields",
+        "list_document_types",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "94c5da3fb084f138#335",
+      "lang": "fr",
+      "utterance": "passe-les en valider dans validation_article",
+      "gold_tool": "apply_transition",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "apply_global_action",
+        "apply_transition",
+        "search_documents"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "109152f36e13813f#336",
+      "lang": "es",
+      "utterance": "¿qué grupos objetivo de personalización existen?",
+      "gold_tool": "list_target_groups",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "c956a900e9e787fb#337",
+      "lang": "es",
+      "utterance": "¿qué hace exactamente get_field_schema?",
+      "gold_tool": "describe_tool",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "describe_tool",
+        "get_queryable_fields",
+        "propose_agent_template_deletion"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "c767e5bf4007a670#338",
+      "lang": "en",
+      "utterance": "which editable types can I use in a template here?",
+      "gold_tool": "list_editables",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "get_asset_queryable_fields",
+        "list_classes",
+        "list_editables"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "45680f57c36a9411#341",
+      "lang": "fr",
+      "utterance": "dans quel état est-ce ?",
+      "gold_tool": "get_element_workflow_details",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_element_workflow_details",
+        "get_element_tags",
+        "get_document_schema"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "be67c0ba591fe811#342",
+      "lang": "es",
+      "utterance": "a ver, encuentra los Medio cuyo campo fechaPublicacion está vacío",
+      "gold_tool": "search_data_objects",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "search_assets",
+        "search_data_objects",
+        "get_document"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "b7c4c5c9b62dad41#343",
+      "lang": "fr",
+      "utterance": "prépare les fichiers twig_partials pour pouvoir lire les templates",
+      "gold_tool": "stage_file_set",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "stage_file_set",
+        "get_queryable_fields",
+        "get_area_brick"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "b67fba7f6f375cb4#344",
+      "lang": "de",
+      "utterance": "zeig mir das Schema hinter dem Objekt bitte kurz",
+      "gold_tool": "get_class_definition",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_class_definition",
+        "get_area_brick"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "c767e5bf4007a670#346",
+      "lang": "en",
+      "utterance": "which editable types can I use in a template here?",
+      "gold_tool": "list_editables",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "get_asset_queryable_fields",
+        "list_classes",
+        "list_editables"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "88bb4ad898e48690#348",
+      "lang": "es",
+      "utterance": "oye, muéstrame el contenido actual",
+      "gold_tool": "get_document",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_document",
+        "get_class_definition",
+        "get_element_workflow_details"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "06604661502a48b2#349",
+      "lang": "es",
+      "utterance": "¿qué flujos de trabajo hay configurados?",
+      "gold_tool": "list_workflows",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "list_thumbnail_configs",
+        "list_workflows",
+        "list_target_groups"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "fc40ce56ca2c8d31#350",
+      "lang": "es",
+      "utterance": "¿qué campos de CuentaFidelidad son consultables?",
+      "gold_tool": "get_queryable_fields",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_queryable_fields",
+        "describe_tool",
+        "propose_agent_template_deletion"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "109152f36e13813f#353",
+      "lang": "es",
+      "utterance": "¿qué grupos objetivo de personalización existen?",
+      "gold_tool": "list_target_groups",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "445b28f61f02a6a0#354",
+      "lang": "fr",
+      "utterance": "lance l'action globale escalate sur ceux-ci dans circuit_editorial s'il te plaît",
+      "gold_tool": "apply_global_action",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "apply_global_action",
+        "apply_transition",
+        "upload_asset"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "443893327326075e#357",
+      "lang": "es",
+      "utterance": "dame los objetos CuentaFidelidad",
+      "gold_tool": "search_data_objects",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "search_assets",
+        "search_data_objects",
+        "get_document"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "b0802daf727ce8e6#359",
+      "lang": "fr",
+      "utterance": "quels groupes cibles de personnalisation existent ?",
+      "gold_tool": "list_target_groups",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "905956bd8ca3ae22#360",
+      "lang": "de",
+      "utterance": "leg hier einen Verweis mit dem Key kontakt an",
+      "gold_tool": "create_document",
+      "rank": 4,
+      "considered": 12,
+      "kept": [
+        "propose_agent_template",
+        "create_data_object",
+        "get_asset"
+      ],
+      "survived": false,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "763d8b3bd1424257#362",
+      "lang": "es",
+      "utterance": "quita la etiqueta Solo web de esto para mí",
+      "gold_tool": "get_element_tags",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "describe_tool",
+        "propose_agent_template_deletion",
+        "get_element_tags"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "f5a872c59101f9db#363",
+      "lang": "de",
+      "utterance": "was steckt im Brick attributes.Bildrecht bei Bildmotiv?",
+      "gold_tool": "get_field_schema",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_field_schema",
+        "list_assets",
+        "apply_transition"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "3671203bcd4f3d08#366",
+      "lang": "es",
+      "utterance": "vale, lista los audiencia cuyo riesgofuga es menor que 10",
+      "gold_tool": "search_data_objects",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_data_objects",
+        "search_assets",
+        "search_documents"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "82416e7387def2d0#368",
+      "lang": "es",
+      "utterance": "a ver, descarga el archivo para poder leerlo entero",
+      "gold_tool": "stage_asset",
+      "rank": 4,
+      "considered": 12,
+      "kept": [
+        "propose_agent_template_deletion",
+        "get_queryable_fields",
+        "stage_file_set"
+      ],
+      "survived": false,
+      "outcome": "no_call"
+    },
+    {
+      "key": "edd8eed72f813212#369",
+      "lang": "fr",
+      "utterance": "montre-moi le schéma des areabricks text-accordion et video-embed s'il te plaît",
+      "gold_tool": "get_area_brick",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_area_brick",
+        "get_class_definition"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "b0802daf727ce8e6#371",
+      "lang": "fr",
+      "utterance": "quels groupes cibles de personnalisation existent ?",
+      "gold_tool": "list_target_groups",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "58bed0a24ec896fa#372",
+      "lang": "fr",
+      "utterance": "quels attributs a Campagne ?",
+      "gold_tool": "get_class_definition",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_class_definition",
+        "get_area_brick"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "e6ba416a8a75802e#375",
+      "lang": "es",
+      "utterance": "una cosa: lista todos los archivos csv",
+      "gold_tool": "search_assets",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_assets",
+        "search_data_objects",
+        "list_tags"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "2175aa941cf88a8b#377",
+      "lang": "es",
+      "utterance": "crea una etiqueta llamada Liquidación, gracias",
+      "gold_tool": "create_tag",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "create_tag",
+        "list_assets",
+        "describe_tool"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "e399c7c3a0322038#378",
+      "lang": "fr",
+      "utterance": "pardon, encore un truc : montre-moi les templates de l'agent",
+      "gold_tool": "list_agent_templates",
+      "rank": 6,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_classes",
+        "list_editables"
+      ],
+      "survived": false,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "efb63479f89aa55d#379",
+      "lang": "fr",
+      "utterance": "bon, dessine-moi le circuit circuit_editorial pour cet élément",
+      "gold_tool": "get_workflow_graph",
+      "rank": 6,
+      "considered": 12,
+      "kept": [
+        "assign_tag",
+        "unassign_tag",
+        "upload_asset"
+      ],
+      "survived": false,
+      "outcome": "no_call"
+    },
+    {
+      "key": "c259d16019cd8230#380",
+      "lang": "de",
+      "utterance": "hol mir bitte das Asset 76406 wenn du kannst",
+      "gold_tool": "get_asset",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_asset",
+        "get_data_object",
+        "assign_tag"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "78871ff816c3f916#383",
+      "lang": "de",
+      "utterance": "leg hier eine Seite mit dem Key rueckgabe an",
+      "gold_tool": "create_document",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "propose_agent_template",
+        "create_document",
+        "create_data_object"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "b50c9983ecae22fc#389",
+      "lang": "es",
+      "utterance": "perdona, otra cosa: muéstrame la estructura de la página",
+      "gold_tool": "get_document_schema",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "propose_agent_template_deletion",
+        "stage_asset",
+        "get_document_schema"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "7cf33f09b42df1a3#390",
+      "lang": "fr",
+      "utterance": "dis, dessine-moi le circuit circuit_editorial pour cet élément",
+      "gold_tool": "get_workflow_graph",
+      "rank": 6,
+      "considered": 12,
+      "kept": [
+        "assign_tag",
+        "unassign_tag",
+        "upload_asset"
+      ],
+      "survived": false,
+      "outcome": "no_call"
+    },
+    {
+      "key": "f84d5f4e1011838d#393",
+      "lang": "de",
+      "utterance": "bei welchen Partnerstamm fehlt letztePflege?",
+      "gold_tool": "search_data_objects",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_data_objects",
+        "search_assets",
+        "get_document"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "c16fbb5963a0ed9b#394",
+      "lang": "fr",
+      "utterance": "dans quel état est-ce ?",
+      "gold_tool": "get_element_workflow_details",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_element_workflow_details",
+        "get_element_tags",
+        "get_document_schema"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "c29c3411ff38f69c#395",
+      "lang": "de",
+      "utterance": "durchsuche die Dokumente nach frühjahrskampagne",
+      "gold_tool": "search_documents",
+      "rank": 4,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "apply_global_action",
+        "get_field_schema"
+      ],
+      "survived": false,
+      "outcome": "no_call"
+    },
+    {
+      "key": "874ecc58c8807b48#396",
+      "lang": "de",
+      "utterance": "welche Parameter nimmt search_data_objects?",
+      "gold_tool": "describe_tool",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "describe_tool",
+        "discover",
+        "get_queryable_fields"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "47fff6f0b26c05fa#397",
+      "lang": "en",
+      "utterance": "what can you actually do in here?",
+      "gold_tool": "discover",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_class_definition",
+        "describe_tool"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "593ff749fac2ece4#398",
+      "lang": "en",
+      "utterance": "quick one: find the Bundle records where listPrice is empty",
+      "gold_tool": "search_data_objects",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "search_assets",
+        "search_data_objects",
+        "search_documents"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "4ed11833166da1da#399",
+      "lang": "es",
+      "utterance": "muéstrame el esquema detrás de este objeto, por favor",
+      "gold_tool": "get_class_definition",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_class_definition",
+        "get_area_brick"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "546262289c9bd059#400",
+      "lang": "fr",
+      "utterance": "quelles pages ne sont pas encore publiées ?",
+      "gold_tool": "search_documents",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "search_documents",
+        "list_tags"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "fb61de2956e4d22a#403",
+      "lang": "de",
+      "utterance": "führ die globale Aktion zuruecksetzen für die hier im Workflow bildfreigabe aus ",
+      "gold_tool": "apply_global_action",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "apply_global_action",
+        "apply_transition",
+        "search_documents"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "af771b5f3e2d8e2b#405",
+      "lang": "en",
+      "utterance": "which BrandAsset have a photographer below 10?",
+      "gold_tool": "search_data_objects",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_data_objects",
+        "search_assets",
+        "search_documents"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "06604661502a48b2#406",
+      "lang": "es",
+      "utterance": "¿qué flujos de trabajo hay configurados?",
+      "gold_tool": "list_workflows",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "list_thumbnail_configs",
+        "list_workflows",
+        "list_target_groups"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "3de2f6f01f870af7#408",
+      "lang": "en",
+      "utterance": "which video thumbnail presets do we have?",
+      "gold_tool": "list_thumbnail_configs",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_thumbnail_configs",
+        "list_workflows",
+        "list_target_groups"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "35e7b75c0e1e7ae4#409",
+      "lang": "en",
+      "utterance": "show me assets whose rights have run out please",
+      "gold_tool": "get_asset_queryable_fields",
+      "rank": 4,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": false,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "7f5f53756b6f53aa#410",
+      "lang": "en",
+      "utterance": "what page presets do we have?",
+      "gold_tool": "list_document_types",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_document_types",
+        "list_classes",
+        "get_asset_queryable_fields"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "128d3c9c95957730#411",
+      "lang": "de",
+      "utterance": "wirf das Template ueber-uns-tpl raus",
+      "gold_tool": "propose_agent_template_deletion",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "describe_tool",
+        "propose_agent_template_deletion",
+        "get_workflow_places"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "42737b8654c2f2a9#412",
+      "lang": "en",
+      "utterance": "open asset 72702",
+      "gold_tool": "get_asset",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "get_asset",
+        "get_data_object",
+        "get_asset_queryable_fields"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "92b714210b02b0e8#413",
+      "lang": "de",
+      "utterance": "durchsuche die dokumente nach sicherheitsdatenblatt",
+      "gold_tool": "search_documents",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "apply_global_action",
+        "search_documents"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "580bdfbd6669fb81#414",
+      "lang": "en",
+      "utterance": "ok so, list Interaction where optInDate is under 199",
+      "gold_tool": "search_data_objects",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "search_data_objects",
+        "search_assets",
+        "search_documents"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "7bbcf2714ac6ce00#416",
+      "lang": "de",
+      "utterance": "sorry, noch was: markier das als Freigegeben",
+      "gold_tool": "list_tags",
+      "rank": 4,
+      "considered": 12,
+      "kept": [
+        "apply_transition",
+        "apply_global_action",
+        "search_documents"
+      ],
+      "survived": false,
+      "outcome": "no_call"
+    },
+    {
+      "key": "6b2fc7d73639335c#417",
+      "lang": "en",
+      "utterance": "list the records sitting in published for product_approval for me",
+      "gold_tool": "list_elements_by_workflow_state",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "propose_agent_template",
+        "create_data_object",
+        "list_elements_by_workflow_state"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "9a2ee17f36af39c8#420",
+      "lang": "de",
+      "utterance": "entferne Abverkauf von diesem Element",
+      "gold_tool": "get_element_tags",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "get_class_definition",
+        "get_data_object",
+        "get_element_tags"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "c767e5bf4007a670#421",
+      "lang": "en",
+      "utterance": "which editable types can I use in a template here?",
+      "gold_tool": "list_editables",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "get_asset_queryable_fields",
+        "list_classes",
+        "list_editables"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "5a4b64bd44db8674#422",
+      "lang": "fr",
+      "utterance": "alors, montre-moi le contenu actuel",
+      "gold_tool": "get_document",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "get_class_definition",
+        "get_document",
+        "get_element_workflow_details"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "379800dde37650ee#423",
+      "lang": "de",
+      "utterance": "wonach kann ich Assets überhaupt filtern?",
+      "gold_tool": "get_asset_queryable_fields",
+      "rank": 4,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": false,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "cf4159709ff8f3af#425",
+      "lang": "fr",
+      "utterance": "crée un tag nommé PE26 s'il te plaît",
+      "gold_tool": "create_tag",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "create_tag",
+        "list_assets",
+        "describe_tool"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "c3a7c099c3d361f2#426",
+      "lang": "en",
+      "utterance": "this spreadsheet is too big for a preview, stage it",
+      "gold_tool": "stage_asset",
+      "rank": 5,
+      "considered": 12,
+      "kept": [
+        "propose_agent_template_deletion",
+        "describe_tool",
+        "get_workflow_places"
+      ],
+      "survived": false,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "7f5f53756b6f53aa#428",
+      "lang": "en",
+      "utterance": "what page presets do we have?",
+      "gold_tool": "list_document_types",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_document_types",
+        "list_classes",
+        "get_asset_queryable_fields"
+      ],
+      "survived": true,
+      "outcome": "no_call"
+    },
+    {
+      "key": "cd8d89b1344510c4#430",
+      "lang": "en",
+      "utterance": "add a PartyMaster record named loyalty-flyer, thanks",
+      "gold_tool": "list_classes",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "ace7a69887073eff#431",
+      "lang": "fr",
+      "utterance": "parcours le dossier racine des médias",
+      "gold_tool": "list_assets",
+      "rank": 1,
+      "considered": 12,
+      "kept": [
+        "list_assets",
+        "discover",
+        "get_field_schema"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "06604661502a48b2#432",
+      "lang": "es",
+      "utterance": "¿qué flujos de trabajo hay configurados?",
+      "gold_tool": "list_workflows",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "list_thumbnail_configs",
+        "list_workflows",
+        "list_target_groups"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "1f73cf005ca81ea4#434",
+      "lang": "en",
+      "utterance": "create a new Category called invoice-2025 please",
+      "gold_tool": "list_classes",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "list_target_groups",
+        "list_editables",
+        "list_classes"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "64cc91a0f45c2feb#435",
+      "lang": "en",
+      "utterance": "sorry, one more thing: delete the template size-guide-tpl",
+      "gold_tool": "propose_agent_template_deletion",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "describe_tool",
+        "propose_agent_template_deletion",
+        "get_workflow_places"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "f61c420fa96b37f2#437",
+      "lang": "en",
+      "utterance": "remove tag 104 from asset 2182 please",
+      "gold_tool": "unassign_tag",
+      "rank": null,
+      "considered": 12,
+      "kept": [
+        "assign_tag",
+        "propose_agent_template",
+        "apply_global_action"
+      ],
+      "survived": false,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "0226aaf576598ed5#438",
+      "lang": "en",
+      "utterance": "sorry, one more thing: pull this file down so you can read it end to end",
+      "gold_tool": "stage_asset",
+      "rank": 5,
+      "considered": 12,
+      "kept": [
+        "propose_agent_template_deletion",
+        "get_queryable_fields",
+        "stage_file_set"
+      ],
+      "survived": false,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "d55cf3f3ac325313#440",
+      "lang": "fr",
+      "utterance": "bon, montre-moi les détails",
+      "gold_tool": "get_asset",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "get_data_object",
+        "get_asset",
+        "get_element_workflow_details"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    },
+    {
+      "key": "bdd7f5c353efe694#441",
+      "lang": "es",
+      "utterance": "perdona, otra cosa: ¿qué atributos puedo rellenar aquí?",
+      "gold_tool": "get_class_definition",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_area_brick",
+        "get_class_definition"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "22d763d00569ca9f#442",
+      "lang": "en",
+      "utterance": "show me the sub-fields of localizedfields for event, thanks",
+      "gold_tool": "get_field_schema",
+      "rank": 2,
+      "considered": 12,
+      "kept": [
+        "discover",
+        "get_field_schema",
+        "get_class_definition"
+      ],
+      "survived": true,
+      "outcome": "right_tool"
+    },
+    {
+      "key": "3063fb0f2aa704ad#443",
+      "lang": "de",
+      "utterance": "leg hier einen Verweis mit dem Key fruehjahrsaktion an",
+      "gold_tool": "create_document",
+      "rank": 3,
+      "considered": 12,
+      "kept": [
+        "propose_agent_template",
+        "create_data_object",
+        "create_document"
+      ],
+      "survived": true,
+      "outcome": "wrong_tool"
+    }
+  ]
 }

@@ -31,7 +31,7 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from esa import score  # noqa: E402
+from esa import load_keyed, score  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[1]
 NTC = REPO / "target" / "release" / "ntc"
@@ -56,7 +56,7 @@ def run(model: Path, rows: list[dict], tools: list[dict], backend: str) -> dict[
         with inp.open("w") as f:
             for r in rows:
                 f.write(json.dumps({
-                    "id": r["id"],
+                    "id": r["_key"],
                     "utterance": r["utterance"],
                     "tools": tools,
                     "context": r.get("context", {}),
@@ -100,7 +100,7 @@ def main() -> None:
     if not NTC.exists():
         sys.exit("build the CLI first: cargo build --release -p ntc-cli")
 
-    gold = load(args.gold)
+    gold = load_keyed(args.gold)
     if args.limit:
         gold = gold[: args.limit]
     all_tools = json.loads(args.tools.read_text())
@@ -124,7 +124,7 @@ def main() -> None:
         with inp.open("w") as f:
             for r in narrow_rows:
                 f.write(json.dumps({
-                    "id": r["id"], "utterance": r["utterance"],
+                    "id": r["_key"], "utterance": r["utterance"],
                     "tools": r["_tools"], "context": r.get("context", {}),
                 }, ensure_ascii=False) + "\n")
         cmd = [str(NTC), "batch-infer", "--model", str(args.model),
@@ -153,35 +153,61 @@ def main() -> None:
     # A tool that never reached the deciding pass is a stage-1 (ranking)
     # failure and needs a better scorer; one that reached it and lost is a
     # stage-2 (model) failure. The end-to-end number cannot separate them.
-    kept_by_id = {}
+    kept_by_id, scores_by_id = {}, {}
     for row in load_pred_rows(args, gold, all_tools):
         if "shortlist" in row:
             kept_by_id[row["id"]] = row["shortlist"]["kept"]
+            scores_by_id[row["id"]] = [
+                r.get("tool") for r in (row["shortlist"].get("ranking") or [])
+            ]
 
     call_rows = [g for g in gold if g["gold"]["action"] == "CALL"]
-    scored = [g for g in call_rows if g["id"] in kept_by_id]
+    scored = [g for g in call_rows if g["_key"] in kept_by_id]
     if scored:
-        survived = [g for g in scored if g["gold"]["tool"] in kept_by_id[g["id"]]]
+        survived = [g for g in scored if g["gold"]["tool"] in kept_by_id[g["_key"]]]
         print(f"\n  \033[1mshortlist recall\033[0m  {len(survived)}/{len(scored)}  "
               f"{len(survived) / len(scored):.1%}"
               "   \033[2m(gold tool reached the deciding pass)\033[0m")
         # Of those that survived, how many then won?
-        wide_right = {f["id"] for f in wide["failures"] if f["stage"] == "wrong_tool"}
-        won = [g for g in survived if g["id"] not in wide_right]
+        wide_right = {f["key"] for f in wide["failures"] if f["stage"] == "wrong_tool"}
+        won = [g for g in survived if g["_key"] not in wide_right]
         print(f"  of those, chosen by the deciding pass  {len(won)}/{len(survived)}  "
               f"{len(won) / max(1, len(survived)):.1%}")
         print("\n  A gold tool that never survives the shortlist cannot be recovered"
               "\n  downstream: that is a ranking problem, not a model problem.")
 
     lost = [f for f in wide["failures"] if f["stage"] == "wrong_tool"]
-    narrow_ok = {f["id"] for f in narrow["failures"]}
-    newly_wrong = [f for f in lost if f["id"] not in narrow_ok]
+    narrow_ok = {f["key"] for f in narrow["failures"]}
+    newly_wrong = [f for f in lost if f["key"] not in narrow_ok]
     print(f"\n  wrong tool on the wide slate           {len(lost)}")
     print(f"    ...of which were right when narrowed {len(newly_wrong)}"
           f"  \033[2m(pure cost of the 49-way choice)\033[0m")
 
+    # Per-row attribution, persisted because the shortlist block only exists in
+    # memory during the run and re-deriving it costs another wide pass. `rank`
+    # is where the gold tool placed among all 49 by margin over NO_TOOL, so a
+    # miss can be read as "ranked 3rd but the cut was 2" rather than just
+    # "lost": recall@k over these ranks says whether a wider cut would pay.
     if args.out:
-        args.out.write_text(json.dumps({"narrow": narrow, "wide": wide}, indent=2,
+        wide_wrong = {f["key"] for f in wide["failures"] if f["stage"] == "wrong_tool"}
+        no_call = {f["key"] for f in wide["failures"] if f["stage"] == "no_call_emitted"}
+        rows = []
+        for g in call_rows:
+            k = g["_key"]
+            ranked = [t for t in scores_by_id.get(k, []) if t]
+            want = g["gold"]["tool"]
+            rows.append({
+                "key": k, "lang": g.get("lang"), "utterance": g["utterance"][:80],
+                "gold_tool": want,
+                "rank": ranked.index(want) + 1 if want in ranked else None,
+                "considered": len(ranked),
+                "kept": kept_by_id.get(k),
+                "survived": want in (kept_by_id.get(k) or []),
+                "outcome": ("no_call" if k in no_call
+                            else "wrong_tool" if k in wide_wrong else "right_tool"),
+            })
+        args.out.write_text(json.dumps({"narrow": narrow, "wide": wide,
+                                        "attribution": rows}, indent=2,
                                        ensure_ascii=False) + "\n")
         print(f"  report -> {args.out}")
 
