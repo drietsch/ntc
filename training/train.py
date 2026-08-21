@@ -443,6 +443,9 @@ def main() -> None:
     parser.add_argument("--max-tools", type=int, default=None,
                         help="override the arch's slate width; also the runtime's "
                              "shortlist cut. Costs quadratically in fusion.")
+    parser.add_argument("--resume", action="store_true",
+                        help="continue an interrupted run from <out>/last.pt; "
+                             "pass the same arguments the run was launched with")
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
@@ -514,14 +517,45 @@ def main() -> None:
 
     args.out.mkdir(parents=True, exist_ok=True)
     log_path = args.out / "log.jsonl"
+    last_path = args.out / "last.pt"
     best_score = -1.0
-    t0 = time.time()
-    with log_path.open("w") as log:
-        for epoch in range(args.epochs):
-            rng.shuffle(train_items)
+    start_epoch, elapsed_before = 0, 0.0
+    order = list(range(len(train_items)))
+    if args.resume:
+        # best.pt cannot restart a run: it carries weights only, so the AdamW
+        # moments and the OneCycle position would begin again underneath them.
+        # last.pt carries the whole training state, written after every epoch.
+        assert last_path.exists(), f"--resume needs {last_path}; none was written"
+        # CPU: the RNG states must stay ByteTensors, and both load_state_dict
+        # calls move what they read onto the parameters they are copying into.
+        state = torch.load(last_path, map_location="cpu", weights_only=False)
+        assert state["total_steps"] == sched.total_steps, (
+            f"resume needs the schedule it was interrupted in: {last_path} ran "
+            f"{state['total_steps']} steps, these arguments plan {sched.total_steps}"
+        )
+        model.load_state_dict(state["state_dict"])
+        opt.load_state_dict(state["opt"])
+        sched.load_state_dict(state["sched"])
+        rng.setstate(state["rng"])
+        order = state["order"]
+        torch.set_rng_state(state["torch_rng"])
+        if state.get("mps_rng") is not None and device == "mps":
+            torch.mps.set_rng_state(state["mps_rng"])
+        best_score = state["best_score"]
+        start_epoch = state["epoch"] + 1
+        elapsed_before = state["elapsed_s"]
+        print(f"resumed {last_path} at epoch {start_epoch}/{args.epochs} "
+              f"(best={best_score:.3f}, {elapsed_before:.0f}s already spent)")
+    t0 = time.time() - elapsed_before
+    with log_path.open("a" if args.resume else "w") as log:
+        for epoch in range(start_epoch, args.epochs):
+            # Shuffling indices rather than the list itself gives the identical
+            # batch sequence (random.shuffle only swaps by position), and leaves
+            # the epoch's order as something last.pt can carry.
+            rng.shuffle(order)
             epoch_loss, steps = 0.0, 0
-            for i in range(0, len(train_items), args.batch):
-                batch = make_batch(cfg, train_items[i : i + args.batch])
+            for i in range(0, len(order), args.batch):
+                batch = make_batch(cfg, [train_items[j] for j in order[i : i + args.batch]])
                 tgt = {k: v.to(device) for k, v in batch.pop("targets").items()}
                 batch.pop("n_linked", None)
                 batch = {k: v.to(device) for k, v in batch.items()}
@@ -552,6 +586,27 @@ def main() -> None:
                     {"cfg": cfg.model_dump(), "state_dict": model.state_dict()},
                     args.out / "best.pt",
                 )
+            # Written through a temporary so a kill mid-save leaves the previous
+            # epoch's state intact rather than a truncated file.
+            tmp_path = last_path.with_suffix(".pt.tmp")
+            torch.save(
+                {
+                    "cfg": cfg.model_dump(),
+                    "state_dict": model.state_dict(),
+                    "opt": opt.state_dict(),
+                    "sched": sched.state_dict(),
+                    "total_steps": sched.total_steps,
+                    "epoch": epoch,
+                    "best_score": best_score,
+                    "elapsed_s": row["elapsed_s"],
+                    "rng": rng.getstate(),
+                    "order": order,
+                    "torch_rng": torch.get_rng_state(),
+                    "mps_rng": torch.mps.get_rng_state() if device == "mps" else None,
+                },
+                tmp_path,
+            )
+            tmp_path.replace(last_path)
 
     # Calibration on dev (stored into the exported .ntc metadata).
     ckpt = torch.load(args.out / "best.pt", weights_only=False)
