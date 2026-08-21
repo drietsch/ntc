@@ -64,3 +64,11 @@ models/ntc-studio-v1/model.ntc
 #     && eval/run_all.sh "$PWD/runs/studio-v4/best.pt" ntc-studio-v4
 models/ntc-studio-v4/model.ntc
 models/ntc-studio-v3-rerun/model.ntc
+# Studio v5 (91 MB): v3 warm-started on the template corpus WITHOUT v4's ASK
+# rows, so the head-codec v4 mechanism is the only variable against v3. Rebuild:
+#   cd training && uv run python -m tools.add_value_templates --src data/studio-neg --out data/studio-tpl-neg \
+#     && uv run python train.py --arch studio --init <v3-final.pt> --data data/studio-tpl-neg \
+#        --out runs/studio-v5 --epochs 10 --batch 12 --lr 2e-4 --backbone-lr 1e-4 \
+#     && eval/run_all.sh "$PWD/runs/studio-v5/best.pt" ntc-studio-v5 \
+#        examples/pimcore-tools-templates.json training/data/studio-tpl-neg/dev.jsonl
+models/ntc-studio-v5/model.ntc

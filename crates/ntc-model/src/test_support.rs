@@ -167,6 +167,9 @@ fn random_weights_for(cfg: &NtcArchConfig, seed: u64, with_v3: bool) -> ModelWei
     if with_v3 {
         specs.extend(crate::weights::v3_head_specs(cfg));
     }
+    // Appended last, and empty unless the config declares a template table,
+    // so every v2/v3 tensor stays bit-identical for the golden-logit tests.
+    specs.extend(crate::weights::v4_head_specs(cfg));
     for (name, shape) in specs {
         let n: usize = shape.iter().product();
         let data: Vec<f32> = if name.ends_with("norm.weight") {

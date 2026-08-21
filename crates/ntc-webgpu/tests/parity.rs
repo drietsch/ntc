@@ -238,6 +238,75 @@ fn tools() -> Vec<ntc_core::CanonicalTool> {
 }
 
 #[test]
+fn filter_template_head_parity() {
+    // The v4 head shipped without this test and the GPU backend simply never
+    // computed it. `decode` reads `filter_template.logits` through
+    // `optional()`, so the miss did not fail — it rendered the raw span where
+    // the host declared a template ("csv" instead of `filename LIKE "*.csv"`).
+    // `full_backend_parity` could not catch it: `tiny_config` declares no
+    // templates, so both backends skipped the head and agreed on nothing.
+    let ctx = match pollster::block_on(WgpuContext::new()) {
+        Ok(ctx) => ctx,
+        Err(e) => {
+            eprintln!("skipping GPU test: {e}");
+            return;
+        }
+    };
+
+    let mut cfg = tiny_config();
+    cfg.filter_templates = vec![
+        ntc_model::config::FilterTemplate {
+            id: "FIELD_IS_NULL".into(),
+            semantic: "FILTER.PQL".into(),
+            pattern: "{field} IS NULL".into(),
+            values: vec![],
+        },
+        ntc_model::config::FilterTemplate {
+            id: "FILE_EXTENSION".into(),
+            semantic: "FILTER.PQL".into(),
+            pattern: "filename LIKE \"*.{token}\"".into(),
+            values: vec!["pdf".into(), "csv".into()],
+        },
+    ];
+
+    let tokenizer = NtcTokenizer::from_bytes(test_tokenizer_json().as_bytes()).unwrap();
+    let tools = tools();
+    let refs: Vec<&_> = tools.iter().collect();
+    let utterance = tokenizer
+        .encode_utterance("make a dentist appointment tomorrow afternoon")
+        .unwrap();
+    let inputs = ModelInputs::pack(&cfg, &tokenizer, &utterance, &refs).unwrap();
+
+    let weights = random_weights(&cfg, 7);
+    let mut gpu = WgpuBackend::new(cfg.clone(), &weights, ctx).unwrap();
+    let mut cpu = CpuRefBackend::new(cfg.clone(), weights);
+    let cpu_out = cpu.run(&inputs).unwrap();
+    let gpu_out = gpu.run(&inputs).unwrap();
+
+    let cpu_t = cpu_out
+        .get("filter_template.logits")
+        .expect("CPU reference computes the v4 head");
+    let gpu_t = gpu_out
+        .get("filter_template.logits")
+        .expect("GPU backend must compute the v4 head, not silently omit it");
+    assert_eq!(gpu_t.shape, cpu_t.shape, "filter_template.logits shape");
+    assert_eq!(
+        cpu_t.shape.last(),
+        Some(&3),
+        "width is NONE plus the declared table"
+    );
+    assert_close("filter_template.logits", &gpu_t.data, &cpu_t.data);
+    for arg in 0..cfg.max_args {
+        let (lo, hi) = (arg * 3, arg * 3 + 3);
+        assert_eq!(
+            argmax(&gpu_t.data[lo..hi]),
+            argmax(&cpu_t.data[lo..hi]),
+            "template argmax differs for arg {arg}"
+        );
+    }
+}
+
+#[test]
 fn full_backend_parity() {
     let ctx = match pollster::block_on(WgpuContext::new()) {
         Ok(ctx) => ctx,

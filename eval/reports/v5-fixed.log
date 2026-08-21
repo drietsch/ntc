@@ -1,0 +1,135 @@
+checkpoint /Users/drietsch/ntc/training/runs/studio-v5/best.pt
+registry   /Users/drietsch/ntc/examples/pimcore-tools-templates.json
+gold       /Users/drietsch/ntc/training/data/studio-tpl-neg/dev.jsonl
+=== exporting /Users/drietsch/ntc/training/runs/studio-v5/best.pt -> /Users/drietsch/ntc/models/ntc-studio-v5/model.ntc
+/Users/drietsch/ntc/training/.venv/lib/python3.12/site-packages/pydantic/main.py:475: UserWarning: Pydantic serializer warnings:
+  PydanticSerializationUnexpectedValue(Expected `Calibration` - serialized value may not be as expected [field_name='calibration', input_value={'action': 1.5, 'tool': 1...nce': 1.0, 'value': 1.0}, input_type=dict])
+  return self.__pydantic_serializer__.to_python(
+wrote /Users/drietsch/ntc/models/ntc-studio-v5/model.ntc (90.77 MB)
+    Finished `release` profile [optimized] target(s) in 0.28s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+
+=== 1. narrow-slate ESA, swept over the optional-argument threshold
+batch-infer: 446 ok, 0 failed
+  threshold 0.5   EXECUTABLE SEMANTIC ACCURACY    88.8%
+batch-infer: 446 ok, 0 failed
+  threshold 0.7   EXECUTABLE SEMANTIC ACCURACY    88.8%
+batch-infer: 446 ok, 0 failed
+  threshold 0.9   EXECUTABLE SEMANTIC ACCURACY    88.8%
+batch-infer: 446 ok, 0 failed
+  threshold 0.99  EXECUTABLE SEMANTIC ACCURACY    88.5%
+
+=== 1b. per language (spec asks for slices, not an average)
+batch-infer: 446 ok, 0 failed
+
+per language (   n  executable  right tool  wrong call):
+  de       60      88.3%      90.0%       3.3%
+  en       76      88.2%      92.1%       7.9%
+  es       75      92.0%      96.0%       4.0%
+  fr       67      86.6%      91.0%       4.5%
+
+=== 2. can it say "none of these tools fits"?  (v2 baseline: 24.0% / intact 88.7%)
+150 rows, each scored twice — with and without its gold tool in the slate · GPU
+
+  intact slate, correct tool chosen   139/150  92.7%   [2m(the guard: must not regress)[0m
+  gold removed, declined (NO_TOOL)    136/150  90.7%   [2m(the capability the cascade needs)[0m
+
+  when it did not decline, what it reached for instead:
+    list_classes                       3
+    get_class_definition               3
+    list_editables                     2
+    upload_asset                       1
+    get_asset_queryable_fields         1
+    list_workflows                     1
+    get_element_tags                   1
+    unassign_tag                       1
+
+=== 3. acceptance scenarios
+[1mStudio use-case acceptance — model.ntc on GPU[0m
+
+  [32mPASS[0m  call-linked-tag                  [2mBind a linked selection to a tool argument — the core in-S[0m
+  [32mPASS[0m  call-id-in-utterance             [2mAn explicit id in the utterance is extracted as a span[0m
+  [31mFAIL[0m  call-search-query                [2mFree-text query extracted from the utterance[0m
+        [31maction NO_CALL != CALL; tool None != search_assets[0m
+        [2mutterance: find the assets for the summer campaign[0m
+  [32mPASS[0m  call-list-classes                [2mZero-argument call, German[0m
+  [31mFAIL[0m  call-workflow-graph-fr           [2mNamed entity extracted from a French utterance[0m
+        [31maction NO_CALL != CALL; tool None != get_workflow_graph[0m
+        [2mutterance: montre-moi le graphe du workflow validation_produit[0m
+  [32mPASS[0m  call-list-tags-es                [2mZero-argument call, Spanish[0m
+  [31mFAIL[0m  ask-missing-id                   [2mRight tool, but nothing supplies the required id and nothi[0m
+        [31maction NO_CALL != ASK[0m
+        [2mutterance: show me the asset[0m
+  [32mPASS[0m  ask-ambiguous-type               [2mTwo linked items of different type: the element type canno[0m
+  [32mPASS[0m  nocall-chitchat                  [2mNothing to execute[0m
+  [32mPASS[0m  nocall-conceptual                [2mA question ABOUT a tool, not a request to run it[0m
+  [32mPASS[0m  nocall-unsupported               [2mCapability Pimcore's tool set does not offer (permissions)[0m
+  [31mFAIL[0m  nocall-out-of-scope              [2mNot a Pimcore action at all[0m
+        [31maction CALL != NO_CALL[0m
+        [2mutterance: book me a flight to Berlin next Tuesday[0m
+  [32mPASS[0m  delegate-payload-update          [2mA write needing a nested payload — POLICY.md 4.1 routes wr[0m
+  [32mPASS[0m  delegate-payload-metadata        [2mAsset metadata edit needs a structured payload[0m
+  [32mPASS[0m  delegate-over-limit              [2mSelection far exceeds the per-call cap (max 5) — needs a l[0m
+  [32mPASS[0m  delegate-multi-step              [2mThe reference case: search, then filter on a property, the[0m
+  [32mPASS[0m  delegate-multi-step-de           [2mSame chained shape in German, different domain[0m
+  [32mPASS[0m  delegate-mixed-types             [2mSelection spans element types a single-type tool cannot ta[0m
+  [31mFAIL[0m  delegate-authoring               [2mOpen-ended authoring is agent work, not a typed call[0m
+        [31maction ASK != DELEGATE[0m
+        [2mutterance: write a product description for the new espresso machine and publish it[0m
+  [32mPASS[0m  delegate-analysis                [2mComparative reasoning across results[0m
+  [32mPASS[0m  policy-resolution-hop            [2mPOLICY.md 4.4: a tag NAME must be resolved to an id first [0m
+  [32mPASS[0m  policy-utterance-over-linked     [2mPOLICY.md 4.2: an explicit id in the utterance beats the l[0m
+  [31mFAIL[0m  adversarial-namespace-trap       [2m`parentId` means a DIFFERENT namespace per tool — a docume[0m
+        [31maction NO_CALL != CALL; tool None != create_document[0m
+        [2mutterance: create a page called about-us under document 12[0m
+  [32mPASS[0m  adversarial-mention-only         [2mThe verb names a tool but the user is asking for an explan[0m
+  [31mFAIL[0m  robust-typo                      [2mReal users typo; the pretrained tokenizer should absorb it[0m
+        [31maction NO_CALL != CALL; tool None != search_assets[0m
+        [2mutterance: serach the assets for teh summer campaign[0m
+  [32mPASS[0m  robust-polite-prefix             [2mPoliteness padding must not change the decision[0m
+
+[1m19/26 scenarios pass[0m
+  by group: adversarial 1/2  ask 1/2  call 4/6  delegate 7/8  nocall 3/4  policy 2/2  robust 1/2
+
+=== 4. wide slate — all 49 tools, shortlist-then-decide
+446 rows · narrow slate = as recorded (2-3 tools) · wide slate = all 49 tools · GPU
+
+[1mnarrow slate — 446 rows, gold tool always among 2-3[0m
+  executable semantic accuracy   88.8%
+    emitted a call                 93.9%
+    ...with the right tool         92.4%
+    ...and every argument correct  88.8%
+
+[1mwide slate — all 49 tools offered, cascade narrows[0m
+  executable semantic accuracy   45.7%
+    emitted a call                 75.2%
+    ...with the right tool         48.6%
+    ...and every argument correct  45.7%
+
+  [1mcost of not being handed the answer   -43.2%[0m
+
+  [1mshortlist recall[0m  237/278  85.3%   [2m(gold tool reached the deciding pass)[0m
+  of those, chosen by the deciding pass  184/237  77.6%
+
+  A gold tool that never survives the shortlist cannot be recovered
+  downstream: that is a ranking problem, not a model problem.
+
+  wrong tool on the wide slate           74
+    ...of which were right when narrowed 71  [2m(pure cost of the 49-way choice)[0m
+  report -> /Users/drietsch/ntc/eval/reports/ntc-studio-v5-wide.json
+
+=== 5. does a focused re-read help the arguments? (measured -0.9% twice)
+213 gold CALL rows that take at least one argument · GPU
+
+  arguments fully correct, shared slate (2-3 tools)   187/213  87.8%
+  arguments fully correct, focused slate (gold only)  190/213  89.2%
+
+  rows the focus fixed     3
+  rows the focus broke     0
+
+  shared   failures — missing 2  invented 1  wrong 8  no_call 16
+
+  focused  failures — missing 0  invented 0  wrong 8  no_call 15
+
+  [1m+1.4% — not worth a third pass — the argument heads, not the slate, are the limit[0m

@@ -44,6 +44,8 @@ pub struct WgpuBackend {
     host: HashMap<String, Tensor>,
     /// Whether this model carries the head-codec v3 heads.
     weights_have_v3: bool,
+    /// Whether this model carries the head-codec v4 filter-template head.
+    weights_have_v4: bool,
 }
 
 impl WgpuBackend {
@@ -57,6 +59,7 @@ impl WgpuBackend {
         cfg.validate()?;
         weights.check(&cfg)?;
         let weights_have_v3 = weights.has_v3_heads();
+        let weights_have_v4 = weights.has_filter_template_head();
         let exec = GpuExecutor::new(ctx);
 
         let mut wbufs = HashMap::new();
@@ -64,11 +67,16 @@ impl WgpuBackend {
         // Head-codec v3 tensors are optional, so they are appended to the
         // manifest walk rather than folded into `tensor_specs`, which every
         // model must satisfy.
-        let optional = if weights_have_v3 {
+        let mut optional = if weights_have_v3 {
             ntc_model::weights::v3_head_specs(&cfg)
         } else {
             Vec::new()
         };
+        // v4 is optional independently of v3: a model may declare a template
+        // table without carrying the v3 heads.
+        if weights_have_v4 {
+            optional.extend(ntc_model::weights::v4_head_specs(&cfg));
+        }
         let manifest = tensor_specs(&cfg).into_iter().chain(optional);
         for (name, _shape) in manifest {
             let tensor = weights.get(&name)?;
@@ -92,6 +100,7 @@ impl WgpuBackend {
             wbufs,
             host,
             weights_have_v3,
+            weights_have_v4,
         })
     }
 
@@ -696,6 +705,26 @@ impl WgpuBackend {
             out.insert("source.logits".into(), source);
             out.insert("unresolved_reason.logits".into(), unresolved);
             out.insert("entity_ref.logits".into(), entity);
+        }
+
+        // Head-codec v4, mirroring `CpuRefBackend`. `decode` reads these
+        // logits through `optional()`, so a backend that omits them does not
+        // fail — it renders the raw span where the host declared a template.
+        // That is a silent wrong answer, so parity here is deliberate.
+        let k = self.cfg.filter_template_classes();
+        if k > 0 && self.weights_have_v4 {
+            let mut templates =
+                Tensor::from_vec(&[n_tools, a, k], vec![f32::MIN; n_tools * a * k]);
+            for (t, tool) in inputs.tools.iter().enumerate() {
+                for (idx, &anchor) in tool.arg_anchors.iter().enumerate() {
+                    let arg_state = state_at(t * ls + anchor).to_vec();
+                    let base = t * a + idx;
+                    templates.data[base * k..base * k + k].copy_from_slice(
+                        &self.linear_head(&arg_state, "heads.filter_template.out")?,
+                    );
+                }
+            }
+            out.insert("filter_template.logits".into(), templates);
         }
 
         Ok(HeadOutputs { tensors: out })
