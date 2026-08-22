@@ -72,3 +72,12 @@ models/ntc-studio-v3-rerun/model.ntc
 #     && eval/run_all.sh "$PWD/runs/studio-v5/best.pt" ntc-studio-v5 \
 #        examples/pimcore-tools-templates.json training/data/studio-tpl-neg/dev.jsonl
 models/ntc-studio-v5/model.ntc
+
+# studio-v6: studio-v5's corpus and init at slate width 5 (`--max-tools 5`), the
+# first model whose shortlist cut is 5 rather than 3. 90 MB, rebuild:
+#   cd training && uv run python train.py --arch studio --max-tools 5 \
+#     --data data/studio5-tpl-neg --init runs/studio-v3/best.pt --epochs 10 \
+#     --out runs/studio-v6 \
+#     && eval/run_all.sh "$PWD/runs/studio-v6/best.pt" ntc-studio-v6 \
+#        examples/pimcore-tools-templates.json training/data/studio5-tpl-neg/dev.jsonl
+models/ntc-studio-v6/model.ntc
